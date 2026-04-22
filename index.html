@@ -1,0 +1,4129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>设备台账</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --panel: #ffffff;
+        --panel-soft: #ffffff;
+        --border: #d7deea;
+        --line-soft: #e5ebf4;
+        --text: #1f2a3a;
+        --muted: #6f7d93;
+        --accent: #2c79ea;
+        --accent-soft: #edf4ff;
+        --danger: #d24b4b;
+        --warning: #c07a1a;
+        --success: #1e8750;
+        --shadow: none;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      .ledger-layout {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+        min-height: 100vh;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        box-shadow: var(--shadow);
+      }
+
+      .left-panel {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .section-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .section-head h2,
+      .section-head h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      .section-subtitle {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: #fff;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .icon-btn:hover {
+        background: #236cce;
+      }
+
+      .tree-wrap {
+        padding: 8px;
+        overflow: auto;
+      }
+
+      .tree-node {
+        margin: 2px 0;
+      }
+
+      .tree-row {
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 6px;
+        padding: 2px 8px 2px 4px;
+        position: relative;
+      }
+
+      .tree-row.is-selected {
+        background: var(--accent-soft);
+      }
+
+      .tree-toggle {
+        width: 20px;
+        height: 20px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .tree-toggle:hover {
+        background: #eef3fb;
+        color: #2c79ea;
+      }
+
+      .tree-label {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .tree-count {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .tree-node-delete {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+      }
+
+      .tree-node-more {
+        width: 20px;
+        height: 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        background: transparent;
+        color: #5e708a;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        padding: 0;
+        opacity: 0;
+      }
+
+      .tree-row:hover .tree-node-more,
+      .tree-node-delete.is-open .tree-node-more {
+        opacity: 1;
+      }
+
+      .tree-node-more:hover {
+        border-color: #c8d3e4;
+        background: #f6f8fc;
+      }
+
+      .tree-delete-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        min-width: 72px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 6px 16px rgba(18, 35, 66, 0.12);
+        padding: 4px;
+        z-index: 6;
+      }
+
+      .tree-delete-menu.hidden {
+        display: none;
+      }
+
+      .tree-delete-btn {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: #d24b4b;
+        font-size: 12px;
+        text-align: left;
+        padding: 6px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .tree-delete-btn:hover {
+        background: #fff4f4;
+        color: #bc3030;
+      }
+
+      .main-panel {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        overflow: hidden;
+      }
+
+      .main-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .head-title h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .head-title p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .head-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .btn {
+        border: 1px solid #b7c4d8;
+        background: #fff;
+        color: #30445f;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        border-color: #9fb2cb;
+      }
+
+      .btn.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn.primary:hover {
+        background: #236cce;
+      }
+
+      .btn.danger {
+        border-color: #f0c0c0;
+        color: var(--danger);
+        background: #fff9f9;
+      }
+
+      .filters {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: minmax(220px, 1.4fr) 160px 180px auto;
+        gap: 8px;
+        align-items: center;
+        background: #fff;
+      }
+
+      .control,
+      .input {
+        width: 100%;
+        min-height: 32px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0 8px;
+        font-size: 13px;
+        background: #fff;
+        color: var(--text);
+      }
+
+      .control:focus,
+      .input:focus {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .table-wrap {
+        overflow: auto;
+        background: var(--panel-soft);
+        padding: 0 10px 10px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0;
+        min-width: 1040px;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f2f5fa;
+        color: #3f4d61;
+        font-weight: 600;
+        border: 1px solid var(--line-soft);
+        font-size: 12px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 7px 8px;
+        border: 1px solid var(--line-soft);
+        font-size: 12px;
+        vertical-align: middle;
+      }
+
+      tbody tr {
+        background: #fff;
+      }
+
+      tbody tr:hover {
+        background: #f9fbfe;
+      }
+
+      .table-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .text-btn {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font-size: 12px;
+        cursor: pointer;
+        color: var(--accent);
+      }
+
+      .text-btn.danger {
+        color: var(--danger);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 1px 8px;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .status-在用 {
+        color: #1e8750;
+        background: #ebf8f0;
+      }
+
+      .status-启用 {
+        color: #1e8750;
+        background: #ebf8f0;
+      }
+
+      .status-备用 {
+        color: #2269b7;
+        background: #edf4ff;
+      }
+
+      .status-停用 {
+        color: #bd4141;
+        background: #fff2f2;
+      }
+
+      .status-检修 {
+        color: #996515;
+        background: #fff6e9;
+      }
+
+      .insp-正常 {
+        color: #1e8750;
+        background: #ebf8f0;
+      }
+
+      .insp-即将到期 {
+        color: #996515;
+        background: #fff6e9;
+      }
+
+      .insp-已逾期,
+      .insp-未点检 {
+        color: #bd4141;
+        background: #fff2f2;
+      }
+
+      .table-foot {
+        padding: 8px 10px;
+        border-top: 1px solid var(--line-soft);
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        background: rgba(12, 22, 36, 0.36);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 20;
+      }
+
+      .modal-mask.hidden {
+        display: none;
+      }
+
+      .modal {
+        width: min(920px, 100%);
+        background: #fff;
+        border-radius: 6px;
+        border: 1px solid #cfd8e6;
+        box-shadow: none;
+        overflow: hidden;
+      }
+
+      .modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .modal-head h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .modal-body {
+        padding: 10px 12px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .section-card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+
+      .section-card h4 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #30445f;
+      }
+
+      .note {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .required-mark {
+        color: #e5484d;
+        margin-right: 2px;
+      }
+
+      .readonly {
+        background: #f5f8fc;
+        color: #6d7c93;
+      }
+
+      .hidden-block {
+        display: none;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: #47566d;
+      }
+
+      .field.full {
+        grid-column: span 2;
+      }
+
+      .field textarea {
+        width: 100%;
+        min-height: 82px;
+        resize: vertical;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 13px;
+        font-family: inherit;
+      }
+
+      .field textarea:focus {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--border);
+        padding: 8px 12px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .qr-modal {
+        width: min(560px, 100%);
+      }
+
+      .detail-modal {
+        width: min(820px, 100%);
+      }
+
+      .category-modal {
+        width: min(560px, 100%);
+      }
+
+      .detail-qr-wrap {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .detail-qr-wrap .qr-preview {
+        margin: 0;
+      }
+
+      .detail-qr-fields {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-self: center;
+      }
+
+      .qr-preview {
+        margin: 4px auto 10px;
+        width: 220px;
+        height: 220px;
+        border: 1px solid var(--line-soft);
+        border-radius: 6px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .qr-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .field small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .switch-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #47566d;
+      }
+
+      .switch-row input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      .api-status {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        background: rgba(20, 34, 54, 0.92);
+        color: #fff;
+        font-size: 12px;
+        padding: 8px 11px;
+        border-radius: 5px;
+        z-index: 30;
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 1200px) {
+        .filters {
+          grid-template-columns: minmax(220px, 1.4fr) 140px 160px auto;
+        }
+      }
+
+      @media (max-width: 980px) {
+        .ledger-layout {
+          grid-template-columns: 1fr;
+          grid-template-rows: 320px minmax(0, 1fr);
+        }
+
+        .left-panel {
+          min-height: 0;
+        }
+
+        .main-head {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .head-actions {
+          justify-content: flex-start;
+        }
+
+        .filters {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .filter-actions {
+          grid-column: span 2;
+          justify-content: flex-start;
+        }
+
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .field.full {
+          grid-column: span 1;
+        }
+
+        .detail-qr-wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .ledger-layout {
+          padding: 10px;
+          gap: 10px;
+        }
+
+        .section-head h2,
+        .section-head h1,
+        .head-title h1 {
+          font-size: 20px;
+        }
+
+        .filters {
+          grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ledger-layout">
+      <aside class="panel left-panel">
+        <div class="section-head">
+          <h2>设备分类</h2>
+          <button id="addCategoryBtn" class="icon-btn" title="新增设备类型" aria-label="新增设备类型">+</button>
+        </div>
+        <div id="categoryTree" class="tree-wrap"></div>
+      </aside>
+
+      <section class="panel main-panel">
+        <div class="main-head">
+          <div class="head-title">
+            <h1>设备台账</h1>
+          </div>
+          <div class="head-actions">
+            <button id="addDeviceBtn" class="btn primary">新增</button>
+            <button id="batchPrintQrBtn" class="btn">批量打印二维码</button>
+            <button id="importBtn" class="btn">导入</button>
+            <button id="exportBtn" class="btn">导出</button>
+            <input id="importFile" type="file" accept=".csv" hidden />
+          </div>
+        </div>
+
+        <div class="filters">
+          <input id="keywordInput" class="input" type="text" placeholder="搜索编号/名称/型号/位置/责任人" />
+          <select id="statusFilter" class="control">
+            <option value="">设备状态（全部）</option>
+            <option value="启用">启用</option>
+            <option value="停用">停用</option>
+          </select>
+          <select id="inspectionFilter" class="control">
+            <option value="">点检状态（全部）</option>
+            <option value="正常">正常</option>
+            <option value="即将到期">即将到期</option>
+            <option value="已逾期">已逾期</option>
+            <option value="未点检">未点检</option>
+          </select>
+          <div class="filter-actions">
+            <button id="searchBtn" class="btn">筛选</button>
+            <button id="resetBtn" class="btn">重置</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 44px">
+                  <input id="checkAll" type="checkbox" />
+                </th>
+                <th>设备编号</th>
+                <th>设备名称</th>
+                <th>分类</th>
+                <th>型号</th>
+                <th>状态</th>
+                <th>位置</th>
+                <th>责任人</th>
+                <th>上次检验</th>
+                <th>点检状态</th>
+                <th style="width: 150px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="table-foot">
+          <span id="summaryText"></span>
+          <span id="apiStatusText" class="api-status">云端：未启用（当前离线模式）</span>
+        </div>
+      </section>
+    </div>
+
+    <div id="categoryTypeModal" class="modal-mask hidden">
+      <div class="modal category-modal">
+        <div class="modal-head">
+          <h3>新增设备类型</h3>
+          <button type="button" id="closeCategoryTypeModal" class="btn">关闭</button>
+        </div>
+        <form id="categoryTypeForm">
+          <div class="modal-body">
+            <section class="section-card">
+              <h4>设备类型管理</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="categoryParentInput"><span class="required-mark">*</span>所属分类</label>
+                  <select id="categoryParentInput" class="control" required></select>
+                </div>
+                <div class="field">
+                  <label for="categoryTypeNameInput"><span class="required-mark">*</span>设备类型名称</label>
+                  <input id="categoryTypeNameInput" class="input" type="text" required placeholder="请输入设备类型名称" />
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="modal-foot">
+            <button type="button" id="cancelCategoryTypeBtn" class="btn">取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="deviceModal" class="modal-mask hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="deviceModalTitle">新增设备</h3>
+          <button type="button" id="closeDeviceModal" class="btn">关闭</button>
+        </div>
+        <form id="deviceForm">
+          <div class="modal-body">
+            <section class="section-card">
+              <h4>基本信息</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="categoryGroupInput"><span class="required-mark">*</span>所属分类</label>
+                  <select id="categoryGroupInput" class="control" name="categoryGroup" required></select>
+                </div>
+                <div class="field">
+                  <label for="deviceTypeInput"><span class="required-mark">*</span>设备类型</label>
+                  <select id="deviceTypeInput" class="control" name="deviceType" required></select>
+                </div>
+                <div class="field">
+                  <label for="codeDisplayInput">设备编号</label>
+                  <input
+                    id="codeDisplayInput"
+                    class="input readonly"
+                    type="text"
+                    readonly
+                    placeholder="自动生成"
+                  />
+                </div>
+                <div class="field">
+                  <label for="innerCodeInput">厂内编号</label>
+                  <input id="innerCodeInput" class="input" name="innerCode" placeholder="请输入厂内编号" />
+                </div>
+                <div class="field">
+                  <label for="nameInput"><span class="required-mark">*</span>设备名称</label>
+                  <input id="nameInput" class="input" name="name" placeholder="请输入设备名称" required />
+                </div>
+                <div class="field">
+                  <label for="modelInput">设备型号</label>
+                  <input id="modelInput" class="input" name="model" placeholder="请输入设备型号" />
+                </div>
+                <div class="field">
+                  <label for="workshopInput">所属车间</label>
+                  <select id="workshopInput" class="control" name="workshop">
+                    <option value="">请选择所属车间</option>
+                    <option value="一期">一期</option>
+                    <option value="二期">二期</option>
+                    <option value="三期">三期</option>
+                    <option value="公共区域">公共区域</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="statusInput">状态</label>
+                  <select id="statusInput" class="control" name="status">
+                    <option value="启用">启用</option>
+                    <option value="停用">停用</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="assetCategoryInput">资产类别</label>
+                  <select id="assetCategoryInput" class="control" name="assetCategory">
+                    <option value="">请选择资产类别</option>
+                    <option value="固定资产">固定资产</option>
+                    <option value="低值易耗">低值易耗</option>
+                    <option value="备品备件">备品备件</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="vendorInput">设备厂家</label>
+                  <input id="vendorInput" class="input" name="vendor" placeholder="请输入设备厂家" />
+                </div>
+              </div>
+            </section>
+
+            <section class="section-card">
+              <h4>检验与时间</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="inspectCycleDaysInput">检验周期(天)</label>
+                  <input
+                    id="inspectCycleDaysInput"
+                    class="input"
+                    name="inspectCycleDays"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="请输入检验周期"
+                  />
+                </div>
+                <div class="field">
+                  <label for="lastCheckDateInput">上次检验日期</label>
+                  <input id="lastCheckDateInput" class="input" name="lastCheckDate" type="date" />
+                </div>
+                <div class="field">
+                  <label for="nextCheckDateInput">下次检验日期</label>
+                  <input
+                    id="nextCheckDateInput"
+                    class="input readonly"
+                    name="nextCheckDate"
+                    type="date"
+                    readonly
+                    placeholder="按检验周期自动计算"
+                  />
+                </div>
+                <div class="field">
+                  <label for="purchaseDateInput">入厂日期</label>
+                  <input id="purchaseDateInput" class="input" name="purchaseDate" type="date" />
+                </div>
+              </div>
+            </section>
+
+            <section id="specialSection" class="section-card">
+              <h4>特种设备信息</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="registerCodeInput">注册代码</label>
+                  <input id="registerCodeInput" class="input" name="registerCode" placeholder="请输入注册代码" />
+                </div>
+                <div class="field">
+                  <label for="volumeInput">容积(立方米)</label>
+                  <input id="volumeInput" class="input" name="volume" type="number" min="0" step="0.01" />
+                </div>
+                <div class="field">
+                  <label for="lineTypeInput">线别</label>
+                  <select id="lineTypeInput" class="control" name="lineType">
+                    <option value="">请选择线别</option>
+                    <option value="A线">A线</option>
+                    <option value="B线">B线</option>
+                    <option value="C线">C线</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="areaInput">区域</label>
+                  <select id="areaInput" class="control" name="area">
+                    <option value="">请选择区域</option>
+                    <option value="北区">北区</option>
+                    <option value="南区">南区</option>
+                    <option value="东区">东区</option>
+                    <option value="西区">西区</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section id="normalSection" class="section-card">
+              <h4>普通设备补充信息</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="powerSupplyInput">电源</label>
+                  <input id="powerSupplyInput" class="input" name="powerSupply" placeholder="请输入电源" />
+                </div>
+                <div class="field">
+                  <label for="totalPowerInput">总功率</label>
+                  <input id="totalPowerInput" class="input" name="totalPower" placeholder="请输入总功率" />
+                </div>
+                <div class="field">
+                  <label for="sourceCategoryInput">来源类别</label>
+                  <select id="sourceCategoryInput" class="control" name="sourceCategory">
+                    <option value="">请选择来源类别</option>
+                    <option value="外购">外购</option>
+                    <option value="自制">自制</option>
+                    <option value="改造">改造</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="remarkInput">备注</label>
+                  <input id="remarkInput" class="input" name="remark" placeholder="请输入备注" />
+                </div>
+              </div>
+            </section>
+
+            <p class="note">带 * 为必填项。设备编号为百数云自动生成字段。</p>
+          </div>
+          <div class="modal-foot">
+            <button type="button" id="cancelDeviceBtn" class="btn">取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="apiModal" class="modal-mask hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>百数云 API 配置</h3>
+          <button type="button" id="closeApiModal" class="btn">关闭</button>
+        </div>
+        <form id="apiForm">
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="field full">
+                <label for="apiBaseUrlInput">Base URL</label>
+                <input id="apiBaseUrlInput" class="input" />
+                <small>默认优先使用当前站点同域的 /api，本地文件调试时回退到 http://localhost:3001/api</small>
+              </div>
+              <div class="field">
+                <label for="apiAppIdInput">App ID</label>
+                <input id="apiAppIdInput" class="input" />
+              </div>
+              <div class="field">
+                <label for="apiEntryIdInput">Entry ID</label>
+                <input id="apiEntryIdInput" class="input" />
+              </div>
+              <div class="field full">
+                <label for="apiAuthInput">Authorization</label>
+                <input id="apiAuthInput" class="input" placeholder="可填 Bearer xxx 或你的 token" />
+                <small>通常留空即可（推荐在后端 .env 配置 API Key）</small>
+              </div>
+              <div class="field full">
+                <label for="apiExtraHeadersInput">自定义 Headers(JSON)</label>
+                <textarea
+                  id="apiExtraHeadersInput"
+                  placeholder='例如：{"X-Access-Token":"xxx","X-User-Id":"xxx"}'
+                ></textarea>
+              </div>
+              <div class="field full">
+                <label for="apiListPathsInput">数据查询接口后缀（逗号分隔）</label>
+                <input id="apiListPathsInput" class="input" placeholder="data,data_search,data_list" />
+                <small>会按顺序尝试，命中一个即可</small>
+              </div>
+              <div class="field full stack">
+                <label class="switch-row" for="apiEnableCloudInput">
+                  <input id="apiEnableCloudInput" type="checkbox" />
+                  启用云端模式（新增/编辑/删除/同步走接口）
+                </label>
+                <small>关闭后仅本地前端演示，不请求云端</small>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button type="button" id="cancelApiBtn" class="btn">取消</button>
+            <button type="submit" class="btn primary">保存配置</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="qrModal" class="modal-mask hidden">
+      <div class="modal qr-modal">
+        <div class="modal-head">
+          <h3>设备二维码</h3>
+          <button type="button" id="closeQrModal" class="btn">关闭</button>
+        </div>
+        <div class="modal-body">
+          <div class="qr-preview">
+            <img id="qrImage" alt="设备二维码" />
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="qrDeviceCodeInput">设备编号</label>
+              <input id="qrDeviceCodeInput" class="input readonly" type="text" readonly />
+            </div>
+            <div class="field">
+              <label for="qrDeviceNameInput">设备名称</label>
+              <input id="qrDeviceNameInput" class="input readonly" type="text" readonly />
+            </div>
+            <div class="field full">
+              <label for="qrContentInput">二维码码值（报工扫码识别值）</label>
+              <input id="qrContentInput" class="input readonly" type="text" readonly />
+            </div>
+            <div class="field full">
+              <label for="qrReportLinkInput">报工页面链接（二维码扫码直达）</label>
+              <input id="qrReportLinkInput" class="input readonly" type="text" readonly />
+            </div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button type="button" id="copyQrContentBtn" class="btn">复制码值</button>
+          <button type="button" id="downloadQrBtn" class="btn">下载二维码</button>
+          <button type="button" id="openReportByQrBtn" class="btn primary">前往报工页</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="detailModal" class="modal-mask hidden">
+      <div class="modal detail-modal">
+        <div class="modal-head">
+          <h3>设备详情</h3>
+          <button type="button" id="closeDetailModal" class="btn">关闭</button>
+        </div>
+        <div class="modal-body">
+          <section class="section-card">
+            <h4>基本信息</h4>
+            <div class="form-grid">
+              <div class="field">
+                <label for="detailCodeInput">设备编号</label>
+                <input id="detailCodeInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailNameInput">设备名称</label>
+                <input id="detailNameInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailCategoryInput">设备分类</label>
+                <input id="detailCategoryInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailTypeInput">设备类型</label>
+                <input id="detailTypeInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailModelInput">设备型号</label>
+                <input id="detailModelInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailStatusInput">设备状态</label>
+                <input id="detailStatusInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailWorkshopInput">所属车间</label>
+                <input id="detailWorkshopInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailLocationInput">位置</label>
+                <input id="detailLocationInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailKeeperInput">责任人</label>
+                <input id="detailKeeperInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailInspectionInput">点检状态</label>
+                <input id="detailInspectionInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailLastCheckInput">上次检验</label>
+                <input id="detailLastCheckInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="detailNextCheckInput">下次检验</label>
+                <input id="detailNextCheckInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field full">
+                <label for="detailRemarkInput">备注</label>
+                <textarea id="detailRemarkInput" class="readonly" readonly></textarea>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <h4>二维码信息</h4>
+            <div class="detail-qr-wrap">
+              <div class="qr-preview">
+                <img id="detailQrImage" alt="设备二维码" />
+              </div>
+              <div class="detail-qr-fields">
+                <div class="field">
+                  <label for="detailQrCodeNoInput">二维码编号</label>
+                  <input id="detailQrCodeNoInput" class="input readonly" type="text" readonly />
+                </div>
+                <div class="field">
+                  <label for="detailQrContentInput">扫码码值</label>
+                  <input id="detailQrContentInput" class="input readonly" type="text" readonly />
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="modal-foot">
+          <button type="button" id="closeDetailFootBtn" class="btn primary">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const STORAGE_KEY_API_CONFIG = "device_ledger_api_config_v1";
+      const DEVICE_STATUS_OPTIONS = ["启用", "停用"];
+      const INSPECTION_STATUS_OPTIONS = ["正常", "即将到期", "已逾期", "未点检"];
+
+      const FIELD_ALIASES = {
+        code: "_widget_1775562607984",
+        name: "_widget_1775562608011",
+        model: "_widget_1775562608189",
+        category: "_widget_1775562608080",
+        deviceType: "_widget_1775803708083",
+        assetCategory: "_widget_1775629050529",
+        assetNameOrSn: "_widget_1775629050553",
+        innerCode: "_widget_1775562608259",
+        productCode: "_widget_1775562608732",
+        isMetallurgyCrane: "_widget_1775562608323",
+        volume: "_widget_1775562608942",
+        size: "_widget_1775629050394",
+        unit: "_widget_1775562610115",
+        factoryCode: "_widget_1775562608360",
+        registerCode: "_widget_1775562608379",
+        usageLocation: "_widget_1775562608423",
+        storageLocation: "_widget_1775629050272",
+        serviceLife: "_widget_1775562609006",
+        inspectCycleDays: "_widget_1775562608460",
+        lastInspectDate: "_widget_1775562608481",
+        nextInspectDate: "_widget_1775562608505",
+        maintenanceCompany: "_widget_1775562609135",
+        maker: "_widget_1775562609154",
+        installer: "_widget_1775562609191",
+        seller: "_widget_1775629050718",
+        permitCode: "_widget_1775562608529",
+        usageCertCode: "_widget_1775562608868",
+        registerCertCode: "_widget_1775562608769",
+        plateCode: "_widget_1775562608806",
+        maintainerUser: "_widget_1775562609045",
+        vendor: "_widget_1775562609328",
+        remark: "_widget_1775562608548",
+        inFactoryDate: "_widget_1775562609372",
+        outFactoryDate: "_widget_1775629050172",
+        department: "_widget_1775562609756",
+        area: "_widget_1775562609479",
+        status: "_widget_1775562609528",
+        period: "_widget_1775562609597",
+        lineType: "_widget_1775562609882",
+        pairMachineName: "_widget_1775629050356",
+        machineVendor: "_widget_1775629050375",
+        powerSupply: "_widget_1775629050413",
+        totalPower: "_widget_1775629050432",
+        grade: "_widget_1775629050798",
+        sourceCategory: "_widget_1775629050476",
+        inspectStandardId: "_widget_1776079114010",
+        inspectStandardCode: "_widget_1776079114066",
+        qrCodeNo: "_widget_1776079114029",
+        qrContent: "_widget_1776079306687",
+        qrImageUrl: "_widget_1776079306490",
+        qrImageUrlText: "_widget_1776079114122",
+        scanReportLink: "_widget_1776079114141",
+        inspectionStatus: "_widget_1776079114202",
+      };
+
+      const DEVICE_TYPE_FIELD_ALIASES = {
+        code: "_widget_1775561402199",
+        categoryGroup: "_widget_1775808374608",
+        name: "_widget_1775561402111",
+      };
+
+      const DEFAULT_API_CONFIG = {
+        baseUrl: resolveApiBaseUrl(),
+        appId: "5a94c4d1642bd8a84c772356",
+        entryId: "38104b6c9d74ce86a7c395b6",
+        typeEntryId: "d8c14b36b0713145a9f338b6",
+        authToken: "",
+        extraHeaders: "{}",
+        listPaths: "data,data_search,data_list,data_query,data_find",
+        enableCloud: true,
+      };
+
+      const DEFAULT_CATEGORY_TREE = {
+        id: "root",
+        name: "全部设备",
+        expanded: true,
+        children: [],
+      };
+
+      const LOCAL_SEED_DEVICES = [];
+
+      const categoryRoot = deepClone(DEFAULT_CATEGORY_TREE);
+      const devices = deepClone(LOCAL_SEED_DEVICES);
+
+      const state = {
+        selectedCategoryId: "root",
+        selectedDeviceIds: new Set(),
+        keyword: "",
+        status: "",
+        inspection: "",
+        openTreeDeleteNodeId: "",
+        editingDeviceId: null,
+        viewingQrDeviceId: "",
+        apiConfig: loadApiConfig(),
+        cloudLoading: false,
+        cloudLoadedAt: "",
+        cloudLastError: "",
+        publicBaseUrl: "",
+      };
+
+      const refs = {
+        categoryTree: document.getElementById("categoryTree"),
+        categoryHint: document.getElementById("categoryHint"),
+        tableBody: document.getElementById("tableBody"),
+        summaryText: document.getElementById("summaryText"),
+        apiStatusText: document.getElementById("apiStatusText"),
+        keywordInput: document.getElementById("keywordInput"),
+        statusFilter: document.getElementById("statusFilter"),
+        inspectionFilter: document.getElementById("inspectionFilter"),
+        searchBtn: document.getElementById("searchBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        checkAll: document.getElementById("checkAll"),
+        addDeviceBtn: document.getElementById("addDeviceBtn"),
+        batchPrintQrBtn: document.getElementById("batchPrintQrBtn"),
+        importBtn: document.getElementById("importBtn"),
+        importFile: document.getElementById("importFile"),
+        exportBtn: document.getElementById("exportBtn"),
+        addCategoryBtn: document.getElementById("addCategoryBtn"),
+        categoryTypeModal: document.getElementById("categoryTypeModal"),
+        closeCategoryTypeModal: document.getElementById("closeCategoryTypeModal"),
+        cancelCategoryTypeBtn: document.getElementById("cancelCategoryTypeBtn"),
+        categoryTypeForm: document.getElementById("categoryTypeForm"),
+        categoryParentInput: document.getElementById("categoryParentInput"),
+        categoryTypeNameInput: document.getElementById("categoryTypeNameInput"),
+        deviceModal: document.getElementById("deviceModal"),
+        closeDeviceModal: document.getElementById("closeDeviceModal"),
+        cancelDeviceBtn: document.getElementById("cancelDeviceBtn"),
+        deviceForm: document.getElementById("deviceForm"),
+        deviceModalTitle: document.getElementById("deviceModalTitle"),
+        categoryGroupInput: document.getElementById("categoryGroupInput"),
+        deviceTypeInput: document.getElementById("deviceTypeInput"),
+        codeDisplayInput: document.getElementById("codeDisplayInput"),
+        innerCodeInput: document.getElementById("innerCodeInput"),
+        nameInput: document.getElementById("nameInput"),
+        modelInput: document.getElementById("modelInput"),
+        workshopInput: document.getElementById("workshopInput"),
+        statusInput: document.getElementById("statusInput"),
+        assetCategoryInput: document.getElementById("assetCategoryInput"),
+        vendorInput: document.getElementById("vendorInput"),
+        inspectCycleDaysInput: document.getElementById("inspectCycleDaysInput"),
+        lastCheckDateInput: document.getElementById("lastCheckDateInput"),
+        nextCheckDateInput: document.getElementById("nextCheckDateInput"),
+        purchaseDateInput: document.getElementById("purchaseDateInput"),
+        registerCodeInput: document.getElementById("registerCodeInput"),
+        volumeInput: document.getElementById("volumeInput"),
+        lineTypeInput: document.getElementById("lineTypeInput"),
+        areaInput: document.getElementById("areaInput"),
+        powerSupplyInput: document.getElementById("powerSupplyInput"),
+        totalPowerInput: document.getElementById("totalPowerInput"),
+        sourceCategoryInput: document.getElementById("sourceCategoryInput"),
+        remarkInput: document.getElementById("remarkInput"),
+        specialSection: document.getElementById("specialSection"),
+        normalSection: document.getElementById("normalSection"),
+        apiModal: document.getElementById("apiModal"),
+        closeApiModal: document.getElementById("closeApiModal"),
+        cancelApiBtn: document.getElementById("cancelApiBtn"),
+        apiForm: document.getElementById("apiForm"),
+        apiBaseUrlInput: document.getElementById("apiBaseUrlInput"),
+        apiAppIdInput: document.getElementById("apiAppIdInput"),
+        apiEntryIdInput: document.getElementById("apiEntryIdInput"),
+        apiAuthInput: document.getElementById("apiAuthInput"),
+        apiExtraHeadersInput: document.getElementById("apiExtraHeadersInput"),
+        apiListPathsInput: document.getElementById("apiListPathsInput"),
+        apiEnableCloudInput: document.getElementById("apiEnableCloudInput"),
+        qrModal: document.getElementById("qrModal"),
+        closeQrModal: document.getElementById("closeQrModal"),
+        qrImage: document.getElementById("qrImage"),
+        qrDeviceCodeInput: document.getElementById("qrDeviceCodeInput"),
+        qrDeviceNameInput: document.getElementById("qrDeviceNameInput"),
+        qrContentInput: document.getElementById("qrContentInput"),
+        qrReportLinkInput: document.getElementById("qrReportLinkInput"),
+        copyQrContentBtn: document.getElementById("copyQrContentBtn"),
+        downloadQrBtn: document.getElementById("downloadQrBtn"),
+        openReportByQrBtn: document.getElementById("openReportByQrBtn"),
+        detailModal: document.getElementById("detailModal"),
+        closeDetailModal: document.getElementById("closeDetailModal"),
+        closeDetailFootBtn: document.getElementById("closeDetailFootBtn"),
+        detailCodeInput: document.getElementById("detailCodeInput"),
+        detailNameInput: document.getElementById("detailNameInput"),
+        detailCategoryInput: document.getElementById("detailCategoryInput"),
+        detailTypeInput: document.getElementById("detailTypeInput"),
+        detailModelInput: document.getElementById("detailModelInput"),
+        detailStatusInput: document.getElementById("detailStatusInput"),
+        detailWorkshopInput: document.getElementById("detailWorkshopInput"),
+        detailLocationInput: document.getElementById("detailLocationInput"),
+        detailKeeperInput: document.getElementById("detailKeeperInput"),
+        detailInspectionInput: document.getElementById("detailInspectionInput"),
+        detailLastCheckInput: document.getElementById("detailLastCheckInput"),
+        detailNextCheckInput: document.getElementById("detailNextCheckInput"),
+        detailRemarkInput: document.getElementById("detailRemarkInput"),
+        detailQrImage: document.getElementById("detailQrImage"),
+        detailQrCodeNoInput: document.getElementById("detailQrCodeNoInput"),
+        detailQrContentInput: document.getElementById("detailQrContentInput"),
+        toast: document.getElementById("toast"),
+      };
+
+      const categoryMap = new Map();
+      rebuildCategoryMap();
+
+      function setCategoryHint(text) {
+        if (refs.categoryHint) {
+          refs.categoryHint.textContent = text;
+        }
+      }
+
+      function deepClone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function loadApiConfig() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY_API_CONFIG);
+          if (!raw) {
+            return { ...DEFAULT_API_CONFIG };
+          }
+          const parsed = JSON.parse(raw);
+          const savedBaseUrl = String(parsed.baseUrl || "").trim();
+          const shouldMigrateLegacyBaseUrl =
+            !savedBaseUrl ||
+            savedBaseUrl.toLowerCase().includes("online-office.net/openapi/v1") ||
+            savedBaseUrl.toLowerCase().includes("localhost:3001/api") ||
+            savedBaseUrl.toLowerCase().includes("127.0.0.1:3001/api");
+          const authToken = String(parsed.authToken || "").trim();
+          return {
+            ...DEFAULT_API_CONFIG,
+            ...parsed,
+            baseUrl: shouldMigrateLegacyBaseUrl ? DEFAULT_API_CONFIG.baseUrl : savedBaseUrl,
+            authToken: authToken || DEFAULT_API_CONFIG.authToken,
+            enableCloud: Boolean(parsed.enableCloud),
+          };
+        } catch (error) {
+          return { ...DEFAULT_API_CONFIG };
+        }
+      }
+
+      function saveApiConfig() {
+        localStorage.setItem(STORAGE_KEY_API_CONFIG, JSON.stringify(state.apiConfig));
+      }
+
+      async function loadPublicBaseUrl() {
+        try {
+          const apiBase = stripTrailingSlash(state.apiConfig?.baseUrl || DEFAULT_API_CONFIG.baseUrl || resolveApiBaseUrl());
+          const response = await fetch(`${apiBase}/public-base-url`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          const text = await response.text();
+          const result = safeJsonParse(text);
+          if (!response.ok || !isApiSuccess(result)) {
+            throw new Error(extractApiMessage(result) || text || `HTTP ${response.status}`);
+          }
+          state.publicBaseUrl = String(result?.data?.baseUrl || "").replace(/\/+$/, "");
+        } catch (error) {
+          state.publicBaseUrl = "";
+          console.warn("load public base url failed:", error && error.message ? error.message : error);
+        }
+      }
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      function generateCategoryNodeId(prefix = "cat") {
+        return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function createCategoryNode(name, overrides = {}) {
+        return {
+          id: overrides.id || generateCategoryNodeId(),
+          name,
+          expanded: overrides.expanded !== false,
+          children: Array.isArray(overrides.children) ? overrides.children : [],
+          canDelete: Boolean(overrides.canDelete),
+          source: overrides.source || "local",
+          cloudId: overrides.cloudId || "",
+          typeCode: overrides.typeCode || "",
+          rawRecord: overrides.rawRecord || null,
+        };
+      }
+
+      function buildEmptyCategoryTree() {
+        return createCategoryNode("全部设备", {
+          id: "root",
+          source: "root",
+          expanded: true,
+          canDelete: false,
+          children: [],
+        });
+      }
+
+      function compareText(a, b) {
+        return String(a || "").localeCompare(String(b || ""), "zh-CN", {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
+
+      function getCategoryGroupSortWeight(name) {
+        const text = String(name || "").trim();
+        if (text === "特种设备") {
+          return 0;
+        }
+        if (text === "普通设备") {
+          return 1;
+        }
+        if (text === "未分类") {
+          return 99;
+        }
+        return 10;
+      }
+
+      function extractExpandedStateByPath(rootNode) {
+        const expandedMap = new Map();
+        const walk = (node, path = []) => {
+          const nextPath = node.id === "root" ? [] : [...path, node.name];
+          if (nextPath.length) {
+            expandedMap.set(nextPath.join(" / "), node.expanded !== false);
+          }
+          node.children.forEach((child) => walk(child, nextPath));
+        };
+        walk(rootNode);
+        return expandedMap;
+      }
+
+      function getDeviceTypeEntryOptions() {
+        return {
+          appId: state.apiConfig.appId,
+          entryId: state.apiConfig.typeEntryId || DEFAULT_API_CONFIG.typeEntryId,
+        };
+      }
+
+      function normalizeCategoryGroupName(value) {
+        return toDisplayText(value) || "未分类";
+      }
+
+      function mapDeviceTypeRecord(record) {
+        const cloudId = extractRecordId(record);
+        return {
+          id: cloudId ? `type-${cloudId}` : generateCategoryNodeId("type"),
+          cloudId,
+          code: toDisplayText(getAliasRawValue(record, DEVICE_TYPE_FIELD_ALIASES.code)),
+          categoryGroup: normalizeCategoryGroupName(getAliasRawValue(record, DEVICE_TYPE_FIELD_ALIASES.categoryGroup)),
+          name: toDisplayText(getAliasRawValue(record, DEVICE_TYPE_FIELD_ALIASES.name)),
+          rawRecord: record,
+        };
+      }
+
+      function buildCategoryTreeFromTypeRecords(records) {
+        const expandedMap = extractExpandedStateByPath(categoryRoot);
+        const nextRoot = buildEmptyCategoryTree();
+        const groupMap = new Map();
+
+        records
+          .map((record) => mapDeviceTypeRecord(record))
+          .filter((item) => item.name)
+          .forEach((item) => {
+            let groupNode = groupMap.get(item.categoryGroup);
+            if (!groupNode) {
+              groupNode = createCategoryNode(item.categoryGroup, {
+                id: `group-${item.categoryGroup}`,
+                source: "cloud-group",
+                expanded: expandedMap.get(item.categoryGroup) ?? true,
+                canDelete: false,
+                children: [],
+              });
+              groupMap.set(item.categoryGroup, groupNode);
+              nextRoot.children.push(groupNode);
+            }
+
+            const exists = groupNode.children.find((child) => child.name === item.name);
+            if (exists) {
+              if (!exists.cloudId && item.cloudId) {
+                exists.cloudId = item.cloudId;
+              }
+              if (!exists.typeCode && item.code) {
+                exists.typeCode = item.code;
+              }
+              return;
+            }
+
+            groupNode.children.push(
+              createCategoryNode(item.name, {
+                id: item.cloudId ? `type-${item.cloudId}` : generateCategoryNodeId("type"),
+                source: "cloud-type",
+                expanded: expandedMap.get(`${item.categoryGroup} / ${item.name}`) ?? true,
+                canDelete: true,
+                cloudId: item.cloudId,
+                typeCode: item.code,
+                rawRecord: item.rawRecord,
+              })
+            );
+          });
+
+        nextRoot.children.sort((a, b) => {
+          const groupWeightDiff = getCategoryGroupSortWeight(a.name) - getCategoryGroupSortWeight(b.name);
+          if (groupWeightDiff !== 0) {
+            return groupWeightDiff;
+          }
+          return compareText(a.name, b.name);
+        });
+        nextRoot.children.forEach((groupNode) => {
+          groupNode.children.sort((a, b) => {
+            const codeDiff = compareText(a.typeCode, b.typeCode);
+            if (codeDiff !== 0) {
+              return codeDiff;
+            }
+            return compareText(a.name, b.name);
+          });
+        });
+
+        return nextRoot;
+      }
+
+      function replaceCategoryTree(nextRoot) {
+        categoryRoot.name = nextRoot.name || "全部设备";
+        categoryRoot.expanded = nextRoot.expanded !== false;
+        categoryRoot.children = Array.isArray(nextRoot.children) ? nextRoot.children : [];
+        rebuildCategoryMap();
+      }
+
+      function findCategoryIdByGroupAndType(groupName, typeName) {
+        const normalizedGroup = String(groupName || "").trim();
+        const normalizedType = String(typeName || "").trim();
+        if (!normalizedGroup) {
+          return "";
+        }
+        const groupNode = categoryRoot.children.find((node) => node.name === normalizedGroup);
+        if (!groupNode) {
+          return "";
+        }
+        if (!normalizedType) {
+          return groupNode.id;
+        }
+        const typeNode = groupNode.children.find((node) => node.name === normalizedType);
+        return typeNode?.id || "";
+      }
+
+      function reconcileDeviceCategoryIds() {
+        devices.forEach((device) => {
+          const groupName = device.categoryGroup || "";
+          const typeName = device.deviceType || "";
+          const categoryText = groupName && typeName ? `${groupName}/${typeName}` : groupName || typeName || "";
+          const matchedId = findCategoryIdByGroupAndType(groupName, typeName);
+          device.categoryId = matchedId || findOrCreateCategoryByPath(categoryText, { source: "derived", canDelete: false }) || "root";
+        });
+      }
+
+      async function syncTypeLibrary({ silent = false } = {}) {
+        if (!state.apiConfig.enableCloud) {
+          return;
+        }
+        const entryOptions = getDeviceTypeEntryOptions();
+        if (!entryOptions.entryId) {
+          if (!silent) {
+            showToast("未配置设备类型底表 entryId");
+          }
+          return;
+        }
+
+        try {
+          const records = await fetchEntryRecords(entryOptions);
+          replaceCategoryTree(buildCategoryTreeFromTypeRecords(records));
+          reconcileDeviceCategoryIds();
+          if (!categoryMap.has(state.selectedCategoryId)) {
+            state.selectedCategoryId = "root";
+          }
+          const selectedName = categoryMap.get(state.selectedCategoryId)?.node?.name || "全部设备";
+          setCategoryHint(`当前分类：${selectedName}`);
+          renderTree();
+          renderTable();
+        } catch (error) {
+          console.warn("sync device type library failed:", error);
+          if (!silent) {
+            showToast(`设备类型同步失败：${error.message}`);
+          }
+        }
+      }
+
+      function rebuildCategoryMap() {
+        categoryMap.clear();
+        traverseCategories(categoryRoot, null, (node, parent, depth) => {
+          categoryMap.set(node.id, { node, parent, depth });
+        });
+      }
+
+      function traverseCategories(node, parent, callback, depth = 0) {
+        callback(node, parent, depth);
+        node.children.forEach((child) => traverseCategories(child, node, callback, depth + 1));
+      }
+
+      function getDescendantIds(categoryId) {
+        const current = categoryMap.get(categoryId)?.node;
+        if (!current) {
+          return [];
+        }
+        const ids = [];
+        traverseCategories(current, null, (node) => ids.push(node.id));
+        return ids;
+      }
+
+      function getCategoryPath(categoryId) {
+        const path = [];
+        let cursor = categoryMap.get(categoryId);
+        while (cursor && cursor.node.id !== "root") {
+          path.unshift(cursor.node.name);
+          cursor = cursor.parent ? categoryMap.get(cursor.parent.id) : null;
+        }
+        return path;
+      }
+
+      function findCategoryName(categoryId) {
+        const path = getCategoryPath(categoryId);
+        return path.length ? path.join(" / ") : "未分类";
+      }
+
+      function findCategoryLeafName(categoryId) {
+        const node = categoryMap.get(categoryId)?.node;
+        return node?.name || "";
+      }
+
+      function countByCategory(categoryId) {
+        const ids = new Set(getDescendantIds(categoryId));
+        return devices.reduce((sum, item) => (ids.has(item.categoryId) ? sum + 1 : sum), 0);
+      }
+
+      function getInspectionStatus(dateText) {
+        if (!dateText) {
+          return "未点检";
+        }
+        const checkedDate = new Date(`${dateText}T00:00:00`);
+        if (Number.isNaN(checkedDate.getTime())) {
+          return "未点检";
+        }
+        const now = new Date();
+        const ms = now.getTime() - checkedDate.getTime();
+        const days = Math.floor(ms / (24 * 3600 * 1000));
+        if (days <= 20) {
+          return "正常";
+        }
+        if (days <= 30) {
+          return "即将到期";
+        }
+        return "已逾期";
+      }
+
+      function getDeviceInspectionStatus(device) {
+        return device.inspectionStatus || getInspectionStatus(device.lastCheckDate);
+      }
+
+      function filterDevices() {
+        const keyword = state.keyword.trim().toLowerCase();
+        const categoryIds = new Set(getDescendantIds(state.selectedCategoryId));
+
+        return devices.filter((device) => {
+          if (!categoryIds.has(device.categoryId)) {
+            return false;
+          }
+
+          if (state.status && device.status !== state.status) {
+            return false;
+          }
+
+          const inspection = getDeviceInspectionStatus(device);
+          if (state.inspection && inspection !== state.inspection) {
+            return false;
+          }
+
+          if (!keyword) {
+            return true;
+          }
+
+          const raw = [
+            device.code,
+            device.name,
+            device.model,
+            device.location,
+            device.keeper,
+            device.remark,
+            findCategoryName(device.categoryId),
+          ]
+            .join(" ")
+            .toLowerCase();
+
+          return raw.includes(keyword);
+        });
+      }
+
+      function renderTree() {
+        refs.categoryTree.innerHTML = "";
+
+        const build = (node, depth = 0) => {
+          const nodeEl = document.createElement("div");
+          nodeEl.className = "tree-node";
+
+          const row = document.createElement("div");
+          row.className = "tree-row" + (node.id === state.selectedCategoryId ? " is-selected" : "");
+          row.style.paddingLeft = `${depth * 16 + 4}px`;
+
+          const toggle = document.createElement("button");
+          toggle.className = "tree-toggle";
+          toggle.type = "button";
+          const hasChild = node.children.length > 0;
+          toggle.textContent = hasChild ? (node.expanded ? "▼" : "▶") : "";
+          toggle.disabled = !hasChild;
+          toggle.addEventListener("click", () => {
+            if (!hasChild) {
+              return;
+            }
+            node.expanded = !node.expanded;
+            state.openTreeDeleteNodeId = "";
+            renderTree();
+          });
+
+          const label = document.createElement("button");
+          label.className = "tree-label";
+          label.type = "button";
+          label.innerHTML = `<span>${escapeHtml(node.name)}</span><span class="tree-count">${countByCategory(node.id)}</span>`;
+          label.addEventListener("click", () => {
+            state.selectedCategoryId = node.id;
+            state.openTreeDeleteNodeId = "";
+            setCategoryHint(`当前分类：${node.name}`);
+            renderTree();
+            renderTable();
+          });
+
+          row.appendChild(toggle);
+          row.appendChild(label);
+
+          if (canDeleteCategoryNode(node.id)) {
+            const isOpen = state.openTreeDeleteNodeId === node.id;
+            const actions = document.createElement("div");
+            actions.className = `tree-node-delete${isOpen ? " is-open" : ""}`;
+
+            const moreBtn = document.createElement("button");
+            moreBtn.type = "button";
+            moreBtn.className = "tree-node-more";
+            moreBtn.title = "更多操作";
+            moreBtn.setAttribute("aria-label", "更多操作");
+            moreBtn.textContent = "⋯";
+            moreBtn.addEventListener("click", (event) => {
+              event.stopPropagation();
+              state.openTreeDeleteNodeId = isOpen ? "" : node.id;
+              renderTree();
+            });
+
+            const menu = document.createElement("div");
+            menu.className = `tree-delete-menu${isOpen ? "" : " hidden"}`;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.className = "tree-delete-btn";
+            deleteBtn.textContent = "删除";
+            deleteBtn.addEventListener("click", (event) => {
+              event.stopPropagation();
+              state.openTreeDeleteNodeId = "";
+              void deleteCategoryNode(node.id);
+            });
+
+            menu.appendChild(deleteBtn);
+            actions.appendChild(moreBtn);
+            actions.appendChild(menu);
+            row.appendChild(actions);
+          }
+
+          nodeEl.appendChild(row);
+
+          if (hasChild && node.expanded) {
+            node.children.forEach((child) => nodeEl.appendChild(build(child, depth + 1)));
+          }
+
+          return nodeEl;
+        };
+
+        refs.categoryTree.appendChild(build(categoryRoot));
+      }
+
+      function syncCheckAll(filtered) {
+        if (!filtered.length) {
+          refs.checkAll.checked = false;
+          refs.checkAll.indeterminate = false;
+          return;
+        }
+
+        const selectedCount = filtered.reduce((sum, item) => (state.selectedDeviceIds.has(item.id) ? sum + 1 : sum), 0);
+        refs.checkAll.checked = selectedCount === filtered.length;
+        refs.checkAll.indeterminate = selectedCount > 0 && selectedCount < filtered.length;
+      }
+
+      function renderTable() {
+        const filtered = filterDevices();
+        refs.tableBody.innerHTML = "";
+
+        const validIds = new Set(devices.map((item) => item.id));
+        state.selectedDeviceIds.forEach((id) => {
+          if (!validIds.has(id)) {
+            state.selectedDeviceIds.delete(id);
+          }
+        });
+
+        if (!filtered.length) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = '<td colspan="11" style="text-align:center;color:#7b8798;padding:28px 0">暂无设备数据</td>';
+          refs.tableBody.appendChild(tr);
+        }
+
+        filtered.forEach((device) => {
+          const tr = document.createElement("tr");
+          const inspection = getDeviceInspectionStatus(device);
+          tr.innerHTML = `
+            <td><input type="checkbox" data-id="${device.id}" ${state.selectedDeviceIds.has(device.id) ? "checked" : ""}></td>
+            <td>${escapeHtml(device.code)}</td>
+            <td>${escapeHtml(device.name)}</td>
+            <td>${escapeHtml(findCategoryName(device.categoryId))}</td>
+            <td>${escapeHtml(device.model || "-")}</td>
+            <td><span class="badge status-${escapeHtml(device.status)}">${escapeHtml(device.status)}</span></td>
+            <td>${escapeHtml(device.location || "-")}</td>
+            <td>${escapeHtml(device.keeper || "-")}</td>
+            <td>${escapeHtml(device.lastCheckDate || "-")}</td>
+            <td><span class="badge insp-${escapeHtml(inspection)}">${escapeHtml(inspection)}</span></td>
+            <td>
+              <div class="table-actions">
+                <button class="text-btn" data-action="detail" data-id="${device.id}">详情</button>
+                <button class="text-btn" data-action="edit" data-id="${device.id}">编辑</button>
+                <button class="text-btn danger" data-action="delete" data-id="${device.id}">删除</button>
+              </div>
+            </td>
+          `;
+          refs.tableBody.appendChild(tr);
+        });
+
+        const selectedVisible = filtered.reduce((sum, item) => (state.selectedDeviceIds.has(item.id) ? sum + 1 : sum), 0);
+        refs.summaryText.textContent = `共 ${devices.length} 台设备，当前筛选 ${filtered.length} 台，已选择 ${selectedVisible} 台`;
+        syncCheckAll(filtered);
+      }
+
+      function openDeviceModal(mode, target) {
+        state.editingDeviceId = mode === "edit" ? target.id : null;
+        refs.deviceModalTitle.textContent = mode === "edit" ? "编辑设备" : "新增设备";
+
+        refs.deviceForm.reset();
+        populateCategoryGroupSelect();
+
+        if (mode === "edit") {
+          const categoryMeta = resolveGroupAndTypeFromCategoryId(target.categoryId);
+          refs.categoryGroupInput.value = target.categoryGroup || categoryMeta.groupName || refs.categoryGroupInput.value;
+          populateDeviceTypeSelect(target.deviceType || categoryMeta.typeName || "");
+          refs.codeDisplayInput.value = target.code || "自动生成";
+          refs.innerCodeInput.value = target.innerCode || "";
+          refs.nameInput.value = target.name || "";
+          refs.modelInput.value = target.model || "";
+          refs.workshopInput.value = target.workshop || "";
+          refs.statusInput.value = normalizeStatusLabel(target.status);
+          refs.assetCategoryInput.value = target.assetCategory || "";
+          refs.vendorInput.value = target.vendor || "";
+          refs.inspectCycleDaysInput.value = target.inspectCycleDays || "";
+          refs.lastCheckDateInput.value = target.lastCheckDate || "";
+          refs.nextCheckDateInput.value = target.nextCheckDate || "";
+          refs.purchaseDateInput.value = target.purchaseDate || "";
+          refs.registerCodeInput.value = target.registerCode || "";
+          refs.volumeInput.value = target.volume || "";
+          refs.lineTypeInput.value = target.lineType || "";
+          refs.areaInput.value = target.area || "";
+          refs.powerSupplyInput.value = target.powerSupply || "";
+          refs.totalPowerInput.value = target.totalPower || "";
+          refs.sourceCategoryInput.value = target.sourceCategory || "";
+          refs.remarkInput.value = target.remark || "";
+        } else {
+          const preferred = resolveGroupAndTypeFromCategoryId(state.selectedCategoryId);
+          refs.categoryGroupInput.value = preferred.groupName || refs.categoryGroupInput.value;
+          populateDeviceTypeSelect(preferred.typeName || "");
+          refs.codeDisplayInput.value = "自动生成";
+          refs.statusInput.value = "启用";
+        }
+
+        updateDeviceExtraSection(refs.categoryGroupInput.value);
+        autoCalcNextCheckDate();
+        refs.deviceModal.classList.remove("hidden");
+      }
+
+      function closeDeviceModal() {
+        refs.deviceModal.classList.add("hidden");
+      }
+
+      function normalizeStatusLabel(status) {
+        return status === "停用" ? "停用" : "启用";
+      }
+
+      function resolveGroupAndTypeFromCategoryId(categoryId) {
+        const fallbackGroup = categoryRoot.children[0]?.name || "";
+        const fallbackType = categoryRoot.children[0]?.children[0]?.name || "";
+        const current = categoryMap.get(categoryId);
+        if (!current) {
+          return { groupName: fallbackGroup, typeName: fallbackType };
+        }
+
+        if (current.node.id === "root") {
+          return { groupName: fallbackGroup, typeName: fallbackType };
+        }
+
+        if (current.parent?.id === "root") {
+          return { groupName: current.node.name, typeName: current.node.children[0]?.name || "" };
+        }
+
+        return { groupName: current.parent?.name || fallbackGroup, typeName: current.node.name };
+      }
+
+      function populateCategoryGroupSelect() {
+        const groups = categoryRoot.children || [];
+        refs.categoryGroupInput.innerHTML = groups
+          .map((group) => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)}</option>`)
+          .join("");
+      }
+
+      function populateDeviceTypeSelect(preferredType = "") {
+        const groupName = refs.categoryGroupInput.value;
+        const groupNode = categoryRoot.children.find((node) => node.name === groupName);
+        const children = groupNode?.children || [];
+        refs.deviceTypeInput.innerHTML = children
+          .map((child) => `<option value="${escapeHtml(child.name)}">${escapeHtml(child.name)}</option>`)
+          .join("");
+
+        if (preferredType && children.some((child) => child.name === preferredType)) {
+          refs.deviceTypeInput.value = preferredType;
+          return;
+        }
+        refs.deviceTypeInput.value = children[0]?.name || "";
+      }
+
+      function updateDeviceExtraSection(groupName) {
+        const isSpecial = groupName === "特种设备";
+        refs.specialSection.classList.toggle("hidden-block", !isSpecial);
+        refs.normalSection.classList.toggle("hidden-block", isSpecial);
+      }
+
+      function autoCalcNextCheckDate() {
+        const days = Number(refs.inspectCycleDaysInput.value);
+        const baseDate = refs.lastCheckDateInput.value;
+        if (!Number.isFinite(days) || days <= 0 || !baseDate) {
+          if (!refs.nextCheckDateInput.value) {
+            refs.nextCheckDateInput.value = "";
+          }
+          return;
+        }
+        const date = new Date(`${baseDate}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+          return;
+        }
+        date.setDate(date.getDate() + days);
+        refs.nextCheckDateInput.value = formatDateTag(date);
+      }
+
+      function ensureCategoryIdByGroupAndType(groupName, typeName) {
+        let groupNode = categoryRoot.children.find((item) => item.name === groupName);
+        if (!groupNode) {
+          groupNode = createCategoryNode(groupName, {
+            source: "derived",
+            canDelete: false,
+          });
+          categoryRoot.children.push(groupNode);
+        }
+
+        let typeNode = groupNode.children.find((item) => item.name === typeName);
+        if (!typeNode) {
+          typeNode = createCategoryNode(typeName, {
+            source: "derived",
+            canDelete: false,
+          });
+          groupNode.children.push(typeNode);
+        }
+
+        groupNode.expanded = true;
+        rebuildCategoryMap();
+        return typeNode.id;
+      }
+
+      function generateLocalDeviceCode() {
+        const year = new Date().getFullYear();
+        let maxSeq = 0;
+        devices.forEach((item) => {
+          const matched = String(item.code || "").match(/EQ-\d{4}-(\d{4,})$/);
+          if (!matched) {
+            return;
+          }
+          const seq = Number(matched[1]);
+          if (Number.isFinite(seq)) {
+            maxSeq = Math.max(maxSeq, seq);
+          }
+        });
+        return `EQ-${year}-${String(maxSeq + 1).padStart(4, "0")}`;
+      }
+
+      function buildQrImageUrl(content, size = 320) {
+        const text = toDisplayText(content);
+        if (!text) {
+          return "";
+        }
+        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+      }
+
+      function buildReportLink(scanValue) {
+        const text = toDisplayText(scanValue);
+        const relative = text ? `inspection-report.html?scan=${encodeURIComponent(text)}` : "inspection-report.html";
+        const publicBase = getReportBaseUrl();
+        if (publicBase) {
+          try {
+            return new URL(relative, publicBase).href;
+          } catch (error) {
+            // Fall through to current-page resolution.
+          }
+        }
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return toAbsoluteUrl(relative);
+        }
+        return relative;
+      }
+
+      function normalizeReportLink(value, scanValue) {
+        const text = toDisplayText(value);
+        const fallback = scanValue ? buildReportLink(scanValue) : "";
+        if (!text) {
+          return fallback;
+        }
+        const publicBase = getReportBaseUrl();
+        try {
+          const parsed = new URL(text, publicBase || window.location.href);
+          if (publicBase && isLoopbackHost(parsed.hostname)) {
+            return new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, publicBase).href;
+          }
+          return parsed.href;
+        } catch (error) {
+          return fallback || text;
+        }
+      }
+
+      function getReportBaseUrl() {
+        const publicBase = String(state.publicBaseUrl || "").trim();
+        if (publicBase) {
+          return publicBase.endsWith("/") ? publicBase : `${publicBase}/`;
+        }
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/`;
+        }
+        try {
+          const apiUrl = new URL(state.apiConfig?.baseUrl || DEFAULT_API_CONFIG.baseUrl || resolveApiBaseUrl());
+          apiUrl.pathname = apiUrl.pathname.replace(/\/api(?:\/.*)?$/, "/") || "/";
+          apiUrl.search = "";
+          apiUrl.hash = "";
+          return apiUrl.href;
+        } catch (error) {
+          return "";
+        }
+      }
+
+      function isLoopbackHost(hostname) {
+        const host = String(hostname || "").trim().toLowerCase();
+        return ["localhost", "0.0.0.0", "::1", "[::1]"].includes(host) || host.startsWith("127.");
+      }
+
+      function toAbsoluteUrl(url) {
+        try {
+          return new URL(url, window.location.href).href;
+        } catch (error) {
+          return url;
+        }
+      }
+
+      function ensureDeviceQrFields(source) {
+        const data = source && typeof source === "object" ? source : {};
+        const code = toDisplayText(data.code);
+        const qrContent = toDisplayText(data.qrContent) || code;
+        const qrCodeNo = toDisplayText(data.qrCodeNo) || (code ? `QR-${code}` : "");
+        const scanReportLink = normalizeReportLink(data.scanReportLink, qrContent);
+        const qrPayload = scanReportLink || qrContent;
+        const qrImageUrlText = qrPayload ? buildQrImageUrl(qrPayload) : "";
+        return {
+          qrCodeNo,
+          qrContent,
+          qrImageUrlText,
+          scanReportLink,
+        };
+      }
+
+      function setReadonlyFieldValue(element, value) {
+        if (!element) {
+          return;
+        }
+        element.value = toDisplayText(value) || "-";
+      }
+
+      function openDetailModal(device) {
+        if (!device) {
+          return;
+        }
+
+        const qr = ensureDeviceQrFields(device);
+        Object.assign(device, qr);
+        const inspection = getDeviceInspectionStatus(device);
+
+        setReadonlyFieldValue(refs.detailCodeInput, device.code);
+        setReadonlyFieldValue(refs.detailNameInput, device.name);
+        setReadonlyFieldValue(refs.detailCategoryInput, findCategoryName(device.categoryId));
+        setReadonlyFieldValue(refs.detailTypeInput, device.deviceType || findCategoryLeafName(device.categoryId));
+        setReadonlyFieldValue(refs.detailModelInput, device.model);
+        setReadonlyFieldValue(refs.detailStatusInput, device.status);
+        setReadonlyFieldValue(refs.detailWorkshopInput, device.workshop);
+        setReadonlyFieldValue(refs.detailLocationInput, device.location);
+        setReadonlyFieldValue(refs.detailKeeperInput, device.keeper);
+        setReadonlyFieldValue(refs.detailInspectionInput, inspection);
+        setReadonlyFieldValue(refs.detailLastCheckInput, device.lastCheckDate);
+        setReadonlyFieldValue(refs.detailNextCheckInput, device.nextCheckDate);
+        setReadonlyFieldValue(refs.detailRemarkInput, device.remark);
+        setReadonlyFieldValue(refs.detailQrCodeNoInput, qr.qrCodeNo);
+        setReadonlyFieldValue(refs.detailQrContentInput, qr.qrContent);
+
+        const detailQrSrc = qr.qrImageUrlText || (qr.qrContent ? buildQrImageUrl(qr.qrContent) : "");
+        refs.detailQrImage.src = detailQrSrc;
+        refs.detailQrImage.alt = `${device.code || "设备"} 二维码`;
+
+        refs.detailModal.classList.remove("hidden");
+      }
+
+      function closeDetailModal() {
+        refs.detailModal.classList.add("hidden");
+      }
+
+      function openQrModal(device) {
+        if (!device) {
+          return;
+        }
+        const qr = ensureDeviceQrFields(device);
+        const shouldSyncCloud =
+          state.apiConfig.enableCloud &&
+          Boolean(device.cloudId) &&
+          (toDisplayText(device.qrCodeNo) !== qr.qrCodeNo ||
+            toDisplayText(device.qrContent) !== qr.qrContent ||
+            toDisplayText(device.qrImageUrlText) !== qr.qrImageUrlText);
+
+        Object.assign(device, qr);
+        state.viewingQrDeviceId = device.id;
+
+        refs.qrImage.src = qr.qrImageUrlText || "";
+        refs.qrImage.alt = `${device.code || "设备"} 二维码`;
+        refs.qrDeviceCodeInput.value = device.code || "";
+        refs.qrDeviceNameInput.value = device.name || "";
+        refs.qrContentInput.value = qr.qrContent || "";
+        refs.qrReportLinkInput.value = toAbsoluteUrl(qr.scanReportLink || "inspection-report.html");
+        refs.qrModal.classList.remove("hidden");
+
+        if (shouldSyncCloud) {
+          const patch = {
+            [FIELD_ALIASES.qrCodeNo]: qr.qrCodeNo,
+            [FIELD_ALIASES.qrContent]: qr.qrContent,
+            [FIELD_ALIASES.qrImageUrlText]: qr.qrImageUrlText,
+            [FIELD_ALIASES.scanReportLink]: qr.scanReportLink,
+          };
+          void updateCloudRecord(device.cloudId, patch).catch((error) => {
+            console.warn("sync device qr failed:", error && error.message ? error.message : error);
+          });
+        }
+      }
+
+      function closeQrModal() {
+        state.viewingQrDeviceId = "";
+        refs.qrModal.classList.add("hidden");
+      }
+
+      async function copyQrContent() {
+        const text = refs.qrContentInput.value.trim();
+        if (!text) {
+          showToast("当前设备暂无二维码码值");
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast("二维码码值已复制");
+        } catch (error) {
+          showToast("复制失败，请手动复制");
+        }
+      }
+
+      function downloadQrImage() {
+        const device = devices.find((item) => item.id === state.viewingQrDeviceId);
+        const src = refs.qrImage.src;
+        if (!src) {
+          showToast("当前没有二维码可下载");
+          return;
+        }
+        const link = document.createElement("a");
+        link.href = src;
+        link.download = `${device?.code || "设备"}_二维码.png`;
+        link.click();
+      }
+
+      function openReportByQr() {
+        const link = refs.qrReportLinkInput.value.trim();
+        if (!link) {
+          return;
+        }
+        window.open(link, "_blank");
+      }
+
+      function collectBatchQrPrintDevices() {
+        const selected = devices.filter((item) => state.selectedDeviceIds.has(item.id));
+        if (selected.length) {
+          return selected;
+        }
+
+        const filtered = filterDevices();
+        if (!filtered.length) {
+          showToast("当前没有可打印的设备");
+          return [];
+        }
+
+        const shouldPrintFiltered = window.confirm(`当前未勾选设备，是否直接打印当前筛选的 ${filtered.length} 台设备二维码？`);
+        if (!shouldPrintFiltered) {
+          return [];
+        }
+        return filtered;
+      }
+
+      async function syncQrFieldsForDevices(deviceList) {
+        if (!state.apiConfig.enableCloud || !Array.isArray(deviceList) || !deviceList.length) {
+          return { syncedCount: 0, skippedCount: deviceList?.length || 0 };
+        }
+
+        let syncedCount = 0;
+        let skippedCount = 0;
+
+        for (const device of deviceList) {
+          const qr = ensureDeviceQrFields(device);
+          const currentQrCodeNo = toDisplayText(device.qrCodeNo);
+          const currentQrContent = toDisplayText(device.qrContent);
+          const currentQrImageUrlText = toDisplayText(device.qrImageUrlText);
+          const currentScanReportLink = toDisplayText(device.scanReportLink);
+
+          if (!device.cloudId) {
+            Object.assign(device, qr);
+            skippedCount += 1;
+            continue;
+          }
+
+          const needSync =
+            currentQrCodeNo !== qr.qrCodeNo ||
+            currentQrContent !== qr.qrContent ||
+            currentQrImageUrlText !== qr.qrImageUrlText ||
+            currentScanReportLink !== qr.scanReportLink;
+
+          Object.assign(device, qr);
+          if (!needSync) {
+            skippedCount += 1;
+            continue;
+          }
+
+          await updateCloudRecord(device.cloudId, {
+            [FIELD_ALIASES.qrCodeNo]: qr.qrCodeNo,
+            [FIELD_ALIASES.qrContent]: qr.qrContent,
+            [FIELD_ALIASES.qrImageUrlText]: qr.qrImageUrlText,
+            [FIELD_ALIASES.scanReportLink]: qr.scanReportLink,
+          });
+          syncedCount += 1;
+        }
+
+        return { syncedCount, skippedCount };
+      }
+
+      function buildBatchPrintHtml(printItems) {
+        const cardsHtml = printItems
+          .map((device) => {
+            const qr = ensureDeviceQrFields(device);
+            Object.assign(device, qr);
+            const imageUrl = qr.qrImageUrlText || buildQrImageUrl(qr.qrContent || device.code);
+            const title = [toDisplayText(device.code), toDisplayText(device.name)].filter(Boolean).join(" ");
+            return `
+              <article class="card">
+                <h2>${escapeHtml(title || "设备二维码")}</h2>
+                <img class="qr-image" src="${escapeHtml(imageUrl)}" alt="二维码" />
+                <p><span>扫码码值：</span>${escapeHtml(qr.qrContent || "-")}</p>
+                <p><span>二维码编号：</span>${escapeHtml(qr.qrCodeNo || "-")}</p>
+              </article>
+            `;
+          })
+          .join("");
+
+        return `
+          <!doctype html>
+          <html lang="zh-CN">
+            <head>
+              <meta charset="UTF-8" />
+              <title>设备二维码批量打印</title>
+              <style>
+                @page {
+                  size: A4 portrait;
+                  margin: 8mm;
+                }
+                * {
+                  box-sizing: border-box;
+                }
+                body {
+                  margin: 0;
+                  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+                  color: #1f2a3a;
+                }
+                .print-head {
+                  padding: 10px 6px 12px;
+                  border-bottom: 1px solid #d7deea;
+                  margin-bottom: 10px;
+                }
+                .print-head h1 {
+                  margin: 0;
+                  font-size: 20px;
+                }
+                .print-head p {
+                  margin: 6px 0 0;
+                  color: #6f7d93;
+                  font-size: 13px;
+                }
+                .card-grid {
+                  display: grid;
+                  grid-template-columns: repeat(3, minmax(0, 1fr));
+                  gap: 10px;
+                }
+                .card {
+                  border: 1px solid #d7deea;
+                  border-radius: 6px;
+                  padding: 10px;
+                  break-inside: avoid;
+                  page-break-inside: avoid;
+                }
+                .card h2 {
+                  margin: 0 0 8px;
+                  font-size: 14px;
+                  line-height: 1.4;
+                }
+                .qr-image {
+                  width: 150px;
+                  height: 150px;
+                  display: block;
+                  margin: 0 auto 8px;
+                  object-fit: contain;
+                }
+                .card p {
+                  margin: 4px 0;
+                  font-size: 12px;
+                  line-height: 1.45;
+                  word-break: break-all;
+                }
+                .card p span {
+                  color: #6f7d93;
+                }
+                @media print {
+                  .card-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <header class="print-head">
+                <h1>设备二维码批量打印</h1>
+                <p>打印数量：${printItems.length} 台</p>
+                <button onclick="window.print()">打印</button>
+              </header>
+              <main class="card-grid">${cardsHtml}</main>
+            </body>
+          </html>
+        `;
+      }
+
+      async function batchPrintSelectedQrCodes() {
+        const printItems = collectBatchQrPrintDevices();
+        if (!printItems.length) {
+          return;
+        }
+
+        refs.batchPrintQrBtn.disabled = true;
+
+        try {
+          const syncResult = await syncQrFieldsForDevices(printItems);
+          const html = buildBatchPrintHtml(printItems);
+          const printWindow = window.open("", "_blank");
+          if (!printWindow) {
+            showToast("浏览器阻止了弹窗，请允许后重试");
+            return;
+          }
+
+          printWindow.document.open();
+          printWindow.document.write(html);
+          printWindow.document.close();
+
+          if (syncResult.syncedCount > 0) {
+            showToast(`已同步 ${syncResult.syncedCount} 台设备二维码，并打开打印页`);
+          } else {
+            showToast(`已打开 ${printItems.length} 台设备二维码打印页`);
+          }
+        } catch (error) {
+          showToast(`批量打印二维码失败：${error.message}`);
+          return;
+        } finally {
+          refs.batchPrintQrBtn.disabled = false;
+        }
+      }
+
+      function openApiModal() {
+        refs.apiBaseUrlInput.value = state.apiConfig.baseUrl;
+        refs.apiAppIdInput.value = state.apiConfig.appId;
+        refs.apiEntryIdInput.value = state.apiConfig.entryId;
+        refs.apiAuthInput.value = state.apiConfig.authToken;
+        refs.apiExtraHeadersInput.value = state.apiConfig.extraHeaders;
+        refs.apiListPathsInput.value = state.apiConfig.listPaths;
+        refs.apiEnableCloudInput.checked = Boolean(state.apiConfig.enableCloud);
+        refs.apiModal.classList.remove("hidden");
+      }
+
+      function closeApiModal() {
+        refs.apiModal.classList.add("hidden");
+      }
+
+      function saveApiConfigFromForm(event) {
+        event.preventDefault();
+        const next = {
+          baseUrl: String(refs.apiBaseUrlInput.value || "").trim(),
+          appId: String(refs.apiAppIdInput.value || "").trim(),
+          entryId: String(refs.apiEntryIdInput.value || "").trim(),
+          authToken: String(refs.apiAuthInput.value || "").trim(),
+          extraHeaders: String(refs.apiExtraHeadersInput.value || "{}").trim(),
+          listPaths: String(refs.apiListPathsInput.value || "").trim(),
+          enableCloud: refs.apiEnableCloudInput.checked,
+        };
+
+        if (!next.baseUrl || !next.appId || !next.entryId) {
+          showToast("请填写 Base URL / App ID / Entry ID");
+          return;
+        }
+
+        try {
+          parseExtraHeaders(next.extraHeaders);
+        } catch (error) {
+          showToast(`自定义 Headers JSON 格式错误：${error.message}`);
+          return;
+        }
+
+        state.apiConfig = {
+          ...state.apiConfig,
+          ...next,
+        };
+        saveApiConfig();
+        closeApiModal();
+        refreshApiStatus();
+
+        if (state.apiConfig.enableCloud) {
+          void bootstrapCloudData();
+        } else {
+          showToast("已切换到离线模式");
+        }
+      }
+
+      function firstLeafCategoryId() {
+        const stack = [...categoryRoot.children];
+        while (stack.length) {
+          const current = stack.shift();
+          if (!current.children.length) {
+            return current.id;
+          }
+          stack.unshift(...current.children);
+        }
+        return "";
+      }
+
+      function populateCategorySelect() {
+        populateCategoryGroupSelect();
+        populateDeviceTypeSelect();
+      }
+
+      async function deleteDevices(ids) {
+        const idSet = new Set(ids);
+        if (!idSet.size) {
+          showToast("请先选择要删除的设备");
+          return;
+        }
+
+        const ok = window.confirm(`确认删除选中的 ${idSet.size} 台设备吗？`);
+        if (!ok) {
+          return;
+        }
+
+        const selectedItems = devices.filter((item) => idSet.has(item.id));
+        const cloudIds = selectedItems.map((item) => item.cloudId).filter(Boolean);
+
+        if (state.apiConfig.enableCloud && cloudIds.length) {
+          try {
+            await deleteCloudRecords(cloudIds);
+          } catch (error) {
+            showToast(`云端删除失败：${error.message}`);
+            return;
+          }
+        }
+
+        for (let i = devices.length - 1; i >= 0; i -= 1) {
+          if (idSet.has(devices[i].id)) {
+            devices.splice(i, 1);
+          }
+        }
+
+        ids.forEach((id) => state.selectedDeviceIds.delete(id));
+        renderTree();
+        renderTable();
+
+        if (state.apiConfig.enableCloud && cloudIds.length) {
+          await syncCloudDevices({ silent: true });
+          showToast(`已删除 ${idSet.size} 台设备（云端已同步）`);
+        } else {
+          showToast(`已删除 ${idSet.size} 台设备`);
+        }
+      }
+
+      function createCategory(name, parentId, overrides = {}) {
+        const parent = categoryMap.get(parentId)?.node;
+        if (!parent) {
+          return null;
+        }
+
+        const exists = parent.children.find((item) => item.name === name);
+        if (exists) {
+          return exists;
+        }
+
+        const node = createCategoryNode(name, overrides);
+        parent.children.push(node);
+        parent.expanded = true;
+        rebuildCategoryMap();
+        return node;
+      }
+
+      function canDeleteCategoryNode(categoryId) {
+        const meta = categoryMap.get(categoryId);
+        if (!meta || !meta.parent) {
+          return false;
+        }
+        if (meta.parent.id === "root") {
+          return false;
+        }
+        const parentMeta = categoryMap.get(meta.parent.id);
+        if (!parentMeta || !parentMeta.parent || parentMeta.parent.id !== "root") {
+          return false;
+        }
+        return meta.node.canDelete === true;
+      }
+
+      async function deleteCategoryNode(categoryId) {
+        if (!canDeleteCategoryNode(categoryId)) {
+          showToast("该节点不支持删除");
+          return;
+        }
+        const meta = categoryMap.get(categoryId);
+        if (!meta || !meta.parent) {
+          showToast("节点不存在，请刷新重试");
+          return;
+        }
+
+        if (meta.node.children.length) {
+          showToast("该节点下还有子级，暂不支持删除");
+          return;
+        }
+
+        const bindCount = devices.filter((item) => item.categoryId === categoryId).length;
+        if (bindCount) {
+          showToast(`该类型下还有 ${bindCount} 台设备，请先调整设备分类`);
+          return;
+        }
+
+        const ok = window.confirm(`确认删除设备类型“${meta.node.name}”吗？`);
+        if (!ok) {
+          return;
+        }
+
+        if (state.apiConfig.enableCloud && meta.node.cloudId) {
+          try {
+            await requestEntryOnce(
+              "data_delete",
+              { data_id: meta.node.cloudId },
+              "POST",
+              getDeviceTypeEntryOptions()
+            );
+            await syncTypeLibrary({ silent: true });
+            state.selectedCategoryId = meta.parent.id || "root";
+            const selectedName = categoryMap.get(state.selectedCategoryId)?.node?.name || "全部设备";
+            setCategoryHint(`当前分类：${selectedName}`);
+            renderTree();
+            renderTable();
+            showToast("设备类型已删除（云端已同步）");
+            return;
+          } catch (error) {
+            showToast(`删除设备类型失败：${error.message}`);
+            return;
+          }
+        }
+
+        const index = meta.parent.children.findIndex((item) => item.id === categoryId);
+        if (index < 0) {
+          showToast("删除失败，请重试");
+          return;
+        }
+        meta.parent.children.splice(index, 1);
+
+        if (state.selectedCategoryId === categoryId) {
+          state.selectedCategoryId = meta.parent.id || "root";
+        }
+        state.openTreeDeleteNodeId = "";
+
+        rebuildCategoryMap();
+        const selectedName = categoryMap.get(state.selectedCategoryId)?.node?.name || "全部设备";
+        setCategoryHint(`当前分类：${selectedName}`);
+        renderTree();
+        renderTable();
+        showToast("设备类型已删除");
+      }
+
+      function findGroupCategoryId(categoryId) {
+        let cursor = categoryMap.get(categoryId);
+        while (cursor && cursor.node.id !== "root" && cursor.parent && cursor.parent.id !== "root") {
+          cursor = categoryMap.get(cursor.parent.id);
+        }
+        if (cursor && cursor.node.id !== "root") {
+          return cursor.node.id;
+        }
+        return categoryRoot.children[0]?.id || "";
+      }
+
+      function fillCategoryGroupOptions(selectedGroupId = "") {
+        const groups = categoryRoot.children.slice();
+        refs.categoryParentInput.innerHTML = "";
+        groups.forEach((group) => {
+          const option = document.createElement("option");
+          option.value = group.id;
+          option.textContent = group.name;
+          refs.categoryParentInput.appendChild(option);
+        });
+
+        const preferred = groups.some((item) => item.id === selectedGroupId) ? selectedGroupId : groups[0]?.id || "";
+        refs.categoryParentInput.value = preferred;
+      }
+
+      function openCategoryTypeModal() {
+        state.openTreeDeleteNodeId = "";
+        const selectedGroupId = findGroupCategoryId(state.selectedCategoryId);
+        refs.categoryTypeForm.reset();
+        fillCategoryGroupOptions(selectedGroupId);
+        refs.categoryTypeModal.classList.remove("hidden");
+        setTimeout(() => refs.categoryTypeNameInput.focus(), 0);
+      }
+
+      function closeCategoryTypeModal() {
+        refs.categoryTypeModal.classList.add("hidden");
+      }
+
+      async function saveCategoryType(event) {
+        event.preventDefault();
+        const groupId = String(refs.categoryParentInput.value || "").trim();
+        const typeName = String(refs.categoryTypeNameInput.value || "").trim();
+
+        if (!groupId) {
+          showToast("请选择所属分类");
+          return;
+        }
+        if (!typeName) {
+          showToast("请填写设备类型名称");
+          return;
+        }
+
+        const groupNode = categoryMap.get(groupId)?.node;
+        if (!groupNode) {
+          showToast("所属分类不存在，请重试");
+          return;
+        }
+        if (groupNode.id === "root") {
+          showToast("不能直接在根节点下新增设备类型");
+          return;
+        }
+
+        const exists = groupNode.children.find((item) => item.name === typeName);
+        if (exists) {
+          state.selectedCategoryId = exists.id;
+          setCategoryHint(`当前分类：${exists.name}`);
+          renderTree();
+          renderTable();
+          closeCategoryTypeModal();
+          showToast(`设备类型已存在：${typeName}`);
+          return;
+        }
+
+        if (state.apiConfig.enableCloud) {
+          try {
+            await requestEntryOnce(
+              "data_create",
+              {
+                data: {
+                  [DEVICE_TYPE_FIELD_ALIASES.categoryGroup]: groupNode.name,
+                  [DEVICE_TYPE_FIELD_ALIASES.name]: typeName,
+                },
+              },
+              "POST",
+              getDeviceTypeEntryOptions()
+            );
+            await syncTypeLibrary({ silent: true });
+            state.selectedCategoryId = findCategoryIdByGroupAndType(groupNode.name, typeName) || groupId || "root";
+            const selectedName = categoryMap.get(state.selectedCategoryId)?.node?.name || typeName;
+            setCategoryHint(`当前分类：${selectedName}`);
+            renderTree();
+            renderTable();
+            closeCategoryTypeModal();
+            showToast(`已新增设备类型：${typeName}`);
+            return;
+          } catch (error) {
+            showToast(`新增设备类型失败：${error.message}`);
+            return;
+          }
+        }
+
+        const node = createCategory(typeName, groupId, {
+          source: "local",
+          canDelete: true,
+        });
+        if (!node) {
+          showToast("新增设备类型失败");
+          return;
+        }
+
+        state.selectedCategoryId = node.id;
+        setCategoryHint(`当前分类：${node.name}`);
+        renderTree();
+        renderTable();
+        closeCategoryTypeModal();
+        showToast(`已新增设备类型：${typeName}`);
+      }
+
+      function escapeCsv(value) {
+        const text = String(value ?? "");
+        if (/[",\n]/.test(text)) {
+          return `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      }
+
+      function exportCsv() {
+        const filtered = filterDevices();
+        const toExport = state.selectedDeviceIds.size
+          ? filtered.filter((item) => state.selectedDeviceIds.has(item.id))
+          : filtered;
+
+        if (!toExport.length) {
+          showToast("没有可导出的设备数据");
+          return;
+        }
+
+        const headers = ["设备编号", "设备名称", "分类", "状态", "型号", "位置", "责任人", "入厂日期", "上次检验日期", "点检状态", "备注"];
+
+        const lines = [
+          headers.join(","),
+          ...toExport.map((item) =>
+            [
+              item.code,
+              item.name,
+              findCategoryName(item.categoryId),
+              item.status,
+              item.model,
+              item.location,
+              item.keeper,
+              item.purchaseDate,
+              item.lastCheckDate,
+              getDeviceInspectionStatus(item),
+              item.remark,
+            ]
+              .map(escapeCsv)
+              .join(",")
+          ),
+        ];
+
+        const csv = `\uFEFF${lines.join("\n")}`;
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const dateTag = formatDateTag(new Date());
+        link.href = url;
+        link.download = `设备台账_${dateTag}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showToast(`导出成功，共 ${toExport.length} 条`);
+      }
+
+      function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let value = "";
+        let inQuote = false;
+
+        for (let i = 0; i < text.length; i += 1) {
+          const char = text[i];
+          const next = text[i + 1];
+
+          if (char === '"') {
+            if (inQuote && next === '"') {
+              value += '"';
+              i += 1;
+            } else {
+              inQuote = !inQuote;
+            }
+            continue;
+          }
+
+          if (char === "," && !inQuote) {
+            row.push(value);
+            value = "";
+            continue;
+          }
+
+          if ((char === "\n" || char === "\r") && !inQuote) {
+            if (char === "\r" && next === "\n") {
+              i += 1;
+            }
+            row.push(value);
+            if (row.some((cell) => String(cell).trim() !== "")) {
+              rows.push(row);
+            }
+            row = [];
+            value = "";
+            continue;
+          }
+
+          value += char;
+        }
+
+        if (value !== "" || row.length) {
+          row.push(value);
+          if (row.some((cell) => String(cell).trim() !== "")) {
+            rows.push(row);
+          }
+        }
+
+        return rows;
+      }
+
+      function findOrCreateCategoryByPath(pathText, overrides = {}) {
+        if (!pathText || !String(pathText).trim()) {
+          return "root";
+        }
+
+        const normalized = String(pathText).replaceAll("＞", ">").replaceAll("|", "/");
+        const segments = normalized
+          .split(/[>/\\]/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+        if (!segments.length) {
+          return "root";
+        }
+
+        let parent = categoryRoot;
+        for (const name of segments) {
+          let child = parent.children.find((item) => item.name === name);
+          if (!child) {
+            child = createCategoryNode(name, {
+              source: overrides.source || "derived",
+              canDelete: Boolean(overrides.canDelete),
+            });
+            parent.children.push(child);
+          }
+          parent.expanded = true;
+          parent = child;
+        }
+
+        rebuildCategoryMap();
+        return parent.id;
+      }
+
+      function normalizeHeader(header) {
+        return String(header || "").trim().toLowerCase();
+      }
+
+      function importCsv(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const raw = String(reader.result || "").replace(/^\uFEFF/, "");
+          const rows = parseCsv(raw);
+          if (!rows.length) {
+            showToast("导入失败：CSV 内容为空");
+            return;
+          }
+
+          const headers = rows[0].map(normalizeHeader);
+          const fieldAlias = {
+            "设备编号": "code",
+            "编号": "code",
+            code: "code",
+            "设备名称": "name",
+            "名称": "name",
+            name: "name",
+            "分类": "categoryPath",
+            "设备分类": "categoryPath",
+            category: "categoryPath",
+            categorypath: "categoryPath",
+            "状态": "status",
+            status: "status",
+            "型号": "model",
+            "设备型号": "model",
+            "型号规格": "model",
+            model: "model",
+            "位置": "location",
+            "使用地点": "location",
+            "使用地点/单位": "location",
+            "安装位置": "location",
+            location: "location",
+            "责任人": "keeper",
+            "维护人": "keeper",
+            keeper: "keeper",
+            owner: "keeper",
+            "入厂日期": "purchaseDate",
+            "购置日期": "purchaseDate",
+            purchasedate: "purchaseDate",
+            "最近点检": "lastCheckDate",
+            "上次检验日期": "lastCheckDate",
+            "最近点检日期": "lastCheckDate",
+            lastcheckdate: "lastCheckDate",
+            "点检状态": "inspectionStatus",
+            inspectionstatus: "inspectionStatus",
+            "备注": "remark",
+            remark: "remark",
+          };
+
+          const mapped = headers.map((h) => fieldAlias[h] || "");
+          let added = 0;
+
+          rows.slice(1).forEach((row, idx) => {
+            const entry = {};
+            mapped.forEach((field, index) => {
+              if (field) {
+                entry[field] = (row[index] || "").trim();
+              }
+            });
+
+            if (!entry.name) {
+              return;
+            }
+
+            const categoryId = findOrCreateCategoryByPath(entry.categoryPath);
+            const code = entry.code || `EQ-IMP-${Date.now().toString().slice(-6)}-${idx + 1}`;
+            const qr = ensureDeviceQrFields({ code });
+
+            devices.push({
+              id: `dev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+              cloudId: "",
+              code,
+              name: entry.name,
+              categoryId,
+              status: DEVICE_STATUS_OPTIONS.includes(entry.status) ? entry.status : "启用",
+              model: entry.model || "",
+              location: entry.location || "",
+              keeper: entry.keeper || "",
+              purchaseDate: normalizeDateInput(entry.purchaseDate) || "",
+              lastCheckDate: normalizeDateInput(entry.lastCheckDate) || "",
+              inspectionStatus: INSPECTION_STATUS_OPTIONS.includes(entry.inspectionStatus) ? entry.inspectionStatus : "",
+              remark: entry.remark || "",
+              qrCodeNo: qr.qrCodeNo,
+              qrContent: qr.qrContent,
+              qrImageUrlText: qr.qrImageUrlText,
+              scanReportLink: qr.scanReportLink,
+              rawRecord: null,
+            });
+            added += 1;
+          });
+
+          renderTree();
+          renderTable();
+
+          if (!added) {
+            showToast("未导入有效数据，请检查 CSV 字段");
+          } else {
+            showToast(`导入完成，新增 ${added} 台设备（本地）`);
+          }
+        };
+
+        reader.onerror = () => showToast("导入失败：文件读取异常");
+        reader.readAsText(file, "utf-8");
+      }
+
+      async function saveDeviceFromForm(event) {
+        event.preventDefault();
+        const form = new FormData(refs.deviceForm);
+        const target = state.editingDeviceId ? devices.find((item) => item.id === state.editingDeviceId) : null;
+
+        const categoryGroup = String(form.get("categoryGroup") || "").trim();
+        const deviceType = String(form.get("deviceType") || "").trim();
+        if (!categoryGroup || !deviceType) {
+          showToast("请填写所属分类和设备类型");
+          return;
+        }
+        const categoryId = ensureCategoryIdByGroupAndType(categoryGroup, deviceType);
+        const inspectCycleDaysRaw = String(form.get("inspectCycleDays") || "").trim();
+        const inspectCycleDaysNum = Number(inspectCycleDaysRaw);
+        const code = target?.code || generateLocalDeviceCode();
+
+        const payload = {
+          code,
+          name: String(form.get("name") || "").trim(),
+          categoryId,
+          categoryGroup,
+          deviceType,
+          status: normalizeStatusLabel(String(form.get("status") || "启用").trim()),
+          model: String(form.get("model") || "").trim(),
+          innerCode: String(form.get("innerCode") || "").trim(),
+          workshop: String(form.get("workshop") || "").trim(),
+          assetCategory: String(form.get("assetCategory") || "").trim(),
+          vendor: String(form.get("vendor") || "").trim(),
+          inspectCycleDays:
+            inspectCycleDaysRaw === "" || !Number.isFinite(inspectCycleDaysNum) ? "" : String(Math.max(0, inspectCycleDaysNum)),
+          purchaseDate: String(form.get("purchaseDate") || "").trim(),
+          lastCheckDate: String(form.get("lastCheckDate") || "").trim(),
+          nextCheckDate: String(form.get("nextCheckDate") || "").trim(),
+          registerCode: String(form.get("registerCode") || "").trim(),
+          volume: String(form.get("volume") || "").trim(),
+          lineType: String(form.get("lineType") || "").trim(),
+          area: String(form.get("area") || "").trim(),
+          powerSupply: String(form.get("powerSupply") || "").trim(),
+          totalPower: String(form.get("totalPower") || "").trim(),
+          sourceCategory: String(form.get("sourceCategory") || "").trim(),
+          remark: String(form.get("remark") || "").trim(),
+          location: String(form.get("workshop") || "").trim() || String(form.get("area") || "").trim(),
+          keeper: target?.keeper || "",
+        };
+        Object.assign(payload, ensureDeviceQrFields(target ? { ...target, ...payload } : payload));
+
+        if (!payload.name) {
+          showToast("请填写设备名称");
+          return;
+        }
+
+        const conflict = payload.code ? devices.find((item) => item.code === payload.code && item.id !== state.editingDeviceId) : null;
+        if (conflict && !target) {
+          showToast(`设备编号已存在：${payload.code}`);
+          return;
+        }
+
+        const useCloud = state.apiConfig.enableCloud;
+
+        if (useCloud) {
+          try {
+            const cloudFields = buildCloudFieldsFromForm(payload, { isEdit: Boolean(target) });
+            if (target && target.cloudId) {
+              await updateCloudRecord(target.cloudId, cloudFields);
+            } else {
+              await createCloudRecord(cloudFields);
+            }
+            closeDeviceModal();
+            await syncCloudDevices({ silent: true });
+            showToast(target ? "设备已更新（云端）" : "设备已新增（云端）");
+            return;
+          } catch (error) {
+            showToast(`云端保存失败：${error.message}`);
+            return;
+          }
+        }
+
+        if (target) {
+          Object.assign(target, payload, {
+            inspectionStatus: payload.lastCheckDate ? getInspectionStatus(payload.lastCheckDate) : target.inspectionStatus || "",
+          });
+          showToast("设备已更新");
+        } else {
+          devices.push({
+            id: `dev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            cloudId: "",
+            ...payload,
+            inspectionStatus: payload.lastCheckDate ? getInspectionStatus(payload.lastCheckDate) : "",
+            rawRecord: null,
+          });
+          showToast("设备已新增");
+        }
+
+        closeDeviceModal();
+        renderTree();
+        renderTable();
+      }
+
+      async function handleTableClick(event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
+
+        const action = target.dataset.action;
+        const id = target.dataset.id;
+        if (!action || !id) {
+          return;
+        }
+
+        const device = devices.find((item) => item.id === id);
+        if (!device) {
+          return;
+        }
+
+        if (action === "edit") {
+          openDeviceModal("edit", device);
+        }
+
+        if (action === "detail") {
+          openDetailModal(device);
+        }
+
+        if (action === "qr") {
+          openQrModal(device);
+        }
+
+        if (action === "delete") {
+          await deleteDevices([id]);
+        }
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => refs.toast.classList.remove("show"), 2200);
+      }
+
+      function escapeHtml(text) {
+        return String(text ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function refreshApiStatus() {
+        if (!state.apiConfig.enableCloud) {
+          refs.apiStatusText.textContent = "云端：未启用（当前离线模式）";
+          return;
+        }
+        if (state.cloudLoading) {
+          refs.apiStatusText.textContent = "云端：同步中...";
+          return;
+        }
+        if (state.cloudLastError) {
+          refs.apiStatusText.textContent = `云端：连接失败（${state.cloudLastError}）`;
+          return;
+        }
+        if (state.cloudLoadedAt) {
+          refs.apiStatusText.textContent = `云端：已连接（${state.cloudLoadedAt}）`;
+          return;
+        }
+        refs.apiStatusText.textContent = "云端：已启用，待同步";
+      }
+
+      function parseExtraHeaders(rawText) {
+        if (!rawText || !rawText.trim()) {
+          return {};
+        }
+        const parsed = JSON.parse(rawText);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new Error("必须是 JSON 对象");
+        }
+        return parsed;
+      }
+
+      function stripTrailingSlash(value) {
+        return String(value || "").replace(/\/+$/, "");
+      }
+
+      function buildEntryUrl(action, entryOptions = {}) {
+        const base = stripTrailingSlash(entryOptions.baseUrl || state.apiConfig.baseUrl);
+        const appId = String(entryOptions.appId || state.apiConfig.appId || "").trim();
+        const entryId = String(entryOptions.entryId || state.apiConfig.entryId || "").trim();
+        const trimmedAction = String(action || "").replace(/^\/+/, "");
+        if (/\/app\/[^/]+\/entry\/[^/]+$/.test(base)) {
+          return `${base}/${trimmedAction}`;
+        }
+        return `${base}/app/${appId}/entry/${entryId}/${trimmedAction}`;
+      }
+
+      function getRequestHeaders() {
+        const headers = {
+          "Content-Type": "application/json",
+        };
+        const token = state.apiConfig.authToken.trim();
+        if (token) {
+          headers.Authorization = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+          // 兼容部分接口使用 API Key 专用请求头
+          headers["X-API-Key"] = token;
+          headers["API-Key"] = token;
+          headers.api_key = token;
+        }
+        const extra = parseExtraHeaders(state.apiConfig.extraHeaders);
+        return { ...headers, ...extra };
+      }
+
+      function safeJsonParse(text) {
+        try {
+          return JSON.parse(text);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function isPlainObject(value) {
+        return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function previewPayload(value, maxLength = 260) {
+        try {
+          const text = JSON.stringify(value);
+          if (text.length <= maxLength) {
+            return text;
+          }
+          return `${text.slice(0, maxLength)}...`;
+        } catch (error) {
+          const text = String(value ?? "");
+          if (text.length <= maxLength) {
+            return text;
+          }
+          return `${text.slice(0, maxLength)}...`;
+        }
+      }
+
+      function objectValuesAsObjectArray(value) {
+        if (!isPlainObject(value)) {
+          return null;
+        }
+        const entries = Object.values(value);
+        if (!entries.length) {
+          return [];
+        }
+        const allObjects = entries.every((item) => item && typeof item === "object");
+        return allObjects ? entries : null;
+      }
+
+      function extractPossibleTotal(result) {
+        const keys = ["total", "count", "data_count", "rows_count", "records_total", "size"];
+        const queue = [result];
+        const visited = new Set();
+        while (queue.length) {
+          const current = queue.shift();
+          if (!isPlainObject(current)) {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          for (const key of keys) {
+            if (!Object.prototype.hasOwnProperty.call(current, key)) {
+              continue;
+            }
+            const raw = Number(current[key]);
+            if (Number.isFinite(raw)) {
+              return raw;
+            }
+          }
+
+          Object.values(current).forEach((value) => {
+            if (isPlainObject(value)) {
+              queue.push(value);
+            }
+          });
+        }
+        return null;
+      }
+
+      function isApiSuccess(result) {
+        if (!result || typeof result !== "object") {
+          return true;
+        }
+        if (result.success === true || result.ok === true) {
+          return true;
+        }
+        const code = result.code ?? result.errcode ?? result.error_code ?? result.status;
+        if (code == null) {
+          return true;
+        }
+        if ([0, "0", 200, "200", 1, "1"].includes(code)) {
+          return true;
+        }
+        if (typeof code === "string" && /^(ok|success)$/i.test(code)) {
+          return true;
+        }
+        return false;
+      }
+
+      function extractApiMessage(result) {
+        if (!result || typeof result !== "object") {
+          return "";
+        }
+        return String(
+          result.msg ||
+            result.message ||
+            result.error ||
+            result.errmsg ||
+            result.error_msg ||
+            result.detail ||
+            result.reason ||
+            ""
+        ).trim();
+      }
+
+      function appendQuery(url, params) {
+        const entries = Object.entries(params || {}).filter(([, value]) => value !== undefined && value !== null && value !== "");
+        if (!entries.length) {
+          return url;
+        }
+        const query = entries
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join("&");
+        return `${url}${url.includes("?") ? "&" : "?"}${query}`;
+      }
+
+      async function requestEntryOnce(action, body = {}, method = "POST", entryOptions = {}) {
+        const headers = getRequestHeaders();
+        let url = buildEntryUrl(action, entryOptions);
+        const options = {
+          method,
+          headers,
+        };
+
+        if (method === "GET") {
+          url = appendQuery(url, body);
+        } else {
+          options.body = JSON.stringify(body || {});
+        }
+
+        let response;
+        try {
+          response = await fetch(url, options);
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text) || { raw: text };
+
+        if (!response.ok) {
+          const message = extractApiMessage(result) || `HTTP ${response.status}`;
+          throw new Error(message);
+        }
+        if (!isApiSuccess(result)) {
+          const message = extractApiMessage(result) || "接口返回失败";
+          throw new Error(message);
+        }
+        return result;
+      }
+
+      async function requestEntryWithPayloads(action, payloads, methods = ["POST"], entryOptions = {}) {
+        const normalizedPayloads = payloads.length ? payloads : [{}];
+        let lastError = null;
+        for (const method of methods) {
+          for (const payload of normalizedPayloads) {
+            try {
+              return await requestEntryOnce(action, payload, method, entryOptions);
+            } catch (error) {
+              lastError = error;
+            }
+          }
+        }
+        throw lastError || new Error("接口请求失败");
+      }
+
+      function extractRecordArray(result) {
+        const queue = [result];
+        const visited = new Set();
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object") {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            if (!current.length || typeof current[0] === "object") {
+              return current;
+            }
+            continue;
+          }
+
+          const preferredKeys = [
+            "list",
+            "rows",
+            "items",
+            "records",
+            "data_list",
+            "entry_list",
+            "entry_data_list",
+            "datas",
+            "result",
+            "results",
+            "content",
+            "data",
+          ];
+          for (const key of preferredKeys) {
+            const value = current[key];
+            if (Array.isArray(value) && (!value.length || typeof value[0] === "object")) {
+              return value;
+            }
+            const objectArray = objectValuesAsObjectArray(value);
+            if (objectArray) {
+              return objectArray;
+            }
+          }
+
+          // 某些接口会把记录对象直接放在顶层 map 里
+          const topObjectArray = objectValuesAsObjectArray(current);
+          if (topObjectArray && topObjectArray.length) {
+            return topObjectArray;
+          }
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        const total = extractPossibleTotal(result);
+        if (total === 0) {
+          return [];
+        }
+        return null;
+      }
+
+      function getListPathCandidates() {
+        const userPaths = String(state.apiConfig.listPaths || "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const defaults = ["data", "data_search", "data_list", "data_query", "data_find", "data_page"];
+        return Array.from(new Set([...userPaths, ...defaults]));
+      }
+
+      async function fetchEntryRecords(entryOptions = {}) {
+        const listPayloadCandidates = [
+          { page: 1, limit: 1000 },
+          { page_no: 1, page_size: 1000 },
+          { pageNum: 1, pageSize: 1000 },
+          { offset: 0, limit: 1000 },
+          { start: 0, limit: 1000 },
+          {},
+        ];
+
+        let lastError = null;
+        for (const path of getListPathCandidates()) {
+          try {
+            const result = await requestEntryWithPayloads(path, listPayloadCandidates, ["POST", "GET"], entryOptions);
+            const records = extractRecordArray(result);
+            if (!records) {
+              throw new Error(`接口 ${path} 返回结构无法识别：${previewPayload(result)}`);
+            }
+            return records;
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        throw lastError || new Error("未命中可用的数据查询接口");
+      }
+
+      async function fetchCloudRecords() {
+        return fetchEntryRecords();
+      }
+
+      function extractRecordId(record) {
+        const candidates = [
+          record?.data_id,
+          record?.id,
+          record?._id,
+          record?.entry_data_id,
+          record?.record_id,
+          record?.uuid,
+        ];
+        const picked = candidates.find((item) => item !== undefined && item !== null && String(item).trim() !== "");
+        return picked ? String(picked) : "";
+      }
+
+      function objectHasAlias(obj) {
+        if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+          return false;
+        }
+        const aliases = [FIELD_ALIASES.code, FIELD_ALIASES.name, FIELD_ALIASES.category, FIELD_ALIASES.status];
+        return aliases.some((alias) => Object.prototype.hasOwnProperty.call(obj, alias));
+      }
+
+      function extractFieldContainer(record) {
+        const candidates = [
+          record?.widgets,
+          record?.widget_data,
+          record?.form_data,
+          record?.entry_data,
+          record?.data,
+          record?.fields,
+          record,
+        ];
+        for (const item of candidates) {
+          if (objectHasAlias(item)) {
+            return item;
+          }
+        }
+        return record || {};
+      }
+
+      function findAliasInArray(list, alias) {
+        if (!Array.isArray(list)) {
+          return undefined;
+        }
+        for (const item of list) {
+          if (!item || typeof item !== "object") {
+            continue;
+          }
+          const key = item.alias || item.widget_alias || item.name || item.key || item.widget_key;
+          if (key === alias) {
+            return item.value ?? item.widget_value ?? item.data ?? item;
+          }
+        }
+        return undefined;
+      }
+
+      function getAliasRawValue(record, alias) {
+        const fields = extractFieldContainer(record);
+        if (fields && typeof fields === "object" && Object.prototype.hasOwnProperty.call(fields, alias)) {
+          return fields[alias];
+        }
+        const fromWidgetsArray = findAliasInArray(record?.widgets, alias);
+        if (fromWidgetsArray !== undefined) {
+          return fromWidgetsArray;
+        }
+        const fromDataArray = findAliasInArray(record?.data, alias);
+        if (fromDataArray !== undefined) {
+          return fromDataArray;
+        }
+        if (record && typeof record === "object" && Object.prototype.hasOwnProperty.call(record, alias)) {
+          return record[alias];
+        }
+        return undefined;
+      }
+
+      function toDisplayText(raw) {
+        if (raw == null) {
+          return "";
+        }
+        if (typeof raw === "string" || typeof raw === "number" || typeof raw === "boolean") {
+          return String(raw).trim();
+        }
+        if (Array.isArray(raw)) {
+          return raw
+            .map((item) => toDisplayText(item))
+            .filter(Boolean)
+            .join(", ");
+        }
+        if (typeof raw === "object") {
+          if ("value" in raw) {
+            return toDisplayText(raw.value);
+          }
+          if ("text" in raw) {
+            return toDisplayText(raw.text);
+          }
+          if ("name" in raw) {
+            return toDisplayText(raw.name);
+          }
+          if ("label" in raw) {
+            return toDisplayText(raw.label);
+          }
+          if ("title" in raw) {
+            return toDisplayText(raw.title);
+          }
+          if ("display" in raw) {
+            return toDisplayText(raw.display);
+          }
+          if ("content" in raw && typeof raw.content === "string") {
+            return raw.content.trim();
+          }
+          if ("url" in raw && typeof raw.url === "string") {
+            return raw.url.trim();
+          }
+          if ("id" in raw && (typeof raw.id === "string" || typeof raw.id === "number")) {
+            return String(raw.id);
+          }
+        }
+        return "";
+      }
+
+      function normalizeDateInput(raw) {
+        const text = toDisplayText(raw);
+        if (!text) {
+          return "";
+        }
+        const direct = text.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (direct) {
+          return direct[1];
+        }
+        const date = new Date(text);
+        if (Number.isNaN(date.getTime())) {
+          return "";
+        }
+        return formatDateTag(date);
+      }
+
+      function normalizeDeviceStatus(value) {
+        return normalizeStatusLabel(toDisplayText(value));
+      }
+
+      function normalizeInspectionStatus(value, fallbackDate = "") {
+        const text = toDisplayText(value);
+        if (INSPECTION_STATUS_OPTIONS.includes(text)) {
+          return text;
+        }
+        return fallbackDate ? getInspectionStatus(fallbackDate) : "未点检";
+      }
+
+      function formatDateTag(date) {
+        const year = date.getFullYear();
+        const month = `${date.getMonth() + 1}`.padStart(2, "0");
+        const day = `${date.getDate()}`.padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function formatDateTimeForApi(dateText) {
+        if (!dateText) {
+          return "";
+        }
+        return `${dateText} 00:00:00`;
+      }
+
+      function cloudRecordToDevice(record) {
+        const cloudId = extractRecordId(record);
+        const rawCategory = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.category));
+        const rawDeviceType = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.deviceType));
+        const categoryText = rawCategory && rawDeviceType ? `${rawCategory}/${rawDeviceType}` : rawCategory || rawDeviceType || "未分类";
+        const categoryId = findCategoryIdByGroupAndType(rawCategory, rawDeviceType) || findOrCreateCategoryByPath(categoryText, {
+          source: "derived",
+          canDelete: false,
+        });
+        const lastCheckDate = normalizeDateInput(getAliasRawValue(record, FIELD_ALIASES.lastInspectDate));
+        const keeper = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.maintainerUser)) || toDisplayText(getAliasRawValue(record, FIELD_ALIASES.maintenanceCompany));
+        const workshop = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.period)) || toDisplayText(getAliasRawValue(record, FIELD_ALIASES.department));
+        const nextCheckDate = normalizeDateInput(getAliasRawValue(record, FIELD_ALIASES.nextInspectDate));
+        const qrCodeNo = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.qrCodeNo));
+        const qrContent = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.qrContent));
+        const qrImageUrlText = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.qrImageUrlText));
+        const scanReportLink = toDisplayText(getAliasRawValue(record, FIELD_ALIASES.scanReportLink));
+        const qr = ensureDeviceQrFields({
+          code: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.code)),
+          qrCodeNo,
+          qrContent,
+          qrImageUrlText,
+          scanReportLink,
+        });
+
+        return {
+          id: cloudId ? `cloud-${cloudId}` : `cloud-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+          cloudId,
+          code: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.code)),
+          name: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.name)) || "未命名设备",
+          categoryId,
+          categoryGroup: rawCategory,
+          deviceType: rawDeviceType || findCategoryLeafName(categoryId),
+          innerCode: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.innerCode)),
+          model: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.model)),
+          status: normalizeDeviceStatus(getAliasRawValue(record, FIELD_ALIASES.status)),
+          workshop,
+          assetCategory: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.assetCategory)),
+          vendor: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.vendor)),
+          inspectCycleDays: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.inspectCycleDays)),
+          nextCheckDate,
+          registerCode: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.registerCode)),
+          volume: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.volume)),
+          lineType: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.lineType)),
+          area: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.area)),
+          powerSupply: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.powerSupply)),
+          totalPower: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.totalPower)),
+          sourceCategory: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.sourceCategory)),
+          location:
+            toDisplayText(getAliasRawValue(record, FIELD_ALIASES.usageLocation)) ||
+            toDisplayText(getAliasRawValue(record, FIELD_ALIASES.storageLocation)) ||
+            workshop,
+          keeper,
+          purchaseDate: normalizeDateInput(getAliasRawValue(record, FIELD_ALIASES.inFactoryDate)),
+          lastCheckDate,
+          inspectionStatus: normalizeInspectionStatus(getAliasRawValue(record, FIELD_ALIASES.inspectionStatus), lastCheckDate),
+          remark: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.remark)),
+          qrCodeNo: qr.qrCodeNo,
+          qrContent: qr.qrContent,
+          qrImageUrlText: qr.qrImageUrlText,
+          scanReportLink: qr.scanReportLink,
+          rawRecord: record,
+        };
+      }
+
+      function buildCloudFieldsFromForm(payload, { isEdit = false } = {}) {
+        const fields = {
+          [FIELD_ALIASES.name]: payload.name,
+          [FIELD_ALIASES.model]: payload.model || "",
+          [FIELD_ALIASES.category]: payload.categoryGroup || "",
+          [FIELD_ALIASES.deviceType]: payload.deviceType || "",
+          [FIELD_ALIASES.innerCode]: payload.innerCode || "",
+          [FIELD_ALIASES.status]: payload.status || "启用",
+          [FIELD_ALIASES.assetCategory]: payload.assetCategory || "",
+          [FIELD_ALIASES.vendor]: payload.vendor || "",
+          [FIELD_ALIASES.period]: payload.workshop || "",
+          [FIELD_ALIASES.usageLocation]: payload.location || "",
+          [FIELD_ALIASES.storageLocation]: payload.location || "",
+          [FIELD_ALIASES.area]: payload.area || "",
+          [FIELD_ALIASES.inspectCycleDays]: payload.inspectCycleDays || "",
+          [FIELD_ALIASES.maintenanceCompany]: payload.keeper || "",
+          [FIELD_ALIASES.inFactoryDate]: formatDateTimeForApi(payload.purchaseDate),
+          [FIELD_ALIASES.lastInspectDate]: formatDateTimeForApi(payload.lastCheckDate),
+          [FIELD_ALIASES.nextInspectDate]: formatDateTimeForApi(payload.nextCheckDate),
+          [FIELD_ALIASES.registerCode]: payload.registerCode || "",
+          [FIELD_ALIASES.volume]: payload.volume || "",
+          [FIELD_ALIASES.lineType]: payload.lineType || "",
+          [FIELD_ALIASES.powerSupply]: payload.powerSupply || "",
+          [FIELD_ALIASES.totalPower]: payload.totalPower || "",
+          [FIELD_ALIASES.sourceCategory]: payload.sourceCategory || "",
+          [FIELD_ALIASES.inspectionStatus]: payload.lastCheckDate ? getInspectionStatus(payload.lastCheckDate) : "未点检",
+          [FIELD_ALIASES.qrCodeNo]: payload.qrCodeNo || "",
+          [FIELD_ALIASES.qrContent]: payload.qrContent || payload.code || "",
+          [FIELD_ALIASES.qrImageUrlText]: payload.qrImageUrlText || "",
+          [FIELD_ALIASES.scanReportLink]: payload.scanReportLink || "",
+          [FIELD_ALIASES.remark]: payload.remark || "",
+        };
+        if (isEdit && payload.code) {
+          fields[FIELD_ALIASES.code] = payload.code;
+        }
+        return fields;
+      }
+
+      function validateCreatedCloudRecord(result, fields) {
+        if (!isPlainObject(result?.data)) {
+          return { ok: true };
+        }
+        const record = result.data;
+        const expectedEntries = Object.entries(fields || {})
+          .filter(([alias, value]) => alias !== FIELD_ALIASES.code && toDisplayText(value) !== "")
+          .map(([alias, value]) => [alias, toDisplayText(value)]);
+
+        if (!expectedEntries.length) {
+          return { ok: true };
+        }
+
+        const matched = expectedEntries.some(([alias, expected]) => toDisplayText(record[alias]) === expected);
+        if (matched) {
+          return { ok: true };
+        }
+        return {
+          ok: false,
+          createdId: extractRecordId(record),
+          message: "云端新增返回成功但字段未落库，已阻止空白记录写入。",
+        };
+      }
+
+      async function createCloudRecord(fields) {
+        const result = await requestEntryOnce("data_create", { data: fields }, "POST");
+        const validation = validateCreatedCloudRecord(result, fields);
+        if (validation.ok) {
+          return result;
+        }
+        if (validation.createdId) {
+          try {
+            await requestEntryOnce("data_delete", { data_id: validation.createdId }, "POST");
+          } catch (rollbackError) {
+            console.warn("rollback blank cloud record failed:", rollbackError);
+          }
+        }
+        throw new Error(validation.message);
+      }
+
+      async function updateCloudRecord(cloudId, fields) {
+        if (!cloudId) {
+          throw new Error("缺少云端记录 ID");
+        }
+        return requestEntryOnce("data_update", { data_id: cloudId, data: fields }, "POST");
+      }
+
+      async function deleteCloudRecords(cloudIds) {
+        if (!cloudIds.length) {
+          return null;
+        }
+        let lastError = null;
+        for (const id of cloudIds) {
+          try {
+            await requestEntryOnce("data_delete", { data_id: id }, "POST");
+          } catch (error) {
+            lastError = error;
+          }
+        }
+        if (lastError) {
+          throw lastError;
+        }
+        return true;
+      }
+
+      async function syncCloudDevices({ silent = false } = {}) {
+        if (!state.apiConfig.enableCloud) {
+          refreshApiStatus();
+          if (!silent) {
+            showToast("当前是离线模式，未请求云端");
+          }
+          return;
+        }
+        if (state.cloudLoading) {
+          return;
+        }
+
+        state.cloudLoading = true;
+        refreshApiStatus();
+
+        try {
+          const records = await fetchCloudRecords();
+          const mapped = records.map((record) => cloudRecordToDevice(record)).filter((item) => item.code || item.name);
+
+          devices.splice(0, devices.length, ...mapped);
+          state.selectedDeviceIds.clear();
+          state.cloudLastError = "";
+          state.cloudLoadedAt = `${formatDateTag(new Date())} ${new Date().toTimeString().slice(0, 8)}`;
+
+          if (!categoryMap.has(state.selectedCategoryId)) {
+            state.selectedCategoryId = "root";
+          }
+          const selectedName = categoryMap.get(state.selectedCategoryId)?.node?.name || "全部设备";
+          setCategoryHint(`当前分类：${selectedName}`);
+
+          renderTree();
+          renderTable();
+          refreshApiStatus();
+          if (!silent) {
+            showToast(`云端同步完成，共 ${mapped.length} 条`);
+          }
+        } catch (error) {
+          state.cloudLastError = error.message || "未知错误";
+          refreshApiStatus();
+          if (!silent) {
+            showToast(`云端同步失败：${state.cloudLastError}`);
+          }
+        } finally {
+          state.cloudLoading = false;
+          refreshApiStatus();
+        }
+      }
+
+      async function bootstrapCloudData({ silent = true } = {}) {
+        try {
+          await syncTypeLibrary({ silent });
+        } finally {
+          await syncCloudDevices({ silent });
+        }
+      }
+
+      refs.searchBtn.addEventListener("click", () => {
+        state.keyword = refs.keywordInput.value;
+        state.status = refs.statusFilter.value;
+        state.inspection = refs.inspectionFilter.value;
+        renderTable();
+      });
+
+      refs.resetBtn.addEventListener("click", () => {
+        state.keyword = "";
+        state.status = "";
+        state.inspection = "";
+        refs.keywordInput.value = "";
+        refs.statusFilter.value = "";
+        refs.inspectionFilter.value = "";
+        renderTable();
+      });
+
+      refs.keywordInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          refs.searchBtn.click();
+        }
+      });
+
+      refs.statusFilter.addEventListener("change", () => {
+        state.status = refs.statusFilter.value;
+        renderTable();
+      });
+
+      refs.inspectionFilter.addEventListener("change", () => {
+        state.inspection = refs.inspectionFilter.value;
+        renderTable();
+      });
+
+      refs.checkAll.addEventListener("change", () => {
+        const filtered = filterDevices();
+        if (refs.checkAll.checked) {
+          filtered.forEach((item) => state.selectedDeviceIds.add(item.id));
+        } else {
+          filtered.forEach((item) => state.selectedDeviceIds.delete(item.id));
+        }
+        renderTable();
+      });
+
+      refs.tableBody.addEventListener("change", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) {
+          return;
+        }
+        if (target.type !== "checkbox") {
+          return;
+        }
+        const id = target.dataset.id;
+        if (!id) {
+          return;
+        }
+        if (target.checked) {
+          state.selectedDeviceIds.add(id);
+        } else {
+          state.selectedDeviceIds.delete(id);
+        }
+        renderTable();
+      });
+
+      refs.tableBody.addEventListener("click", (event) => {
+        void handleTableClick(event);
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!state.openTreeDeleteNodeId) {
+          return;
+        }
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
+        if (!target.closest(".tree-node-delete")) {
+          state.openTreeDeleteNodeId = "";
+          renderTree();
+        }
+      });
+
+      refs.categoryGroupInput.addEventListener("change", () => {
+        populateDeviceTypeSelect();
+        updateDeviceExtraSection(refs.categoryGroupInput.value);
+      });
+
+      refs.inspectCycleDaysInput.addEventListener("input", autoCalcNextCheckDate);
+      refs.lastCheckDateInput.addEventListener("change", autoCalcNextCheckDate);
+
+      refs.addDeviceBtn.addEventListener("click", () => {
+        openDeviceModal("add", null);
+      });
+      refs.batchPrintQrBtn.addEventListener("click", batchPrintSelectedQrCodes);
+
+      refs.importBtn.addEventListener("click", () => refs.importFile.click());
+      refs.importFile.addEventListener("change", () => {
+        const file = refs.importFile.files?.[0];
+        if (!file) {
+          return;
+        }
+        importCsv(file);
+        refs.importFile.value = "";
+      });
+
+      refs.exportBtn.addEventListener("click", exportCsv);
+      refs.addCategoryBtn.addEventListener("click", openCategoryTypeModal);
+      refs.closeCategoryTypeModal.addEventListener("click", closeCategoryTypeModal);
+      refs.cancelCategoryTypeBtn.addEventListener("click", closeCategoryTypeModal);
+      refs.categoryTypeModal.addEventListener("click", (event) => {
+        if (event.target === refs.categoryTypeModal) {
+          closeCategoryTypeModal();
+        }
+      });
+      refs.categoryTypeForm.addEventListener("submit", saveCategoryType);
+
+      refs.closeDeviceModal.addEventListener("click", closeDeviceModal);
+      refs.cancelDeviceBtn.addEventListener("click", closeDeviceModal);
+      refs.deviceModal.addEventListener("click", (event) => {
+        if (event.target === refs.deviceModal) {
+          closeDeviceModal();
+        }
+      });
+      refs.deviceForm.addEventListener("submit", (event) => {
+        void saveDeviceFromForm(event);
+      });
+
+      refs.closeApiModal.addEventListener("click", closeApiModal);
+      refs.cancelApiBtn.addEventListener("click", closeApiModal);
+      refs.apiModal.addEventListener("click", (event) => {
+        if (event.target === refs.apiModal) {
+          closeApiModal();
+        }
+      });
+      refs.apiForm.addEventListener("submit", saveApiConfigFromForm);
+
+      refs.closeQrModal.addEventListener("click", closeQrModal);
+      refs.qrModal.addEventListener("click", (event) => {
+        if (event.target === refs.qrModal) {
+          closeQrModal();
+        }
+      });
+      refs.copyQrContentBtn.addEventListener("click", () => {
+        void copyQrContent();
+      });
+      refs.downloadQrBtn.addEventListener("click", downloadQrImage);
+      refs.openReportByQrBtn.addEventListener("click", openReportByQr);
+
+      refs.closeDetailModal.addEventListener("click", closeDetailModal);
+      refs.closeDetailFootBtn.addEventListener("click", closeDetailModal);
+      refs.detailModal.addEventListener("click", (event) => {
+        if (event.target === refs.detailModal) {
+          closeDetailModal();
+        }
+      });
+
+      setCategoryHint("当前分类：全部设备");
+      refreshApiStatus();
+      renderTree();
+      renderTable();
+      void loadPublicBaseUrl().finally(() => {
+        if (state.apiConfig.enableCloud) {
+          void bootstrapCloudData({ silent: true });
+        }
+      });
+    </script>
+  </body>
+</html>

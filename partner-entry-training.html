@@ -1,0 +1,3486 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>相关方入场培训</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --panel: #ffffff;
+        --line: #d7deea;
+        --line-soft: #e5ebf4;
+        --text: #1f2a3a;
+        --minor: #6f7d93;
+        --primary: #2c79ea;
+        --danger: #d24b4b;
+        --success: #1e8750;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      }
+
+      .page {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 12px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 330px minmax(0, 1fr);
+        gap: 12px;
+        min-height: calc(100vh - 24px);
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .left-panel {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+
+      .right-panel {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+
+      .panel-head {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 18px;
+      }
+
+      .minor {
+        color: var(--minor);
+        font-size: 12px;
+      }
+
+      .toolbar {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line-soft);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .toolbar.right-tools {
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
+      }
+
+      .btn {
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid #b7c4d8;
+        background: #fff;
+        color: #30445f;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .btn:hover:not(:disabled) {
+        border-color: #97aacc;
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .btn.primary {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn.danger {
+        color: var(--danger);
+        border-color: #efb9b9;
+        background: #fff8f8;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        border: 1px solid #cad3e1;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .input,
+      .select {
+        height: 32px;
+        padding: 0 8px;
+      }
+
+      .date-field {
+        position: relative;
+      }
+
+      .date-display-input {
+        padding-right: 36px;
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .date-field-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6f7d93;
+        pointer-events: none;
+      }
+
+      .date-field:focus-within .date-field-icon,
+      .date-field:hover .date-field-icon {
+        color: #2c79ea;
+      }
+
+      .date-field-icon svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .date-native-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .textarea {
+        min-height: 76px;
+        padding: 8px;
+        resize: vertical;
+      }
+
+      .input:focus,
+      .select:focus,
+      .textarea:focus {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .list-wrap {
+        overflow: auto;
+        padding: 6px;
+      }
+
+      .record-item {
+        width: 100%;
+        border: 1px solid transparent;
+        border-bottom: 1px solid var(--line-soft);
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        text-align: left;
+        padding: 8px;
+      }
+
+      .record-item:hover {
+        background: #f8fbff;
+      }
+
+      .record-item.active {
+        border-color: #9abdf1;
+        background: #edf4ff;
+      }
+
+      .record-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+
+      .record-name {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .record-code {
+        color: #5d6f8a;
+        font-size: 12px;
+      }
+
+      .record-sub {
+        margin-top: 4px;
+        color: #6f7d93;
+        font-size: 12px;
+      }
+
+      .empty {
+        margin: 8px;
+        padding: 16px 10px;
+        text-align: center;
+        border: 1px dashed #cdd8e8;
+        background: #fafcff;
+        color: #7b8799;
+        font-size: 12px;
+      }
+
+      .qr-strip {
+        border-bottom: 1px solid var(--line-soft);
+        padding: 10px 12px;
+        background: #fbfdff;
+      }
+
+      .scan-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 24px;
+        border-radius: 999px;
+        padding: 0 10px;
+        font-size: 12px;
+        color: #1f65c8;
+        background: #eaf3ff;
+        border: 1px solid #c8defc;
+        margin-bottom: 8px;
+      }
+
+      .qr-grid {
+        display: grid;
+        grid-template-columns: 190px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .qr-box {
+        border: 1px solid #d9e4f3;
+        border-radius: 8px;
+        background: #fff;
+        padding: 8px;
+        text-align: center;
+      }
+
+      .qr-box img {
+        width: 160px;
+        height: 160px;
+        display: block;
+        margin: 0 auto;
+      }
+
+      .qr-note {
+        margin-top: 6px;
+        color: #5d6f8a;
+        font-size: 12px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: #4f6078;
+      }
+
+      .qr-actions {
+        margin-top: 8px;
+        display: flex;
+        gap: 8px;
+      }
+
+      .table-wrap {
+        overflow: auto;
+        padding: 0 10px 10px;
+      }
+
+      table {
+        width: 100%;
+        min-width: 1080px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line-soft);
+        padding: 7px 8px;
+        font-size: 12px;
+        text-align: left;
+        background: #fff;
+        vertical-align: middle;
+      }
+
+      th {
+        background: #f2f5fa;
+        color: #3f4d61;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      tr:hover td {
+        background: #f9fbfe;
+      }
+
+      .cell-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .text-btn {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: var(--primary);
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .text-btn.danger {
+        color: var(--danger);
+      }
+
+      .detail-wrap {
+        padding: 10px 12px;
+        overflow: auto;
+      }
+
+      .card {
+        border: 1px solid var(--line-soft);
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .card-head {
+        border-bottom: 1px solid var(--line-soft);
+        padding: 8px 10px;
+        font-weight: 600;
+        font-size: 13px;
+      }
+
+      .kv-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+      }
+
+      .kv-item {
+        border-right: 1px solid var(--line-soft);
+        border-bottom: 1px solid var(--line-soft);
+        padding: 8px 10px;
+      }
+
+      .kv-item:nth-child(3n) {
+        border-right: 0;
+      }
+
+      .kv-item.full {
+        grid-column: 1 / -1;
+        border-right: 0;
+      }
+
+      .kv-k {
+        font-size: 12px;
+        color: #5e708b;
+      }
+
+      .kv-v {
+        margin-top: 4px;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .foot,
+      .status {
+        border-top: 1px solid var(--line-soft);
+        padding: 8px 10px;
+        font-size: 12px;
+        color: var(--minor);
+      }
+
+      .status.error {
+        color: #b24040;
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        background: rgba(18, 35, 66, 0.42);
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        z-index: 50;
+      }
+
+      .modal-mask.hidden {
+        display: none;
+      }
+
+      .modal {
+        width: min(1040px, 100%);
+        max-height: calc(100vh - 32px);
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        overflow: hidden;
+      }
+
+      .modal-head,
+      .modal-foot {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .modal-foot {
+        border-bottom: 0;
+        border-top: 1px solid var(--line-soft);
+        justify-content: flex-end;
+      }
+
+      .modal-body {
+        overflow: auto;
+        padding: 10px 12px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .form-grid .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .field-tip {
+        font-size: 12px;
+        color: #7a879b;
+      }
+
+      .participant-panel {
+        border: 1px solid #d8e3f5;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fbfdff;
+      }
+
+      .participant-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e4ecf7;
+        background: #f7faff;
+      }
+
+      .participant-toolbar strong {
+        font-size: 13px;
+        color: #30445f;
+      }
+
+      .participant-list {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .participant-row {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr) 120px 156px 68px;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 12px;
+        border-top: 1px solid #e9eff8;
+      }
+
+      .participant-row:first-child {
+        border-top: 0;
+      }
+
+      .participant-seq {
+        color: #61738f;
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .participant-sign-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .sign-state {
+        font-size: 12px;
+        color: #7c8ba1;
+      }
+
+      .sign-state.done {
+        color: var(--success);
+      }
+
+      .sign-preview-link {
+        border: 0;
+        background: transparent;
+        color: var(--primary);
+        font-size: 12px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .participant-empty {
+        padding: 16px 12px;
+        color: #7d8ca4;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .sign-modal {
+        width: min(720px, 100%);
+        max-height: calc(100vh - 40px);
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 18px 36px rgba(23, 42, 74, 0.18);
+      }
+
+      .sign-modal-head,
+      .sign-modal-foot {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .sign-modal-foot {
+        border-bottom: 0;
+        border-top: 1px solid var(--line-soft);
+        justify-content: flex-end;
+      }
+
+      .sign-modal-body {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .sign-canvas-wrap {
+        border: 1px dashed #bfd0ea;
+        border-radius: 12px;
+        background:
+          linear-gradient(180deg, rgba(248, 251, 255, 0.96), rgba(243, 248, 255, 0.96)),
+          repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(196, 210, 231, 0.38) 35px, rgba(196, 210, 231, 0.38) 36px);
+        padding: 10px;
+      }
+
+      .sign-canvas {
+        width: 100%;
+        height: 240px;
+        display: block;
+        border-radius: 10px;
+        background: transparent;
+        touch-action: none;
+        cursor: crosshair;
+      }
+
+      .detail-subtable {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .detail-subtable th,
+      .detail-subtable td {
+        position: static;
+      }
+
+      .readonly {
+        background: #f6f8fb;
+        color: #5f708a;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        min-width: 220px;
+        max-width: 360px;
+        background: rgba(17, 25, 40, 0.92);
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 13px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition: opacity 0.18s ease, transform 0.18s ease;
+        z-index: 100;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .scan-entry-banner {
+        margin: 10px 12px 0;
+        border: 1px solid #cfe1fb;
+        background: #edf5ff;
+        color: #28548f;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 1180px) {
+        .layout {
+          grid-template-columns: 1fr;
+          min-height: auto;
+        }
+
+        .left-panel {
+          min-height: 360px;
+        }
+
+        .qr-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .kv-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .kv-item:nth-child(3n) {
+          border-right: 1px solid var(--line-soft);
+        }
+
+        .kv-item:nth-child(2n) {
+          border-right: 0;
+        }
+
+        .form-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 820px) {
+        .toolbar,
+        .toolbar.right-tools {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .field-grid,
+        .form-grid,
+        .kv-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .participant-row {
+          grid-template-columns: 46px minmax(0, 1fr);
+        }
+
+        .participant-sign-cell,
+        .participant-row .participant-time,
+        .participant-row .participant-delete {
+          grid-column: 2;
+        }
+
+        .kv-item {
+          border-right: 0 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="layout">
+        <aside class="panel left-panel">
+          <div class="panel-head">
+            <div>
+              <h1>培训记录</h1>
+              <div class="minor">相关方安全教育培训记录</div>
+            </div>
+          </div>
+          <div class="toolbar">
+            <input id="recordKeywordInput" class="input" type="text" placeholder="标题/施工单位/施工项目" />
+            <button id="recordSearchBtn" type="button" class="btn">搜索</button>
+            <button id="recordResetBtn" type="button" class="btn">重置</button>
+          </div>
+          <div id="recordList" class="list-wrap"></div>
+          <div id="recordListFoot" class="foot">-</div>
+        </aside>
+
+        <main class="panel right-panel">
+          <div class="panel-head">
+            <div>
+              <h1>相关方入场培训</h1>
+              <div class="minor">扫码填报 + 台账增删改同步百数云</div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+              <button id="refreshBtn" type="button" class="btn">刷新</button>
+              <button id="addBtn" type="button" class="btn primary">新建</button>
+              <button id="editBtn" type="button" class="btn">编辑</button>
+              <button id="deleteBtn" type="button" class="btn danger">删除</button>
+            </div>
+          </div>
+
+          <div id="scanEntryBanner" class="scan-entry-banner hidden"></div>
+
+          <section class="qr-strip">
+            <div class="scan-badge">扫码入口</div>
+            <div class="qr-grid">
+              <div class="qr-box">
+                <img id="entryQrImage" alt="入场培训二维码" />
+                <div class="qr-note">默认展示静态入口码</div>
+              </div>
+              <div>
+                <div class="field-grid">
+                  <div class="field full">
+                    <label for="qrModeSelect">二维码类型</label>
+                    <select id="qrModeSelect" class="select">
+                      <option value="static">静态入口码（推荐）</option>
+                      <option value="prefill">单位预填码（动态）</option>
+                    </select>
+                  </div>
+                  <div class="field full" id="qrUnitFieldWrap">
+                    <label for="qrUnitSelect">预填施工单位</label>
+                    <input id="qrUnitKeywordInput" class="input" type="text" placeholder="输入单位名称或编号搜索" autocomplete="off" />
+                    <select id="qrUnitSelect" class="select"></select>
+                  </div>
+                  <div class="field full">
+                    <label for="qrUrlInput">扫码跳转链接</label>
+                    <input id="qrUrlInput" class="input readonly" type="text" readonly />
+                  </div>
+                </div>
+                <div class="field-tip" style="margin-top:8px;">
+                  建议将静态入口码张贴在门岗或培训室，供微信扫一扫直接进入“外部填报页”；动态单位码用于施工单位入场前预填，减少现场录入时间。
+                </div>
+                <div class="qr-actions">
+                  <button id="copyQrUrlBtn" type="button" class="btn">复制链接</button>
+                  <a id="openQrImageBtn" class="btn" target="_blank" rel="noopener noreferrer">打开二维码</a>
+                  <a id="openEntryUrlBtn" class="btn" target="_blank" rel="noopener noreferrer">打开入口页</a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="table-wrap" style="padding-top:8px;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:90px;">编号</th>
+                  <th style="width:220px;">标题</th>
+                  <th style="width:150px;">培训日期</th>
+                  <th style="width:180px;">施工单位</th>
+                  <th style="width:86px;">培训人数</th>
+                  <th style="width:180px;">施工项目</th>
+                  <th style="width:130px;">授课人</th>
+                  <th style="width:86px;">是否抽取</th>
+                  <th style="width:120px;">操作</th>
+                </tr>
+              </thead>
+              <tbody id="recordTableBody"></tbody>
+            </table>
+          </div>
+
+          <section class="detail-wrap">
+            <div class="card">
+              <div class="card-head">记录详情</div>
+              <div id="detailBody" class="kv-grid"></div>
+            </div>
+          </section>
+
+          <div id="statusBar" class="status">准备就绪</div>
+        </main>
+      </div>
+    </div>
+
+    <div id="formModal" class="modal-mask hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="formModalTitle">新建培训记录</h3>
+          <button id="closeFormBtn" type="button" class="btn">关闭</button>
+        </div>
+        <form id="recordForm">
+          <div class="modal-body">
+            <div class="form-grid">
+              <div class="field">
+                <label for="formCodeInput">编号</label>
+                <input id="formCodeInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="formTitleInput"><span style="color:#d24b4b;">*</span>标题</label>
+                <input id="formTitleInput" class="input" type="text" required />
+              </div>
+              <div class="field">
+                <label for="formTrainingDateDisplayInput"><span style="color:#d24b4b;">*</span>培训日期</label>
+                <div id="formTrainingDateField" class="date-field">
+                  <input
+                    id="formTrainingDateDisplayInput"
+                    class="input date-display-input"
+                    type="text"
+                    placeholder="YYYY-MM-DD"
+                    readonly
+                  />
+                  <input id="formTrainingDateInput" class="date-native-input" type="date" tabindex="-1" aria-hidden="true" required />
+                  <span class="date-field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                      <path d="M8 2v4M16 2v4M3 10h18"></path>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="formCompanySelect"><span style="color:#d24b4b;">*</span>施工单位</label>
+                <input id="formCompanyKeywordInput" class="input" type="text" placeholder="输入单位名称或编号搜索" autocomplete="off" />
+                <select id="formCompanySelect" class="select" required></select>
+                <div class="field-tip">可先搜索再从下拉中选择施工单位。</div>
+              </div>
+              <div class="field">
+                <label for="formCountInput"><span style="color:#d24b4b;">*</span>培训人数</label>
+                <input id="formCountInput" class="input readonly" type="number" min="1" step="1" required readonly />
+              </div>
+              <div class="field">
+                <label for="formProjectInput"><span style="color:#d24b4b;">*</span>施工项目</label>
+                <input id="formProjectInput" class="input" type="text" required />
+              </div>
+              <div class="field">
+                <label for="formLecturerSelect">授课人</label>
+                <select id="formLecturerSelect" class="select"></select>
+                <div class="field-tip">成员单选字段将写入成员ID。</div>
+              </div>
+              <div class="field">
+                <label for="formSampledSelect">是否抽取</label>
+                <select id="formSampledSelect" class="select">
+                  <option value="否">否</option>
+                  <option value="是">是</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="formExtractTimeInput">最后一次抽取时间</label>
+                <input id="formExtractTimeInput" class="input" type="datetime-local" />
+              </div>
+              <div class="field full">
+                <label>参加培训人员签字</label>
+                <div class="participant-panel">
+                  <div class="participant-toolbar">
+                    <strong>逐行录入参训人员，签字可后续补录</strong>
+                    <button id="formAddParticipantBtn" type="button" class="btn">新增人员</button>
+                  </div>
+                  <div id="formParticipantList" class="participant-list"></div>
+                </div>
+                <div class="field-tip">培训人数将根据已录入姓名自动统计；如已完成签字，会同步写入子表的“签字 / 签字时间”。</div>
+              </div>
+              <div class="field full">
+                <label for="formContentInput">培训内容</label>
+                <textarea id="formContentInput" class="textarea" rows="4"></textarea>
+              </div>
+              <div class="field full">
+                <label for="formEffectInput">培训效果验证</label>
+                <textarea id="formEffectInput" class="textarea" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button id="cancelFormBtn" type="button" class="btn">取消</button>
+            <button id="saveFormBtn" type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="participantSignatureModal" class="modal-mask hidden" style="z-index:70;">
+      <div class="sign-modal">
+        <div class="sign-modal-head">
+          <h3 id="participantSignatureTitle">参训人员手写签字</h3>
+          <button id="closeParticipantSignatureBtn" type="button" class="btn">关闭</button>
+        </div>
+        <div class="sign-modal-body">
+          <div class="field-tip">请直接在下方签字板上书写，保存后会自动回填到当前人员行。</div>
+          <div class="sign-canvas-wrap">
+            <canvas id="participantSignatureCanvas" class="sign-canvas"></canvas>
+          </div>
+          <div id="participantSignatureStatus" class="status" style="border-top:0;padding:0;">请开始签字</div>
+        </div>
+        <div class="sign-modal-foot">
+          <button id="clearParticipantSignatureBtn" type="button" class="btn">清空重签</button>
+          <button id="saveParticipantSignatureBtn" type="button" class="btn primary">保存签字</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_CONFIG = {
+        baseUrl: resolveApiBaseUrl(),
+        appId: "5a94c4d1642bd8a84c772356",
+        partnerEntryId: "e909400e8837d7f8cc75482b",
+        trainingEntryId: "c40d44a99118a61bd17f9325",
+      };
+
+      const PARTNER_FIELD = {
+        code: "_widget_1776687063504",
+        name: "_widget_1776687063598",
+      };
+
+      const PARTNER_FIELD_TITLE_MATCHER = {
+        code: ["相关方编号", "单位编号", "编号", "编码", "代码"],
+        name: ["外来单位名称", "相关方名称", "单位名称", "施工单位", "单位", "名称"],
+      };
+
+      const TRAINING_FIELD = {
+        code: "_widget_1775706019426",
+        title: "_widget_1775706019440",
+        trainingDate: "_widget_1775706019459",
+        company: "_widget_1775706019483",
+        attendeeCount: "_widget_1775706019502",
+        project: "_widget_1775706019523",
+        lecturer: "_widget_1775706019542",
+        employeeSign: "_widget_1775706019561",
+        content: "_widget_1775706019574",
+        effect: "_widget_1775706019591",
+        sampled: "_widget_1775706019878",
+        lastExtractTime: "_widget_1775706019671",
+        participantSubform: "_widget_1776499479462",
+      };
+
+      const PARTICIPANT_FIELD = {
+        name: "_widget_1776499479512",
+        sign: "_widget_1776499479592",
+        signTime: "_widget_1776499479597",
+      };
+
+      const state = {
+        loading: false,
+        records: [],
+        units: [],
+        users: [],
+        selectedRecordId: "",
+        keyword: "",
+        formMode: "add",
+        formRecordId: "",
+        formDraft: null,
+        qrMode: "static",
+        qrUnitId: "",
+        partnerFieldAliasMap: {
+          codeAliases: [PARTNER_FIELD.code],
+          nameAliases: [PARTNER_FIELD.name],
+        },
+        scanContext: parseScanContext(),
+        formSignatureIndex: -1,
+        formSignaturePad: {
+          drawing: false,
+          dirty: false,
+          pointerId: null,
+          lastX: 0,
+          lastY: 0,
+        },
+      };
+
+      const refs = {
+        recordKeywordInput: document.getElementById("recordKeywordInput"),
+        recordSearchBtn: document.getElementById("recordSearchBtn"),
+        recordResetBtn: document.getElementById("recordResetBtn"),
+        recordList: document.getElementById("recordList"),
+        recordListFoot: document.getElementById("recordListFoot"),
+
+        refreshBtn: document.getElementById("refreshBtn"),
+        addBtn: document.getElementById("addBtn"),
+        editBtn: document.getElementById("editBtn"),
+        deleteBtn: document.getElementById("deleteBtn"),
+
+        scanEntryBanner: document.getElementById("scanEntryBanner"),
+        qrModeSelect: document.getElementById("qrModeSelect"),
+        qrUnitFieldWrap: document.getElementById("qrUnitFieldWrap"),
+        qrUnitKeywordInput: document.getElementById("qrUnitKeywordInput"),
+        qrUnitSelect: document.getElementById("qrUnitSelect"),
+        qrUrlInput: document.getElementById("qrUrlInput"),
+        entryQrImage: document.getElementById("entryQrImage"),
+        copyQrUrlBtn: document.getElementById("copyQrUrlBtn"),
+        openQrImageBtn: document.getElementById("openQrImageBtn"),
+        openEntryUrlBtn: document.getElementById("openEntryUrlBtn"),
+
+        recordTableBody: document.getElementById("recordTableBody"),
+        detailBody: document.getElementById("detailBody"),
+        statusBar: document.getElementById("statusBar"),
+
+        formModal: document.getElementById("formModal"),
+        formModalTitle: document.getElementById("formModalTitle"),
+        closeFormBtn: document.getElementById("closeFormBtn"),
+        cancelFormBtn: document.getElementById("cancelFormBtn"),
+        saveFormBtn: document.getElementById("saveFormBtn"),
+        recordForm: document.getElementById("recordForm"),
+
+        formCodeInput: document.getElementById("formCodeInput"),
+        formTitleInput: document.getElementById("formTitleInput"),
+        formTrainingDateField: document.getElementById("formTrainingDateField"),
+        formTrainingDateDisplayInput: document.getElementById("formTrainingDateDisplayInput"),
+        formTrainingDateInput: document.getElementById("formTrainingDateInput"),
+        formCompanyKeywordInput: document.getElementById("formCompanyKeywordInput"),
+        formCompanySelect: document.getElementById("formCompanySelect"),
+        formCountInput: document.getElementById("formCountInput"),
+        formProjectInput: document.getElementById("formProjectInput"),
+        formLecturerSelect: document.getElementById("formLecturerSelect"),
+        formSampledSelect: document.getElementById("formSampledSelect"),
+        formExtractTimeInput: document.getElementById("formExtractTimeInput"),
+        formAddParticipantBtn: document.getElementById("formAddParticipantBtn"),
+        formParticipantList: document.getElementById("formParticipantList"),
+        formContentInput: document.getElementById("formContentInput"),
+        formEffectInput: document.getElementById("formEffectInput"),
+
+        participantSignatureModal: document.getElementById("participantSignatureModal"),
+        participantSignatureTitle: document.getElementById("participantSignatureTitle"),
+        closeParticipantSignatureBtn: document.getElementById("closeParticipantSignatureBtn"),
+        participantSignatureCanvas: document.getElementById("participantSignatureCanvas"),
+        participantSignatureStatus: document.getElementById("participantSignatureStatus"),
+        clearParticipantSignatureBtn: document.getElementById("clearParticipantSignatureBtn"),
+        saveParticipantSignatureBtn: document.getElementById("saveParticipantSignatureBtn"),
+
+        toast: document.getElementById("toast"),
+      };
+
+      init();
+
+      async function init() {
+        bindEvents();
+        bindDateField(refs.formTrainingDateField, refs.formTrainingDateDisplayInput, refs.formTrainingDateInput);
+        bindFormSignatureCanvas();
+        applyScanBanner();
+        renderQrUnitOptions();
+        renderQrPanel();
+        await refreshAll();
+        openFromScanContextIfNeeded();
+      }
+
+      function bindEvents() {
+        refs.recordSearchBtn.addEventListener("click", () => {
+          state.keyword = refs.recordKeywordInput.value.trim();
+          renderRecordList();
+          renderRecordTable();
+        });
+
+        refs.recordResetBtn.addEventListener("click", () => {
+          state.keyword = "";
+          refs.recordKeywordInput.value = "";
+          renderRecordList();
+          renderRecordTable();
+        });
+
+        refs.recordKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            refs.recordSearchBtn.click();
+          }
+        });
+
+        refs.refreshBtn.addEventListener("click", () => {
+          void refreshAll({ preserveSelection: true });
+        });
+
+        refs.addBtn.addEventListener("click", () => {
+          openFormModal("add");
+        });
+
+        refs.editBtn.addEventListener("click", () => {
+          openFormModal("edit");
+        });
+
+        refs.deleteBtn.addEventListener("click", () => {
+          void deleteSelectedRecord();
+        });
+
+        refs.recordList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const card = target.closest(".record-item");
+          if (!card) {
+            return;
+          }
+          const id = card.dataset.id;
+          if (!id) {
+            return;
+          }
+          state.selectedRecordId = id;
+          renderRecordList();
+          renderDetail();
+          renderActionDisabled();
+        });
+
+        refs.recordTableBody.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const actionBtn = target.closest("[data-action]");
+          if (!actionBtn) {
+            return;
+          }
+          const action = actionBtn.dataset.action;
+          const id = actionBtn.dataset.id;
+          if (!action || !id) {
+            return;
+          }
+          state.selectedRecordId = id;
+          if (action === "edit") {
+            openFormModal("edit");
+            return;
+          }
+          if (action === "delete") {
+            void deleteSelectedRecord();
+          }
+        });
+
+        refs.qrModeSelect.addEventListener("change", () => {
+          state.qrMode = refs.qrModeSelect.value === "prefill" ? "prefill" : "static";
+          renderQrPanel();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("input", () => {
+          const rows = filterPartnerUnits(refs.qrUnitKeywordInput.value);
+          state.qrUnitId = rows.some((item) => item.id === state.qrUnitId) ? state.qrUnitId : "";
+          renderQrUnitOptions({ selectedId: state.qrUnitId });
+          renderQrPanel();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("change", () => {
+          applyQrUnitKeywordSelection();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") {
+            return;
+          }
+          event.preventDefault();
+          applyQrUnitKeywordSelection({ preferFirst: true });
+        });
+
+        refs.qrUnitSelect.addEventListener("change", () => {
+          state.qrUnitId = String(refs.qrUnitSelect.value || "").trim();
+          syncQrUnitKeywordFromSelection();
+          renderQrPanel();
+        });
+
+        refs.copyQrUrlBtn.addEventListener("click", async () => {
+          const text = String(refs.qrUrlInput.value || "").trim();
+          if (!text) {
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(text);
+            showToast("链接已复制");
+          } catch {
+            showToast("复制失败，请手工复制");
+          }
+        });
+
+        refs.closeFormBtn.addEventListener("click", closeFormModal);
+        refs.cancelFormBtn.addEventListener("click", closeFormModal);
+
+        refs.formModal.addEventListener("click", (event) => {
+          if (event.target === refs.formModal) {
+            closeFormModal();
+          }
+        });
+
+        refs.recordForm.addEventListener("submit", (event) => {
+          void saveForm(event);
+        });
+
+        refs.formCompanyKeywordInput.addEventListener("input", () => {
+          const rows = filterPartnerUnits(refs.formCompanyKeywordInput.value);
+          const selectedId = rows.some((item) => item.id === refs.formCompanySelect.value)
+            ? String(refs.formCompanySelect.value || "").trim()
+            : "";
+          renderFormCompanyOptions({ selectedId });
+        });
+
+        refs.formCompanyKeywordInput.addEventListener("change", () => {
+          applyFormCompanyKeywordSelection();
+        });
+
+        refs.formCompanyKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") {
+            return;
+          }
+          event.preventDefault();
+          applyFormCompanyKeywordSelection({ preferFirst: true });
+        });
+
+        refs.formCompanySelect.addEventListener("change", () => {
+          syncFormCompanyKeywordFromSelection();
+        });
+
+        refs.formAddParticipantBtn.addEventListener("click", () => {
+          addDraftParticipantRow();
+        });
+
+        refs.formParticipantList.addEventListener("input", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const row = target.closest("[data-participant-index]");
+          if (!row) {
+            return;
+          }
+          const index = Number(row.dataset.participantIndex);
+          const participants = ensureDraftParticipants(state.formDraft);
+          if (!Number.isInteger(index) || index < 0 || index >= participants.length) {
+            return;
+          }
+
+          if (target.matches("[data-role='participant-name']")) {
+            participants[index].name = normalizeParticipantName(target.value);
+            syncDraftParticipantCount();
+          }
+        });
+
+        refs.formParticipantList.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement)) {
+            return;
+          }
+          const actionButton = event.target.closest("[data-action]");
+          if (!actionButton) {
+            return;
+          }
+          const row = actionButton.closest("[data-participant-index]");
+          if (!row) {
+            return;
+          }
+
+          const index = Number(row.dataset.participantIndex);
+          const participants = ensureDraftParticipants(state.formDraft);
+          if (!Number.isInteger(index) || index < 0 || index >= participants.length) {
+            return;
+          }
+
+          const action = String(actionButton.dataset.action || "").trim();
+          if (action === "sign") {
+            openDraftParticipantSignatureModal(index);
+            return;
+          }
+          if (action === "preview") {
+            previewDraftParticipantSignature(index);
+            return;
+          }
+          if (action === "delete-sign") {
+            clearDraftParticipantSignature(index);
+            return;
+          }
+          if (action === "delete-row") {
+            removeDraftParticipantRow(index);
+          }
+        });
+
+        refs.closeParticipantSignatureBtn.addEventListener("click", closeDraftParticipantSignatureModal);
+        refs.clearParticipantSignatureBtn.addEventListener("click", clearDraftSignatureCanvas);
+        refs.saveParticipantSignatureBtn.addEventListener("click", () => {
+          void saveDraftParticipantSignature();
+        });
+
+        refs.participantSignatureModal.addEventListener("click", (event) => {
+          if (event.target === refs.participantSignatureModal) {
+            closeDraftParticipantSignatureModal();
+          }
+        });
+      }
+
+      function bindDateField(fieldWrapper, displayInput, nativeInput) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(nativeInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+
+        fieldWrapper.addEventListener("click", () => {
+          openNativeDatePicker(nativeInput);
+          displayInput.focus();
+        });
+
+        displayInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+            event.preventDefault();
+            openNativeDatePicker(nativeInput);
+          }
+        });
+
+        nativeInput.addEventListener("input", () => {
+          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+        });
+        nativeInput.addEventListener("change", () => {
+          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+        });
+
+        syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+      }
+
+      function syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(nativeInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+        const normalized = normalizeDateInput(nativeInput.value);
+        displayInput.value = normalized || "";
+        fieldWrapper.classList.toggle("has-value", Boolean(normalized));
+      }
+
+      function openNativeDatePicker(input) {
+        if (!(input instanceof HTMLInputElement)) {
+          return;
+        }
+        if (typeof input.showPicker === "function") {
+          try {
+            input.showPicker();
+            return;
+          } catch {
+            // Some browsers require direct user gestures. Fallback below.
+          }
+        }
+        input.focus();
+      }
+
+      function parseScanContext() {
+        try {
+          const params = new URLSearchParams(window.location.search || "");
+          return {
+            fromQr: params.get("from") === "qr",
+            autoNew: params.get("new") === "1",
+            unitId: String(params.get("unit_id") || "").trim(),
+            unitName: decodeURIComponentSafe(params.get("unit_name") || ""),
+          };
+        } catch {
+          return {
+            fromQr: false,
+            autoNew: false,
+            unitId: "",
+            unitName: "",
+          };
+        }
+      }
+
+      function decodeURIComponentSafe(value) {
+        const text = String(value || "");
+        try {
+          return decodeURIComponent(text);
+        } catch {
+          return text;
+        }
+      }
+
+      function applyScanBanner() {
+        if (!state.scanContext.fromQr) {
+          refs.scanEntryBanner.classList.add("hidden");
+          refs.scanEntryBanner.textContent = "";
+          return;
+        }
+
+        refs.scanEntryBanner.classList.remove("hidden");
+        refs.scanEntryBanner.textContent =
+          "当前为扫码进入模式：建议现场完成培训后直接保存记录，系统会同步写入相关方安全教育培训记录底表。";
+      }
+
+      function buildEntryUrl({ unitId = "", unitName = "" } = {}) {
+        const current = new URL(resolvePublicFormUrl(), window.location.href);
+        current.search = "";
+        current.hash = "";
+        const params = new URLSearchParams();
+        params.set("from", "qr");
+        params.set("new", "1");
+        params.set("source", "wechat");
+        if (unitId) {
+          params.set("unit_id", unitId);
+        }
+        if (unitName) {
+          params.set("unit_name", unitName);
+        }
+        current.search = params.toString();
+        return current.toString();
+      }
+
+      function resolvePublicFormUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/h5/partner-training`;
+        }
+        return "partner-entry-training-form.html";
+      }
+
+      function buildQrImageUrl(entryUrl) {
+        const text = String(entryUrl || "").trim();
+        if (!text) {
+          return "";
+        }
+        return `https://quickchart.io/qr?size=280&text=${encodeURIComponent(text)}`;
+      }
+
+      function getSelectedQrUnit() {
+        const id = String(state.qrUnitId || "").trim();
+        if (!id) {
+          return null;
+        }
+        return state.units.find((item) => item.id === id) || null;
+      }
+
+      function renderQrUnitOptions({ selectedId = state.qrUnitId || "" } = {}) {
+        const rows = filterPartnerUnits(refs.qrUnitKeywordInput.value);
+        const options = ['<option value="">请选择施工单位</option>'];
+        rows.forEach((item) => {
+          options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`);
+        });
+        if (!rows.length) {
+          options.push('<option value="" disabled>未找到匹配施工单位</option>');
+        }
+        refs.qrUnitSelect.innerHTML = options.join("");
+        refs.qrUnitSelect.value = rows.some((item) => item.id === selectedId) ? selectedId : "";
+      }
+
+      function renderQrPanel() {
+        refs.qrModeSelect.value = state.qrMode;
+        const prefillMode = state.qrMode === "prefill";
+        refs.qrUnitFieldWrap.style.display = prefillMode ? "block" : "none";
+
+        let url = "";
+        if (prefillMode) {
+          const unit = getSelectedQrUnit();
+          url = buildEntryUrl({
+            unitId: unit?.id || "",
+            unitName: unit?.name || "",
+          });
+        } else {
+          url = buildEntryUrl();
+        }
+
+        const qrUrl = buildQrImageUrl(url);
+        refs.qrUrlInput.value = url;
+        refs.entryQrImage.src = qrUrl;
+        refs.openQrImageBtn.href = qrUrl || "#";
+        refs.openEntryUrlBtn.href = url || "#";
+
+        if (window.location.protocol === "file:") {
+          setStatus("当前页面是本地文件路径。微信扫码请使用已部署的 http/https 地址，否则外部手机无法访问。", true);
+        }
+      }
+
+      function createEmptyDraft() {
+        return {
+          cloudId: "",
+          code: "自动生成",
+          title: "",
+          trainingDateLocal: toDateInputValue(new Date()),
+          company: "",
+          companyId: "",
+          attendeeCount: "",
+          project: "",
+          lecturerId: "",
+          lecturerName: "",
+          sampled: "否",
+          lastExtractTimeLocal: "",
+          participants: [createEmptyParticipant()],
+          content: "",
+          effect: "",
+        };
+      }
+
+      function createDraftFromRecord(record) {
+        return {
+          cloudId: record.cloudId,
+          code: record.code || "",
+          title: record.title || "",
+          trainingDateLocal: record.trainingDateLocal || "",
+          company: record.company || "",
+          companyId: findUnitIdByName(record.company || ""),
+          attendeeCount: record.attendeeCount > 0 ? String(record.attendeeCount) : "",
+          project: record.project || "",
+          lecturerId: record.lecturerId || "",
+          lecturerName: record.lecturerName || "",
+          sampled: record.sampled || "否",
+          lastExtractTimeLocal: record.lastExtractTimeLocal || "",
+          participants: (record.participantDetails || []).length
+            ? record.participantDetails.map((item) => normalizeParticipantRow(item))
+            : [createEmptyParticipant()],
+          content: record.content || "",
+          effect: record.effect || "",
+        };
+      }
+
+      function findUnitIdByName(name) {
+        const text = normalizeCompareText(name);
+        if (!text) {
+          return "";
+        }
+        const matched = state.units.find((item) => normalizeCompareText(item.name) === text);
+        return matched ? matched.id : "";
+      }
+
+      async function refreshAll({ preserveSelection = false } = {}) {
+        setLoading(true);
+        setStatus("正在加载相关方培训数据...");
+
+        const previousSelectedId = preserveSelection ? state.selectedRecordId : "";
+
+        try {
+          const [unitRows, userRows, recordRows] = await Promise.all([
+            fetchPartnerUnits(),
+            fetchContactsUsers(),
+            fetchTrainingRecords(),
+          ]);
+
+          state.units = unitRows;
+          state.users = userRows;
+          state.records = recordRows;
+
+          if (state.scanContext.unitId && !state.qrUnitId) {
+            state.qrUnitId = state.scanContext.unitId;
+          }
+          renderQrUnitOptions();
+          syncQrUnitKeywordFromSelection();
+          renderQrPanel();
+
+          const validIds = new Set(state.records.map((item) => item.id));
+          if (previousSelectedId && validIds.has(previousSelectedId)) {
+            state.selectedRecordId = previousSelectedId;
+          } else if (!validIds.has(state.selectedRecordId)) {
+            state.selectedRecordId = state.records[0]?.id || "";
+          }
+
+          renderRecordList();
+          renderRecordTable();
+          renderDetail();
+          renderActionDisabled();
+          setStatus(`加载完成：培训记录 ${state.records.length} 条，相关方单位 ${state.units.length} 条`);
+        } catch (error) {
+          setStatus(`加载失败：${error.message}`, true);
+          showToast(`加载失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function renderActionDisabled() {
+        const hasSelected = Boolean(getSelectedRecord());
+        refs.editBtn.disabled = state.loading || !hasSelected;
+        refs.deleteBtn.disabled = state.loading || !hasSelected;
+        refs.refreshBtn.disabled = state.loading;
+        refs.addBtn.disabled = state.loading;
+      }
+
+      function getFilteredRecords() {
+        const keyword = normalizeCompareText(state.keyword);
+        if (!keyword) {
+          return state.records;
+        }
+        return state.records.filter((item) => {
+          const haystack = [item.code, item.title, item.company, item.project, item.lecturerName]
+            .map((part) => normalizeCompareText(part))
+            .join("|");
+          return haystack.includes(keyword);
+        });
+      }
+
+      function renderRecordList() {
+        const rows = getFilteredRecords();
+        refs.recordList.innerHTML = "";
+
+        if (!rows.length) {
+          refs.recordList.innerHTML = '<div class="empty">暂无培训记录</div>';
+          refs.recordListFoot.textContent = "记录 0 条";
+          return;
+        }
+
+        rows.forEach((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `record-item${item.id === state.selectedRecordId ? " active" : ""}`;
+          button.dataset.id = item.id;
+          button.innerHTML = `
+            <div class="record-row">
+              <span class="record-name">${escapeHtml(item.title || "未命名培训")}</span>
+              <span class="record-code">${escapeHtml(item.code || "-")}</span>
+            </div>
+            <div class="record-sub">${escapeHtml(item.company || "-")} ｜ ${escapeHtml(item.trainingDateText || "-")}</div>
+          `;
+          refs.recordList.appendChild(button);
+        });
+
+        refs.recordListFoot.textContent = `记录 ${state.records.length} 条，当前 ${rows.length} 条`;
+      }
+
+      function renderRecordTable() {
+        const rows = getFilteredRecords();
+        refs.recordTableBody.innerHTML = "";
+
+        if (!rows.length) {
+          refs.recordTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7e8a9b;padding:20px">暂无记录</td></tr>';
+          return;
+        }
+
+        rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${escapeHtml(row.code || "-")}</td>
+            <td>${escapeHtml(row.title || "-")}</td>
+            <td>${escapeHtml(row.trainingDateText || "-")}</td>
+            <td>${escapeHtml(row.company || "-")}</td>
+            <td>${escapeHtml(row.attendeeCountText || "-")}</td>
+            <td>${escapeHtml(row.project || "-")}</td>
+            <td>${escapeHtml(row.lecturerName || "-")}</td>
+            <td>${escapeHtml(row.sampled || "否")}</td>
+            <td>
+              <div class="cell-actions">
+                <button class="text-btn" data-action="edit" data-id="${escapeHtml(row.id)}">编辑</button>
+                <button class="text-btn danger" data-action="delete" data-id="${escapeHtml(row.id)}">删除</button>
+              </div>
+            </td>
+          `;
+          refs.recordTableBody.appendChild(tr);
+        });
+      }
+
+      function renderDetail() {
+        const record = getSelectedRecord();
+        if (!record) {
+          refs.detailBody.innerHTML = '<div class="kv-item full"><div class="kv-v" style="color:#7e8a9b;">请选择一条培训记录查看详情</div></div>';
+          return;
+        }
+
+        refs.detailBody.innerHTML = `
+          <div class="kv-item"><div class="kv-k">编号</div><div class="kv-v">${escapeHtml(record.code || "-")}</div></div>
+          <div class="kv-item"><div class="kv-k">标题</div><div class="kv-v">${escapeHtml(record.title || "-")}</div></div>
+          <div class="kv-item"><div class="kv-k">培训日期</div><div class="kv-v">${escapeHtml(record.trainingDateText || "-")}</div></div>
+          <div class="kv-item"><div class="kv-k">施工单位</div><div class="kv-v">${escapeHtml(record.company || "-")}</div></div>
+          <div class="kv-item"><div class="kv-k">培训人数</div><div class="kv-v">${escapeHtml(record.attendeeCountText || "-")}</div></div>
+          <div class="kv-item"><div class="kv-k">施工项目</div><div class="kv-v">${escapeHtml(record.project || "-")}</div></div>
+          <div class="kv-item"><div class="kv-k">授课人</div><div class="kv-v">${escapeHtml(record.lecturerName || "-")}</div></div>
+          <div class="kv-item"><div class="kv-k">是否抽取</div><div class="kv-v">${escapeHtml(record.sampled || "否")}</div></div>
+          <div class="kv-item"><div class="kv-k">最后一次抽取时间</div><div class="kv-v">${escapeHtml(record.lastExtractTimeText || "-")}</div></div>
+          <div class="kv-item full"><div class="kv-k">参加培训人员</div><div class="kv-v">${renderParticipantDetailTable(record.participantDetails || [])}</div></div>
+          <div class="kv-item full"><div class="kv-k">培训内容</div><div class="kv-v">${escapeHtml(record.content || "-")}</div></div>
+          <div class="kv-item full"><div class="kv-k">培训效果验证</div><div class="kv-v">${escapeHtml(record.effect || "-")}</div></div>
+        `;
+      }
+
+      function getSelectedRecord() {
+        return state.records.find((item) => item.id === state.selectedRecordId) || null;
+      }
+
+      function openFormModal(mode) {
+        if (mode === "edit" && !getSelectedRecord()) {
+          showToast("请先选择记录");
+          return;
+        }
+
+        state.formMode = mode;
+        if (mode === "edit") {
+          const current = getSelectedRecord();
+          state.formRecordId = current.id;
+          state.formDraft = createDraftFromRecord(current);
+          refs.formModalTitle.textContent = "编辑培训记录";
+        } else {
+          state.formRecordId = "";
+          state.formDraft = createEmptyDraft();
+          applyScanPrefillToDraft(state.formDraft);
+          refs.formModalTitle.textContent = "新建培训记录";
+        }
+
+        refs.formCompanyKeywordInput.value = state.formDraft.company || "";
+        renderFormOptions();
+        fillFormFromDraft();
+        refs.formModal.classList.remove("hidden");
+      }
+
+      function openFromScanContextIfNeeded() {
+        if (!state.scanContext.autoNew) {
+          return;
+        }
+        openFormModal("add");
+      }
+
+      function applyScanPrefillToDraft(draft) {
+        if (!draft || !state.scanContext.fromQr) {
+          return;
+        }
+
+        const unitId = String(state.scanContext.unitId || "").trim();
+        if (unitId) {
+          const matched = state.units.find((item) => item.id === unitId);
+          if (matched) {
+            draft.companyId = matched.id;
+            draft.company = matched.name;
+            return;
+          }
+        }
+
+        const unitName = String(state.scanContext.unitName || "").trim();
+        if (unitName) {
+          draft.company = unitName;
+          draft.companyId = findUnitIdByName(unitName);
+        }
+      }
+
+      function closeFormModal() {
+        refs.formModal.classList.add("hidden");
+        closeDraftParticipantSignatureModal();
+      }
+
+      function renderFormOptions() {
+        const draft = state.formDraft || createEmptyDraft();
+        renderFormCompanyOptions({
+          selectedId: draft.companyId || (!draft.companyId && draft.company ? "__CUSTOM__" : ""),
+        });
+
+        const lecturerOptions = ['<option value="">请选择授课人（可选）</option>'];
+        state.users.forEach((item) => {
+          lecturerOptions.push(`<option value="${escapeHtml(item.userId)}">${escapeHtml(item.name)}</option>`);
+        });
+        if (!draft.lecturerId && draft.lecturerName) {
+          lecturerOptions.push(`<option value="__LECTURER_CUSTOM__">${escapeHtml(draft.lecturerName)}</option>`);
+        }
+        refs.formLecturerSelect.innerHTML = lecturerOptions.join("");
+      }
+
+      function fillFormFromDraft() {
+        const draft = state.formDraft || createEmptyDraft();
+
+        refs.formCodeInput.value = draft.code || "自动生成";
+        refs.formTitleInput.value = draft.title || "";
+        refs.formTrainingDateInput.value = draft.trainingDateLocal || "";
+        syncDateFieldDisplay(refs.formTrainingDateField, refs.formTrainingDateDisplayInput, refs.formTrainingDateInput);
+        refs.formCompanyKeywordInput.value = draft.company || "";
+
+        if (draft.companyId) {
+          refs.formCompanySelect.value = draft.companyId;
+        } else if (draft.company) {
+          refs.formCompanySelect.value = "__CUSTOM__";
+        } else {
+          refs.formCompanySelect.value = "";
+        }
+
+        refs.formCountInput.value = draft.attendeeCount || "";
+        refs.formProjectInput.value = draft.project || "";
+
+        if (draft.lecturerId) {
+          refs.formLecturerSelect.value = draft.lecturerId;
+        } else if (draft.lecturerName) {
+          refs.formLecturerSelect.value = "__LECTURER_CUSTOM__";
+        } else {
+          refs.formLecturerSelect.value = "";
+        }
+
+        refs.formSampledSelect.value = draft.sampled || "否";
+        refs.formExtractTimeInput.value = draft.lastExtractTimeLocal || "";
+        refs.formContentInput.value = draft.content || "";
+        refs.formEffectInput.value = draft.effect || "";
+        renderFormParticipantList();
+        syncDraftParticipantCount();
+      }
+
+      function applyFormToDraft() {
+        const draft = state.formDraft || createEmptyDraft();
+
+        draft.title = refs.formTitleInput.value.trim();
+        draft.trainingDateLocal = refs.formTrainingDateInput.value.trim();
+        syncDateFieldDisplay(refs.formTrainingDateField, refs.formTrainingDateDisplayInput, refs.formTrainingDateInput);
+
+        const companySelectValue = String(refs.formCompanySelect.value || "").trim();
+        if (companySelectValue && companySelectValue !== "__CUSTOM__") {
+          const unit = state.units.find((item) => item.id === companySelectValue);
+          draft.companyId = companySelectValue;
+          draft.company = unit?.name || "";
+        } else {
+          draft.companyId = "";
+          draft.company = draft.company || "";
+        }
+
+        draft.attendeeCount = refs.formCountInput.value.trim();
+        draft.project = refs.formProjectInput.value.trim();
+
+        const lecturerSelectValue = String(refs.formLecturerSelect.value || "").trim();
+        if (lecturerSelectValue && lecturerSelectValue !== "__LECTURER_CUSTOM__") {
+          const user = state.users.find((item) => item.userId === lecturerSelectValue);
+          draft.lecturerId = lecturerSelectValue;
+          draft.lecturerName = user?.name || "";
+        } else {
+          draft.lecturerId = "";
+          draft.lecturerName = draft.lecturerName || "";
+        }
+
+        draft.sampled = refs.formSampledSelect.value === "是" ? "是" : "否";
+        draft.lastExtractTimeLocal = refs.formExtractTimeInput.value.trim();
+        draft.content = refs.formContentInput.value.trim();
+        draft.effect = refs.formEffectInput.value.trim();
+        draft.participants = ensureDraftParticipants(draft).map((item) => normalizeParticipantRow(item));
+        syncDraftParticipantCount();
+
+        state.formDraft = draft;
+      }
+
+      async function saveForm(event) {
+        event.preventDefault();
+        applyFormToDraft();
+
+        const draft = state.formDraft;
+        if (!draft) {
+          return;
+        }
+
+        let participants = [];
+
+        try {
+          participants = collectValidDraftParticipants();
+        } catch (error) {
+          showToast(error.message);
+          return;
+        }
+
+        const finalCount = participants.length;
+
+        if (!draft.title) {
+          showToast("请填写标题");
+          return;
+        }
+
+        if (!draft.trainingDateLocal) {
+          showToast("请填写培训日期");
+          return;
+        }
+
+        if (!draft.company && !draft.companyId) {
+          showToast("请选择施工单位");
+          return;
+        }
+
+        if (!finalCount) {
+          showToast("请至少录入 1 位参训人员");
+          return;
+        }
+
+        if (!draft.project) {
+          showToast("请填写施工项目");
+          return;
+        }
+
+        const payload = {
+          [TRAINING_FIELD.title]: draft.title,
+          [TRAINING_FIELD.trainingDate]: formatDateTimeForApi(draft.trainingDateLocal),
+          [TRAINING_FIELD.company]: draft.company || resolveUnitNameById(draft.companyId) || "",
+          [TRAINING_FIELD.attendeeCount]: finalCount,
+          [TRAINING_FIELD.project]: draft.project,
+          [TRAINING_FIELD.content]: draft.content || "",
+          [TRAINING_FIELD.effect]: draft.effect || "",
+          [TRAINING_FIELD.sampled]: draft.sampled || "否",
+          [TRAINING_FIELD.lastExtractTime]: draft.lastExtractTimeLocal ? formatDateTimeForApi(draft.lastExtractTimeLocal) : "",
+          [TRAINING_FIELD.participantSubform]: buildParticipantSubformRows(participants),
+        };
+
+        payload[TRAINING_FIELD.lecturer] = draft.lecturerId || null;
+
+        setLoading(true);
+        setStatus("正在保存培训记录...");
+
+        try {
+          let savedId = "";
+          if (state.formMode === "edit" && draft.cloudId) {
+            await requestEntry(API_CONFIG.trainingEntryId, "data_update", {
+              data_id: draft.cloudId,
+              data: payload,
+            });
+            savedId = draft.cloudId;
+          } else {
+            const result = await requestEntry(API_CONFIG.trainingEntryId, "data_create", { data: payload });
+            savedId = extractRecordId(result?.data || result);
+          }
+
+          closeFormModal();
+          await refreshAll({ preserveSelection: true });
+          if (savedId) {
+            state.selectedRecordId = savedId;
+            renderRecordList();
+            renderRecordTable();
+            renderDetail();
+            renderActionDisabled();
+          }
+          showToast("培训记录已保存");
+        } catch (error) {
+          setStatus(`保存失败：${error.message}`, true);
+          showToast(`保存失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function deleteSelectedRecord() {
+        const current = getSelectedRecord();
+        if (!current) {
+          showToast("请先选择记录");
+          return;
+        }
+
+        const confirmed = window.confirm(`确认删除培训记录「${current.title || current.code || current.id}」吗？`);
+        if (!confirmed) {
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在删除培训记录...");
+
+        try {
+          await requestEntry(API_CONFIG.trainingEntryId, "data_delete", {
+            data_id: current.cloudId,
+          });
+          await refreshAll({ preserveSelection: false });
+          showToast("培训记录已删除");
+        } catch (error) {
+          setStatus(`删除失败：${error.message}`, true);
+          showToast(`删除失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function createEmptyParticipant() {
+        return {
+          name: "",
+          signFiles: [],
+          signPreviewUrl: "",
+          signTime: "",
+        };
+      }
+
+      function normalizeParticipantName(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+
+      function normalizeParticipantRow(row) {
+        const source = row && typeof row === "object" ? row : {};
+        return {
+          name: normalizeParticipantName(source.name),
+          signFiles: normalizeFileArray(source.signFiles),
+          signPreviewUrl: String(source.signPreviewUrl || "").trim(),
+          signTime: normalizeDateTimeLocal(source.signTime),
+        };
+      }
+
+      function normalizeFileArray(value) {
+        if (Array.isArray(value)) {
+          return value.filter((item) => item && typeof item === "object");
+        }
+        if (value && typeof value === "object") {
+          const extracted = extractObjectArray(value, ["data", "list", "rows"]);
+          if (Array.isArray(extracted)) {
+            return extracted.filter((item) => item && typeof item === "object");
+          }
+        }
+        return [];
+      }
+
+      function resolveFileUrl(file) {
+        if (!file || typeof file !== "object") {
+          return "";
+        }
+        const keys = ["url", "download_url", "downloadUrl", "link", "href", "preview_url", "previewUrl"];
+        for (const key of keys) {
+          if (!Object.prototype.hasOwnProperty.call(file, key)) {
+            continue;
+          }
+          const text = String(file[key] || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+        return "";
+      }
+
+      function ensureDraftParticipants(draft) {
+        const target = draft && typeof draft === "object" ? draft : createEmptyDraft();
+        if (!Array.isArray(target.participants) || !target.participants.length) {
+          target.participants = [createEmptyParticipant()];
+        } else {
+          target.participants = target.participants.map((item) => normalizeParticipantRow(item));
+        }
+        if (state.formDraft !== target) {
+          state.formDraft = target;
+        }
+        return target.participants;
+      }
+
+      function syncDraftParticipantCount() {
+        const participants = ensureDraftParticipants(state.formDraft);
+        const count = participants.filter((item) => Boolean(normalizeParticipantName(item.name))).length;
+        refs.formCountInput.value = count ? String(count) : "";
+        if (state.formDraft) {
+          state.formDraft.attendeeCount = count ? String(count) : "";
+        }
+      }
+
+      function renderFormParticipantList() {
+        const participants = ensureDraftParticipants(state.formDraft);
+        refs.formParticipantList.innerHTML = participants
+          .map((item, index) => {
+            const hasSign = item.signFiles.length > 0;
+            const previewUrl = item.signPreviewUrl || resolveFileUrl(item.signFiles[0]);
+            const signTimeText = item.signTime ? item.signTime.replace("T", " ") : "";
+            return `
+              <div class="participant-row" data-participant-index="${index}">
+                <div class="participant-seq">${index + 1}</div>
+                <input
+                  class="input"
+                  type="text"
+                  data-role="participant-name"
+                  value="${escapeHtml(item.name)}"
+                  placeholder="请输入姓名"
+                />
+                <div class="participant-sign-cell">
+                  <button type="button" class="btn" data-action="sign">${hasSign ? "重签" : "点击签字"}</button>
+                  <span class="sign-state${hasSign ? " done" : ""}">${hasSign ? "已签" : "未签"}</span>
+                  ${previewUrl ? '<button type="button" class="sign-preview-link" data-action="preview">预览</button>' : ""}
+                  ${hasSign ? '<button type="button" class="sign-preview-link" data-action="delete-sign">清除</button>' : ""}
+                </div>
+                <input
+                  class="input participant-time"
+                  type="text"
+                  value="${escapeHtml(signTimeText)}"
+                  placeholder="签字后自动记录"
+                  readonly
+                />
+                <button type="button" class="btn participant-delete" data-action="delete-row">删除</button>
+              </div>
+            `;
+          })
+          .join("");
+
+        if (!participants.length) {
+          refs.formParticipantList.innerHTML = '<div class="participant-empty">暂无参训人员，请点击“新增人员”开始录入。</div>';
+        }
+      }
+
+      function addDraftParticipantRow() {
+        const participants = ensureDraftParticipants(state.formDraft);
+        participants.push(createEmptyParticipant());
+        renderFormParticipantList();
+        syncDraftParticipantCount();
+
+        const index = participants.length - 1;
+        const input = refs.formParticipantList.querySelector(`[data-participant-index="${index}"] [data-role="participant-name"]`);
+        if (input instanceof HTMLInputElement) {
+          input.focus();
+        }
+      }
+
+      function removeDraftParticipantRow(index) {
+        const participants = ensureDraftParticipants(state.formDraft);
+        participants.splice(index, 1);
+
+        if (state.formSignatureIndex === index) {
+          closeDraftParticipantSignatureModal();
+        } else if (state.formSignatureIndex > index) {
+          state.formSignatureIndex -= 1;
+        }
+
+        if (!participants.length) {
+          participants.push(createEmptyParticipant());
+        }
+
+        renderFormParticipantList();
+        syncDraftParticipantCount();
+      }
+
+      function clearDraftParticipantSignature(index) {
+        const participants = ensureDraftParticipants(state.formDraft);
+        const row = participants[index];
+        if (!row) {
+          return;
+        }
+
+        row.signFiles = [];
+        row.signPreviewUrl = "";
+        row.signTime = "";
+        renderFormParticipantList();
+        showToast(`已清除第 ${index + 1} 行签字`);
+      }
+
+      function previewDraftParticipantSignature(index) {
+        const participants = ensureDraftParticipants(state.formDraft);
+        const row = participants[index];
+        const previewUrl = String((row && (row.signPreviewUrl || resolveFileUrl(row.signFiles[0]))) || "").trim();
+        if (!previewUrl) {
+          showToast("当前签字暂无可预览图片");
+          return;
+        }
+        window.open(previewUrl, "_blank", "noopener,noreferrer");
+      }
+
+      function collectValidDraftParticipants() {
+        const participants = ensureDraftParticipants(state.formDraft);
+        const output = [];
+        const seen = new Set();
+
+        participants.forEach((item, index) => {
+          const row = normalizeParticipantRow(item);
+          const hasName = Boolean(row.name);
+          const hasSign = row.signFiles.length > 0;
+          const hasOtherValue = Boolean(row.signPreviewUrl || row.signTime || hasSign);
+
+          if (!hasName && !hasOtherValue) {
+            return;
+          }
+          if (!hasName) {
+            throw new Error(`第 ${index + 1} 行请先填写参训人员姓名`);
+          }
+          if (seen.has(row.name)) {
+            throw new Error(`参训人员“${row.name}”重复录入，请检查`);
+          }
+
+          seen.add(row.name);
+          if (!hasSign) {
+            row.signFiles = [];
+            row.signPreviewUrl = "";
+            row.signTime = "";
+          } else if (!row.signTime) {
+            row.signTime = toDateTimeLocalValue(new Date());
+          }
+          output.push(row);
+        });
+
+        return output;
+      }
+
+      function renderParticipantDetailTable(rows) {
+        const list = Array.isArray(rows) ? rows.filter((item) => item && typeof item === "object") : [];
+        if (!list.length) {
+          return "-";
+        }
+        const body = list
+          .map((item, index) => {
+            const previewUrl = item.signPreviewUrl || resolveFileUrl(item.signFiles[0]);
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(item.name || "-")}</td>
+                <td>${item.signFiles.length ? "已签" : "未签"}</td>
+                <td>${escapeHtml((item.signTime || "").replace("T", " ") || "-")}</td>
+                <td>${previewUrl ? `<a class="text-btn" href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener noreferrer">查看签字</a>` : "-"}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        return `
+          <table class="detail-subtable">
+            <thead>
+              <tr>
+                <th style="width:60px;">序号</th>
+                <th style="width:140px;">姓名</th>
+                <th style="width:90px;">签字状态</th>
+                <th style="width:170px;">签字时间</th>
+                <th style="width:100px;">签字图片</th>
+              </tr>
+            </thead>
+            <tbody>${body}</tbody>
+          </table>
+        `;
+      }
+
+      function buildParticipantSubformRows(participants) {
+        return (Array.isArray(participants) ? participants : []).map((item) => ({
+          [PARTICIPANT_FIELD.name]: item.name,
+          [PARTICIPANT_FIELD.sign]: item.signFiles.length ? item.signFiles : null,
+          [PARTICIPANT_FIELD.signTime]: item.signTime ? formatDateTimeForApi(item.signTime) : "",
+        }));
+      }
+
+      function openDraftParticipantSignatureModal(index) {
+        const participants = ensureDraftParticipants(state.formDraft);
+        const row = participants[index];
+        if (!row) {
+          return;
+        }
+
+        const name = normalizeParticipantName(row.name);
+        if (!name) {
+          showToast(`请先填写第 ${index + 1} 行参训人员姓名`);
+          const input = refs.formParticipantList.querySelector(`[data-participant-index="${index}"] [data-role="participant-name"]`);
+          if (input instanceof HTMLInputElement) {
+            input.focus();
+          }
+          return;
+        }
+
+        state.formSignatureIndex = index;
+        refs.participantSignatureTitle.textContent = `参训人员手写签字 - ${name}`;
+        refs.participantSignatureModal.classList.remove("hidden");
+        resizeDraftSignatureCanvas();
+        clearDraftSignatureCanvas();
+        refs.participantSignatureStatus.textContent = "请在签字板上书写后点击保存";
+      }
+
+      function closeDraftParticipantSignatureModal() {
+        state.formSignatureIndex = -1;
+        refs.participantSignatureModal.classList.add("hidden");
+        clearDraftSignatureCanvas();
+        refs.participantSignatureStatus.textContent = "请开始签字";
+      }
+
+      function bindFormSignatureCanvas() {
+        const canvas = refs.participantSignatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+
+        canvas.addEventListener("pointerdown", handleDraftSignaturePointerDown);
+        canvas.addEventListener("pointermove", handleDraftSignaturePointerMove);
+        canvas.addEventListener("pointerup", handleDraftSignaturePointerUp);
+        canvas.addEventListener("pointerleave", handleDraftSignaturePointerUp);
+        canvas.addEventListener("pointercancel", handleDraftSignaturePointerUp);
+
+        window.addEventListener("resize", () => {
+          if (!refs.participantSignatureModal.classList.contains("hidden")) {
+            resizeDraftSignatureCanvas();
+          }
+        });
+      }
+
+      function resizeDraftSignatureCanvas() {
+        const canvas = refs.participantSignatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = Math.max(Math.floor(rect.width * ratio), 320);
+        canvas.height = Math.max(Math.floor(rect.height * ratio), 180);
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(ratio, ratio);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 2.6;
+        ctx.strokeStyle = "#18324d";
+        ctx.clearRect(0, 0, rect.width, rect.height);
+
+        state.formSignaturePad.dirty = false;
+        state.formSignaturePad.drawing = false;
+        state.formSignaturePad.pointerId = null;
+      }
+
+      function clearDraftSignatureCanvas() {
+        const canvas = refs.participantSignatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        state.formSignaturePad.dirty = false;
+        state.formSignaturePad.drawing = false;
+        state.formSignaturePad.pointerId = null;
+        refs.participantSignatureStatus.textContent = "已清空，请重新签字";
+      }
+
+      function handleDraftSignaturePointerDown(event) {
+        const canvas = refs.participantSignatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+
+        event.preventDefault();
+        const point = getDraftSignatureCanvasPoint(canvas, event);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        state.formSignaturePad.drawing = true;
+        state.formSignaturePad.pointerId = event.pointerId;
+        state.formSignaturePad.lastX = point.x;
+        state.formSignaturePad.lastY = point.y;
+        refs.participantSignatureStatus.textContent = "正在签字...";
+
+        if (typeof canvas.setPointerCapture === "function") {
+          try {
+            canvas.setPointerCapture(event.pointerId);
+          } catch {
+            // ignore
+          }
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y);
+      }
+
+      function handleDraftSignaturePointerMove(event) {
+        const canvas = refs.participantSignatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        if (!state.formSignaturePad.drawing || state.formSignaturePad.pointerId !== event.pointerId) {
+          return;
+        }
+
+        event.preventDefault();
+        const point = getDraftSignatureCanvasPoint(canvas, event);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(state.formSignaturePad.lastX, state.formSignaturePad.lastY);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+
+        state.formSignaturePad.lastX = point.x;
+        state.formSignaturePad.lastY = point.y;
+        state.formSignaturePad.dirty = true;
+      }
+
+      function handleDraftSignaturePointerUp(event) {
+        const canvas = refs.participantSignatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        if (state.formSignaturePad.pointerId !== null && state.formSignaturePad.pointerId !== event.pointerId) {
+          return;
+        }
+
+        state.formSignaturePad.drawing = false;
+        state.formSignaturePad.pointerId = null;
+        if (state.formSignaturePad.dirty) {
+          refs.participantSignatureStatus.textContent = "签字完成，点击保存后回填到当前人员";
+        }
+
+        if (typeof canvas.releasePointerCapture === "function") {
+          try {
+            canvas.releasePointerCapture(event.pointerId);
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      function getDraftSignatureCanvasPoint(canvas, event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
+      }
+
+      async function saveDraftParticipantSignature() {
+        const index = state.formSignatureIndex;
+        const participants = ensureDraftParticipants(state.formDraft);
+        const row = participants[index];
+        if (!row) {
+          showToast("当前没有可保存的签字行");
+          return;
+        }
+        if (!state.formSignaturePad.dirty) {
+          refs.participantSignatureStatus.textContent = "请先在签字板上完成签字";
+          return;
+        }
+
+        const canvas = refs.participantSignatureCanvas;
+        const dataUrl = canvas.toDataURL("image/png");
+
+        refs.saveParticipantSignatureBtn.disabled = true;
+        refs.clearParticipantSignatureBtn.disabled = true;
+        refs.closeParticipantSignatureBtn.disabled = true;
+        refs.participantSignatureStatus.textContent = "正在上传签字...";
+
+        try {
+          const result = await requestBackend("/partner-training/signature-upload", "POST", {
+            dataUrl,
+            name: `participant-sign-${Date.now()}.png`,
+          });
+          const files = normalizeFileArray(result?.data?.files);
+          if (!files.length) {
+            throw new Error("上传成功但未返回签字文件");
+          }
+
+          row.signFiles = files;
+          row.signPreviewUrl = dataUrl;
+          row.signTime = toDateTimeLocalValue(new Date());
+          renderFormParticipantList();
+          syncDraftParticipantCount();
+          showToast(`第 ${index + 1} 行签字已保存`);
+          closeDraftParticipantSignatureModal();
+        } catch (error) {
+          const message = `签字上传失败：${error.message}`;
+          refs.participantSignatureStatus.textContent = message;
+          showToast(message);
+        } finally {
+          refs.saveParticipantSignatureBtn.disabled = false;
+          refs.clearParticipantSignatureBtn.disabled = false;
+          refs.closeParticipantSignatureBtn.disabled = false;
+        }
+      }
+
+      function resolveUnitNameById(unitId) {
+        const id = String(unitId || "").trim();
+        if (!id) {
+          return "";
+        }
+        const unit = state.units.find((item) => item.id === id);
+        return unit?.name || "";
+      }
+
+      function filterPartnerUnits(keyword) {
+        const text = normalizeCompareText(keyword);
+        if (!text) {
+          return state.units.slice();
+        }
+        return state.units.filter((item) => {
+          const haystack = [item.name, item.code].map((part) => normalizeCompareText(part)).join("|");
+          return haystack.includes(text);
+        });
+      }
+
+      function renderFormCompanyOptions({ selectedId = String(refs.formCompanySelect.value || "").trim() } = {}) {
+        const draft = state.formDraft || createEmptyDraft();
+        const rows = filterPartnerUnits(refs.formCompanyKeywordInput.value);
+        const companyOptions = ['<option value="">请选择施工单位</option>'];
+        rows.forEach((item) => {
+          companyOptions.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`);
+        });
+        if (!draft.companyId && draft.company) {
+          companyOptions.push(`<option value="__CUSTOM__">${escapeHtml(draft.company)}</option>`);
+        }
+        if (!rows.length) {
+          companyOptions.push('<option value="" disabled>未找到匹配施工单位</option>');
+        }
+        refs.formCompanySelect.innerHTML = companyOptions.join("");
+        refs.formCompanySelect.value = Array.from(refs.formCompanySelect.options).some((option) => option.value === selectedId)
+          ? selectedId
+          : "";
+      }
+
+      function applyQrUnitKeywordSelection({ preferFirst = false } = {}) {
+        const keyword = refs.qrUnitKeywordInput.value.trim();
+        if (!keyword) {
+          state.qrUnitId = "";
+          renderQrUnitOptions();
+          renderQrPanel();
+          return;
+        }
+
+        const rows = filterPartnerUnits(keyword);
+        const compareKeyword = normalizeCompareText(keyword);
+        const exactMatch = rows.find((item) => {
+          return normalizeCompareText(item.name) === compareKeyword || normalizeCompareText(item.code) === compareKeyword;
+        });
+        const target = exactMatch || (preferFirst && rows.length === 1 ? rows[0] : null);
+
+        if (target) {
+          state.qrUnitId = target.id;
+          refs.qrUnitKeywordInput.value = target.name;
+          renderQrUnitOptions();
+        } else {
+          renderQrUnitOptions({ selectedId: state.qrUnitId });
+          if (!rows.some((item) => item.id === state.qrUnitId)) {
+            state.qrUnitId = "";
+            refs.qrUnitSelect.value = "";
+          }
+        }
+        renderQrPanel();
+      }
+
+      function syncQrUnitKeywordFromSelection() {
+        const unit = getSelectedQrUnit();
+        if (!unit) {
+          return;
+        }
+        refs.qrUnitKeywordInput.value = unit.name;
+        renderQrUnitOptions();
+      }
+
+      function applyFormCompanyKeywordSelection({ preferFirst = false } = {}) {
+        const draft = state.formDraft || createEmptyDraft();
+        const keyword = refs.formCompanyKeywordInput.value.trim();
+        if (!keyword) {
+          refs.formCompanySelect.value = "";
+          renderFormCompanyOptions({ selectedId: "" });
+          return;
+        }
+
+        const rows = filterPartnerUnits(keyword);
+        const compareKeyword = normalizeCompareText(keyword);
+        const exactMatch = rows.find((item) => {
+          return normalizeCompareText(item.name) === compareKeyword || normalizeCompareText(item.code) === compareKeyword;
+        });
+        const target = exactMatch || (preferFirst && rows.length === 1 ? rows[0] : null);
+
+        if (target) {
+          draft.companyId = target.id;
+          draft.company = target.name;
+          refs.formCompanyKeywordInput.value = target.name;
+          renderFormCompanyOptions({ selectedId: target.id });
+          return;
+        }
+
+        renderFormCompanyOptions({ selectedId: String(refs.formCompanySelect.value || "").trim() });
+        if (!rows.some((item) => item.id === refs.formCompanySelect.value)) {
+          refs.formCompanySelect.value = "";
+        }
+      }
+
+      function syncFormCompanyKeywordFromSelection() {
+        const id = String(refs.formCompanySelect.value || "").trim();
+        const unit = state.units.find((item) => item.id === id);
+        if (!unit) {
+          return;
+        }
+        refs.formCompanyKeywordInput.value = unit.name;
+        renderFormCompanyOptions({ selectedId: unit.id });
+      }
+
+      async function resolvePartnerFieldAliasMap() {
+        const map = {
+          codeAliases: [PARTNER_FIELD.code],
+          nameAliases: [PARTNER_FIELD.name],
+        };
+
+        try {
+          const widgetsResult = await fetchEntryWidgets(API_CONFIG.partnerEntryId);
+          const widgets = extractWidgetList(widgetsResult);
+          if (!widgets.length) {
+            return map;
+          }
+
+          const codeAliases = new Set(map.codeAliases);
+          const nameAliases = new Set(map.nameAliases);
+
+          widgets.forEach((widget) => {
+            const alias = String(widget.alias || "").trim();
+            const titleText = String(widget.title || "").trim();
+            if (!alias || !titleText) {
+              return;
+            }
+
+            if (matchesWidgetTitle(titleText, PARTNER_FIELD_TITLE_MATCHER.code)) {
+              codeAliases.add(alias);
+            }
+
+            if (matchesWidgetTitle(titleText, PARTNER_FIELD_TITLE_MATCHER.name)) {
+              nameAliases.add(alias);
+            }
+          });
+
+          map.codeAliases = Array.from(codeAliases);
+          map.nameAliases = Array.from(nameAliases);
+          return map;
+        } catch {
+          return map;
+        }
+      }
+
+      function matchesWidgetTitle(title, keywords) {
+        const text = normalizeCompareText(title);
+        return (keywords || []).some((keyword) => text.includes(normalizeCompareText(keyword)));
+      }
+
+      async function fetchEntryWidgets(entryId) {
+        try {
+          return await requestEntry(entryId, "widgets", {}, "POST");
+        } catch {
+          return requestEntry(entryId, "widgets", {}, "GET");
+        }
+      }
+
+      function extractWidgetList(result) {
+        const roots = [];
+        const visited = new Set();
+        const queue = [result];
+
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object") {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            current.forEach((item) => {
+              if (item && typeof item === "object") {
+                queue.push(item);
+              }
+            });
+            continue;
+          }
+
+          const candidates = [current.widgets, current.data, current.list, current.rows, current.items];
+          candidates.forEach((candidate) => {
+            if (Array.isArray(candidate)) {
+              candidate.forEach((item) => {
+                if (item && typeof item === "object") {
+                  roots.push(item);
+                }
+              });
+            }
+          });
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        const output = [];
+        roots.forEach((item) => {
+          collectWidgetList(item, output);
+        });
+        return output;
+      }
+
+      function collectWidgetList(widget, output) {
+        if (!widget || typeof widget !== "object") {
+          return;
+        }
+
+        const alias = String(widget.alias || widget.name || widget.widget_alias || widget.widget_name || "").trim();
+        const title = String(widget.title || widget.label || widget.widget_title || "").trim();
+        if (alias) {
+          output.push({
+            alias,
+            title,
+            type: String(widget.type || widget.widget_type || "").trim(),
+          });
+        }
+
+        const children = []
+          .concat(Array.isArray(widget.widgets) ? widget.widgets : [])
+          .concat(Array.isArray(widget.sub_widgets) ? widget.sub_widgets : [])
+          .concat(Array.isArray(widget.children) ? widget.children : []);
+        children.forEach((item) => collectWidgetList(item, output));
+      }
+
+      function getAliasByCandidates(record, aliases) {
+        const list = Array.isArray(aliases) ? aliases : [];
+        for (const alias of list) {
+          const key = String(alias || "").trim();
+          if (!key) {
+            continue;
+          }
+          const raw = getAliasRawValue(record, key);
+          if (raw !== undefined && raw !== null && String(toDisplayText(raw)).trim()) {
+            return raw;
+          }
+        }
+        return "";
+      }
+
+      async function fetchPartnerUnits() {
+        state.partnerFieldAliasMap = await resolvePartnerFieldAliasMap();
+        const records = await fetchEntryRecords(API_CONFIG.partnerEntryId);
+        const mapped = records.map((row) => mapPartnerUnitRecord(row, state.partnerFieldAliasMap)).filter((item) => Boolean(item.name));
+        const deduped = [];
+        const seen = new Set();
+        mapped.forEach((item) => {
+          const key = `${normalizeCompareText(item.name)}|${item.id}`;
+          if (!key || seen.has(key)) {
+            return;
+          }
+          seen.add(key);
+          deduped.push(item);
+        });
+        deduped.sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-Hans-CN"));
+        return deduped;
+      }
+
+      async function fetchContactsUsers() {
+        const result = await requestApi("/contacts/users");
+        const rows = result?.data?.users || [];
+        return normalizeContactUsers(rows);
+      }
+
+      async function fetchTrainingRecords() {
+        const records = await fetchEntryRecords(API_CONFIG.trainingEntryId);
+        return records
+          .map(mapTrainingRecord)
+          .filter((item) => Boolean(item.id))
+          .sort((a, b) => (b.trainingDateText || "").localeCompare(a.trainingDateText || ""));
+      }
+
+      function mapPartnerUnitRecord(record, aliasMap) {
+        const codeValue = getAliasByCandidates(record, aliasMap?.codeAliases || [PARTNER_FIELD.code]);
+        const nameValue = getAliasByCandidates(record, aliasMap?.nameAliases || [PARTNER_FIELD.name]);
+        return {
+          id: extractRecordId(record),
+          code: toDisplayText(codeValue),
+          name: toDisplayText(nameValue),
+        };
+      }
+
+      function mapTrainingRecord(record) {
+        const cloudId = extractRecordId(record);
+        const rawLecturer = getAliasRawValue(record, TRAINING_FIELD.lecturer);
+        const rawParticipants = getAliasRawValue(record, TRAINING_FIELD.participantSubform);
+        const participantRows = normalizeSubformRows(rawParticipants);
+        const participantDetails = participantRows.map((row) => {
+          const signFiles = normalizeFileArray(getAliasRawValue(row, PARTICIPANT_FIELD.sign));
+          return {
+            name: toDisplayText(getAliasRawValue(row, PARTICIPANT_FIELD.name)),
+            signFiles,
+            signPreviewUrl: resolveFileUrl(signFiles[0]),
+            signTime: normalizeDateTimeLocal(getAliasRawValue(row, PARTICIPANT_FIELD.signTime)),
+          };
+        });
+        const participantNames = participantDetails.map((item) => item.name).filter(Boolean);
+
+        const trainingDateRaw = getAliasRawValue(record, TRAINING_FIELD.trainingDate);
+        const extractDateRaw = getAliasRawValue(record, TRAINING_FIELD.lastExtractTime);
+
+        const attendeeCountNum = toNumberOrNull(getAliasRawValue(record, TRAINING_FIELD.attendeeCount));
+
+        return {
+          id: cloudId,
+          cloudId,
+          code: toDisplayText(getAliasRawValue(record, TRAINING_FIELD.code)),
+          title: toDisplayText(getAliasRawValue(record, TRAINING_FIELD.title)),
+          trainingDateText: normalizeDateInput(trainingDateRaw),
+          trainingDateLocal: normalizeDateInput(trainingDateRaw),
+          company: toDisplayText(getAliasRawValue(record, TRAINING_FIELD.company)),
+          attendeeCount: attendeeCountNum === null ? 0 : attendeeCountNum,
+          attendeeCountText: attendeeCountNum === null ? "" : String(attendeeCountNum),
+          project: toDisplayText(getAliasRawValue(record, TRAINING_FIELD.project)),
+          lecturerId: extractComplexId(rawLecturer),
+          lecturerName: toDisplayText(rawLecturer),
+          content: toDisplayText(getAliasRawValue(record, TRAINING_FIELD.content)),
+          effect: toDisplayText(getAliasRawValue(record, TRAINING_FIELD.effect)),
+          sampled: normalizeYesNo(toDisplayText(getAliasRawValue(record, TRAINING_FIELD.sampled))),
+          lastExtractTimeText: normalizeDateTimeText(extractDateRaw),
+          lastExtractTimeLocal: normalizeDateTimeLocal(extractDateRaw),
+          participantRows,
+          participantDetails,
+          participantNames,
+        };
+      }
+
+      function normalizeContactUsers(list) {
+        const output = [];
+        const seen = new Set();
+
+        (Array.isArray(list) ? list : []).forEach((item) => {
+          if (!item || typeof item !== "object") {
+            return;
+          }
+          const userId = readFirstObjectText(item, ["userId", "user_id", "id", "_id", "uniqueid", "uniqueId"]);
+          const name = readFirstObjectText(item, ["name", "userName", "user_name", "nickname", "label", "title"]);
+          if (!userId || !name) {
+            return;
+          }
+          if (seen.has(userId)) {
+            return;
+          }
+          seen.add(userId);
+          output.push({
+            userId,
+            name,
+            account: readFirstObjectText(item, ["account"]),
+            mainDeptName: readFirstObjectText(item, ["mainDeptName", "main_department_name", "mainDepartmentName"]),
+          });
+        });
+
+        output.sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-Hans-CN"));
+        return output;
+      }
+
+      function readFirstObjectText(source, keys) {
+        for (const key of keys) {
+          if (!Object.prototype.hasOwnProperty.call(source, key)) {
+            continue;
+          }
+          const text = String(source[key] || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+        return "";
+      }
+
+      function normalizeSubformRows(value) {
+        if (!value) {
+          return [];
+        }
+
+        if (Array.isArray(value)) {
+          return value.filter((item) => item && typeof item === "object");
+        }
+
+        if (typeof value === "object") {
+          const keys = ["data", "rows", "list", "entry_data_list"];
+          for (const key of keys) {
+            const rows = value[key];
+            if (Array.isArray(rows)) {
+              return rows.filter((item) => item && typeof item === "object");
+            }
+          }
+          const fromValues = Object.values(value).filter((item) => item && typeof item === "object");
+          if (fromValues.length && fromValues.every((item) => !Array.isArray(item))) {
+            return fromValues;
+          }
+        }
+
+        return [];
+      }
+
+      function setLoading(flag) {
+        state.loading = Boolean(flag);
+        refs.formAddParticipantBtn.disabled = state.loading;
+        refs.saveFormBtn.disabled = state.loading;
+        refs.closeFormBtn.disabled = state.loading;
+        refs.cancelFormBtn.disabled = state.loading;
+        renderActionDisabled();
+      }
+
+      function setStatus(message, isError = false) {
+        refs.statusBar.textContent = message;
+        refs.statusBar.classList.toggle("error", Boolean(isError));
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => {
+          refs.toast.classList.remove("show");
+        }, 2300);
+      }
+
+      async function fetchEntryRecords(entryId) {
+        const actionCandidates = ["data", "data_search", "data_list", "data_query", "data_find"];
+        const payloadCandidates = [{ page: 1, limit: 1000 }, { page_no: 1, page_size: 1000 }, { limit: 1000 }, {}];
+
+        const errors = [];
+
+        for (const action of actionCandidates) {
+          for (const payload of payloadCandidates) {
+            try {
+              const response = await requestEntry(entryId, action, payload, "POST");
+              const records = extractRecordArray(response);
+              if (Array.isArray(records)) {
+                return records;
+              }
+            } catch (error) {
+              errors.push(`${action}(${JSON.stringify(payload)}): ${error.message}`);
+            }
+          }
+        }
+
+        throw new Error(errors[errors.length - 1] || "未能获取列表数据");
+      }
+
+      async function requestApi(path, query = {}) {
+        const url = new URL(`${API_CONFIG.baseUrl}${path}`);
+        Object.entries(query || {}).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === "") {
+            return;
+          }
+          url.searchParams.set(key, String(value));
+        });
+
+        let response;
+        try {
+          response = await fetch(url.toString(), {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      async function requestBackend(path, method = "GET", body = null) {
+        const url = `${API_CONFIG.baseUrl}${path}`;
+        const options = {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        if (method !== "GET" && body !== null) {
+          options.body = JSON.stringify(body);
+        }
+
+        let response;
+        try {
+          response = await fetch(url, options);
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      async function requestEntry(entryId, action, body = {}, method = "POST") {
+        const url = `${API_CONFIG.baseUrl}/app/${API_CONFIG.appId}/entry/${entryId}/${action}`;
+
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        const options = {
+          method,
+          headers,
+        };
+
+        if (method !== "GET") {
+          options.body = JSON.stringify(body || {});
+        }
+
+        let response;
+        try {
+          response = await fetch(url, options);
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      function extractRecordArray(result) {
+        const queue = [result];
+        const visited = new Set();
+
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object") {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            if (!current.length || typeof current[0] === "object") {
+              return current;
+            }
+            continue;
+          }
+
+          const keys = ["data_list", "data", "list", "rows", "items", "result", "records", "entry_data_list"];
+          for (const key of keys) {
+            const value = current[key];
+            if (Array.isArray(value) && (!value.length || typeof value[0] === "object")) {
+              return value;
+            }
+            const fromObjectValues = objectValuesAsObjectArray(value);
+            if (fromObjectValues) {
+              return fromObjectValues;
+            }
+          }
+
+          const topFromValues = objectValuesAsObjectArray(current);
+          if (topFromValues && topFromValues.length) {
+            return topFromValues;
+          }
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        return [];
+      }
+
+      function objectValuesAsObjectArray(source) {
+        if (!source || typeof source !== "object" || Array.isArray(source)) {
+          return null;
+        }
+        const values = Object.values(source);
+        if (!values.length) {
+          return null;
+        }
+        if (values.every((item) => item && typeof item === "object" && !Array.isArray(item))) {
+          return values;
+        }
+        return null;
+      }
+
+      function extractRecordId(record) {
+        if (!record || typeof record !== "object") {
+          return "";
+        }
+
+        const candidates = [
+          record._id,
+          record.id,
+          record.data_id,
+          record.entry_data_id,
+          record.record_id,
+          record._rowid,
+        ];
+
+        for (const candidate of candidates) {
+          const text = String(candidate || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+
+        const nestedCandidates = [record.data, record.entry_data, record.widget_data, record.form_data];
+        for (const nested of nestedCandidates) {
+          if (nested && typeof nested === "object") {
+            const nestedId = extractRecordId(nested);
+            if (nestedId) {
+              return nestedId;
+            }
+          }
+        }
+
+        return "";
+      }
+
+      function getAliasRawValue(record, alias) {
+        if (!record || !alias) {
+          return "";
+        }
+
+        const containers = [record, record.data, record.entry_data, record.widget_data, record.form_data];
+        for (const container of containers) {
+          if (container && typeof container === "object" && Object.prototype.hasOwnProperty.call(container, alias)) {
+            return container[alias];
+          }
+        }
+
+        const fromWidgets = findAliasInArray(record.widgets, alias);
+        if (fromWidgets !== undefined) {
+          return fromWidgets;
+        }
+
+        const fromDataArray = findAliasInArray(record.data, alias);
+        if (fromDataArray !== undefined) {
+          return fromDataArray;
+        }
+
+        return "";
+      }
+
+      function findAliasInArray(list, alias) {
+        if (!Array.isArray(list)) {
+          return undefined;
+        }
+        for (const item of list) {
+          if (!item || typeof item !== "object") {
+            continue;
+          }
+          const key = item.alias || item.widget_alias || item.name || item.key || item.widget_key;
+          if (key === alias) {
+            return item.value ?? item.widget_value ?? item.data ?? item;
+          }
+        }
+        return undefined;
+      }
+
+      function toDisplayText(value) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return String(value).trim();
+        }
+
+        if (Array.isArray(value)) {
+          return value
+            .map((item) => toDisplayText(item))
+            .filter(Boolean)
+            .join("、");
+        }
+
+        if (typeof value === "object") {
+          if (typeof value.display_name === "string") {
+            return value.display_name.trim();
+          }
+          if (typeof value.name === "string") {
+            return value.name.trim();
+          }
+          if (typeof value.label === "string") {
+            return value.label.trim();
+          }
+          if (typeof value.title === "string") {
+            return value.title.trim();
+          }
+          if (typeof value.value === "string" || typeof value.value === "number") {
+            return String(value.value).trim();
+          }
+          return Object.values(value)
+            .map((item) => toDisplayText(item))
+            .filter(Boolean)
+            .join("、");
+        }
+
+        return "";
+      }
+
+      function extractComplexId(value) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return String(value).trim();
+        }
+
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const id = extractComplexId(item);
+            if (id) {
+              return id;
+            }
+          }
+          return "";
+        }
+
+        if (typeof value === "object") {
+          const keys = ["_id", "id", "user_id", "userId", "value", "code", "key"];
+          for (const key of keys) {
+            if (Object.prototype.hasOwnProperty.call(value, key)) {
+              const text = String(value[key] || "").trim();
+              if (text) {
+                return text;
+              }
+            }
+          }
+        }
+
+        return "";
+      }
+
+      function normalizeCompareText(value) {
+        return String(value || "")
+          .replace(/\s+/g, "")
+          .toLowerCase();
+      }
+
+      function normalizeYesNo(value) {
+        const text = toDisplayText(value);
+        if (!text) {
+          return "否";
+        }
+        if (text === "是" || text === "1" || text.toLowerCase() === "yes" || text.toLowerCase() === "true") {
+          return "是";
+        }
+        return "否";
+      }
+
+      function toIntOrDefault(value, fallback = 0) {
+        const num = Number.parseInt(String(value || "").trim(), 10);
+        return Number.isFinite(num) ? num : fallback;
+      }
+
+      function toNumberOrNull(value) {
+        if (value === null || value === undefined || value === "") {
+          return null;
+        }
+        const num = Number(value);
+        if (!Number.isFinite(num)) {
+          return null;
+        }
+        return num;
+      }
+
+      function normalizeDateTimeText(value) {
+        const local = normalizeDateTimeLocal(value);
+        if (!local) {
+          return "";
+        }
+        return local.replace("T", " ") + ":00";
+      }
+
+      function normalizeDateInput(value) {
+        const text = String(toDisplayText(value) || "").trim();
+        if (!text) {
+          return "";
+        }
+
+        const normalized = text
+          .replace(/年/g, "-")
+          .replace(/月/g, "-")
+          .replace(/日/g, "")
+          .replace(/\//g, "-")
+          .replace(/\s+/g, " ");
+
+        const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
+        if (!match) {
+          return "";
+        }
+
+        const year = match[1];
+        const month = match[2].padStart(2, "0");
+        const day = match[3].padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function normalizeDateTimeLocal(value) {
+        const text = String(toDisplayText(value) || "").trim();
+        if (!text) {
+          return "";
+        }
+
+        const normalized = text
+          .replace(/年/g, "-")
+          .replace(/月/g, "-")
+          .replace(/日/g, "")
+          .replace(/\//g, "-")
+          .replace(/\s+/g, " ")
+          .replace("T", " ");
+
+        const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
+        if (!match) {
+          return "";
+        }
+
+        const year = match[1];
+        const month = match[2].padStart(2, "0");
+        const day = match[3].padStart(2, "0");
+        const hour = (match[4] || "00").padStart(2, "0");
+        const minute = (match[5] || "00").padStart(2, "0");
+
+        return `${year}-${month}-${day}T${hour}:${minute}`;
+      }
+
+      function formatDateTimeForApi(localValue) {
+        const local = String(localValue || "").trim();
+        if (!local) {
+          return "";
+        }
+        const dateOnly = local.match(/^(\d{4}-\d{2}-\d{2})$/);
+        if (dateOnly) {
+          return `${dateOnly[1]} 00:00:00`;
+        }
+        const match = local.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/);
+        if (!match) {
+          return "";
+        }
+        return `${match[1]} ${match[2]}:00`;
+      }
+
+      function toDateInputValue(date) {
+        const d = date instanceof Date ? date : new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function toDateTimeLocalValue(date) {
+        const d = date instanceof Date ? date : new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const hour = String(d.getHours()).padStart(2, "0");
+        const minute = String(d.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day}T${hour}:${minute}`;
+      }
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      function isApiSuccess(result) {
+        if (!result || typeof result !== "object") {
+          return true;
+        }
+
+        const values = [result.code, result.errcode, result.error_code, result.status];
+        for (const raw of values) {
+          if (raw === undefined || raw === null || raw === "") {
+            continue;
+          }
+          const text = String(raw).trim().toLowerCase();
+          if (["0", "200", "ok", "success", "true"].includes(text)) {
+            return true;
+          }
+          if (["1"].includes(text) && /success|ok/.test(String(result.msg || result.message || "").toLowerCase())) {
+            return true;
+          }
+          if (["400", "401", "403", "404", "500", "error", "false", "fail", "failed"].includes(text)) {
+            return false;
+          }
+          if (!Number.isNaN(Number(text))) {
+            return Number(text) >= 200 && Number(text) < 300;
+          }
+        }
+
+        return true;
+      }
+
+      function extractApiMessage(result) {
+        if (!result || typeof result !== "object") {
+          return "";
+        }
+
+        const candidates = [
+          result.msg,
+          result.message,
+          result.error,
+          result.errmsg,
+          result.error_msg,
+          result.errorMsg,
+          result.detail,
+          result.data && result.data.msg,
+          result.data && result.data.message,
+        ];
+
+        for (const item of candidates) {
+          const text = String(item || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+        return "";
+      }
+
+      function safeJsonParse(text) {
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,2329 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>危化品台账</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --panel: #ffffff;
+        --border: #d7deea;
+        --line-soft: #e5ebf4;
+        --text: #1f2a3a;
+        --muted: #6f7d93;
+        --accent: #2c79ea;
+        --accent-soft: #edf4ff;
+        --danger: #d24b4b;
+        --warning: #c07a1a;
+        --success: #1e8750;
+        --shadow: none;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .ledger-layout {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+        min-height: 100vh;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        box-shadow: var(--shadow);
+      }
+
+      .left-panel {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .location-tree {
+        padding: 8px;
+        overflow: auto;
+      }
+
+      .tree-group {
+        margin: 2px 0 6px;
+      }
+
+      .tree-children {
+        margin-top: 2px;
+      }
+
+      .tree-node {
+        width: 100%;
+        min-height: 32px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px 2px 4px;
+        text-align: left;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .tree-node:hover {
+        background: #f6f8fc;
+      }
+
+      .tree-node.active {
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .tree-node.root,
+      .tree-node.area {
+        font-weight: 600;
+      }
+
+      .tree-node.root::before,
+      .tree-node.area::before {
+        content: "▾";
+        width: 20px;
+        flex: 0 0 20px;
+        color: var(--muted);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .tree-node.area {
+        padding-left: 20px;
+      }
+
+      .tree-node.site {
+        padding-left: 48px;
+        font-weight: 400;
+      }
+
+      .tree-node > span:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tree-count {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .tree-row {
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 6px;
+        padding: 2px 8px 2px 4px;
+        position: relative;
+      }
+
+      .tree-row.is-selected {
+        background: var(--accent-soft);
+      }
+
+      .tree-row:hover {
+        background: #f9fbfe;
+      }
+
+      .tree-row.is-selected:hover {
+        background: var(--accent-soft);
+      }
+
+      .tree-toggle {
+        width: 20px;
+        height: 20px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 0;
+        flex: 0 0 20px;
+      }
+
+      .tree-toggle:hover:not(:disabled) {
+        background: #eef3fb;
+        color: var(--accent);
+      }
+
+      .tree-toggle:disabled {
+        cursor: default;
+        opacity: 0;
+      }
+
+      .tree-label {
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.5;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .tree-label span:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tree-label.is-strong {
+        font-weight: 400;
+      }
+
+      .section-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .section-head h2,
+      .main-head h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      .section-subtitle {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .detail-wrap {
+        padding: 10px;
+        overflow: auto;
+      }
+
+      .detail-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .kv {
+        border: 1px solid var(--line-soft);
+        border-radius: 6px;
+        background: #fafcff;
+        padding: 8px;
+      }
+
+      .kv span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+
+      .kv strong {
+        font-size: 13px;
+        font-weight: 600;
+        white-space: pre-wrap;
+      }
+
+      .main-panel {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        overflow: hidden;
+        min-height: calc(100vh - 24px);
+      }
+
+      .main-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .head-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .btn {
+        border: 1px solid #b7c4d8;
+        background: #fff;
+        color: #30445f;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .btn.primary:hover {
+        background: #236cce;
+        color: #fff;
+      }
+
+      .btn.danger {
+        border-color: #efc4c4;
+        color: var(--danger);
+      }
+
+      .btn.danger:hover {
+        background: #fff4f4;
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) 160px 160px auto;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        background: #fbfcff;
+      }
+
+      .filter-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .input,
+      .select,
+      .textarea,
+      .control {
+        width: 100%;
+        border: 1px solid #c9d3e2;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        min-height: 32px;
+        padding: 0 10px;
+        outline: none;
+        font-size: 13px;
+      }
+
+      .textarea {
+        min-height: 76px;
+        padding: 8px 10px;
+        resize: vertical;
+      }
+
+      .input:focus,
+      .select:focus,
+      .textarea:focus,
+      .control:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(44, 121, 234, 0.12);
+      }
+
+      .readonly {
+        background: #f5f7fb;
+        color: var(--muted);
+      }
+
+      .table-wrap {
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1180px;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line-soft);
+        padding: 9px 10px;
+        text-align: left;
+        vertical-align: middle;
+        font-size: 13px;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #f4f7fb;
+        color: #50627a;
+        font-weight: 700;
+      }
+
+      tbody tr {
+        cursor: pointer;
+      }
+
+      tbody tr:hover td {
+        background: #f8fbff;
+      }
+
+      tbody tr.active td {
+        background: var(--accent-soft);
+      }
+
+      .row-actions {
+        display: flex;
+        gap: 8px;
+        white-space: nowrap;
+      }
+
+      .text-btn {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        cursor: pointer;
+        color: var(--accent);
+      }
+
+      .text-btn:hover {
+        color: #236cce;
+      }
+
+      .text-btn.danger {
+        color: var(--danger);
+      }
+
+      .text-btn.danger:hover {
+        color: #bc3030;
+      }
+
+      .table-foot {
+        min-height: 38px;
+        padding: 9px 12px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 13px;
+        background: #fff;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 12px;
+        background: #eef2f7;
+        color: #50627a;
+        white-space: nowrap;
+      }
+
+      .tag.ok {
+        background: #e9f7ef;
+        color: var(--success);
+      }
+
+      .tag.stop {
+        background: #fff0f0;
+        color: var(--danger);
+      }
+
+      .tag.warn {
+        background: #fff7e6;
+        color: var(--warning);
+      }
+
+      .empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 24px;
+      }
+
+      .status-bar {
+        margin: 8px 10px 10px;
+        border-top: 1px solid var(--line-soft);
+        padding-top: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status-bar.error {
+        color: var(--danger);
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(31, 42, 58, 0.35);
+        padding: 20px;
+      }
+
+      .modal-mask.hidden {
+        display: none;
+      }
+
+      .modal {
+        width: min(1040px, 100%);
+        max-height: 92vh;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        box-shadow: 0 16px 48px rgba(31, 42, 58, 0.22);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .modal.detail-modal {
+        width: min(980px, 100%);
+      }
+
+      .modal-head,
+      .modal-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--border);
+        border-bottom: 0;
+        justify-content: flex-end;
+      }
+
+      .modal-head h3 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .modal-body {
+        overflow: auto;
+        padding: 12px;
+      }
+
+      .section-card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #fff;
+      }
+
+      .section-card h4 {
+        margin: 0 0 10px;
+        font-size: 15px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .field label {
+        display: block;
+        color: #50627a;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .detail-modal-grid {
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .qr-card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: #fbfcff;
+        padding: 12px;
+      }
+
+      .qr-preview {
+        display: grid;
+        place-items: center;
+        min-height: 230px;
+        border: 1px dashed #c9d3e2;
+        border-radius: 6px;
+        background: #fff;
+        margin-bottom: 10px;
+      }
+
+      .qr-preview img {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+      }
+
+      .detail-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .detail-fields .kv {
+        min-height: 58px;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%) translateY(24px);
+        padding: 10px 14px;
+        border-radius: 6px;
+        background: #1f2a3a;
+        color: #fff;
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.2s ease;
+        z-index: 50;
+        font-size: 13px;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      @media (max-width: 980px) {
+        .ledger-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-modal-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .filters,
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ledger-layout">
+      <aside class="panel left-panel">
+        <div class="section-head">
+          <div>
+            <h2>危化品地点</h2>
+          </div>
+          <button id="printCurrentLocationQrBtn" type="button" class="btn primary">打印码</button>
+        </div>
+        <div id="locationTree" class="location-tree"></div>
+      </aside>
+
+      <section class="panel main-panel">
+        <div class="main-head">
+          <h1>危化品台账</h1>
+          <div class="head-actions">
+            <button id="addBtn" class="btn primary">新增</button>
+            <button id="batchPrintQrBtn" class="btn">批量打印地点码</button>
+            <button id="importBtn" class="btn">导入</button>
+            <button id="exportBtn" class="btn">导出</button>
+            <input id="importFile" type="file" accept=".csv" hidden />
+          </div>
+        </div>
+
+        <div class="filters">
+            <input id="keywordInput" class="input" placeholder="危化品编号/名称/地点/责任人/事故类型" />
+            <select id="statusFilter" class="control">
+              <option value="">全部状态</option>
+              <option value="启用">启用</option>
+              <option value="停用">停用</option>
+            </select>
+            <select id="includedFilter" class="control">
+              <option value="">全部点检</option>
+              <option value="是">纳入点检</option>
+              <option value="否">不纳入点检</option>
+            </select>
+            <div class="filter-actions">
+              <button id="searchBtn" class="btn">筛选</button>
+              <button id="resetBtn" class="btn">重置</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 62px">序</th>
+                  <th style="width: 130px">危化品编号</th>
+                  <th style="width: 120px">危化品名称</th>
+                  <th style="width: 90px">状态</th>
+                  <th style="width: 100px">纳入点检</th>
+                  <th style="width: 140px">存放位置</th>
+                  <th style="width: 120px">最大存放量</th>
+                  <th style="width: 110px">包装形式</th>
+                  <th style="width: 130px">事故类型</th>
+                  <th style="width: 130px">责任人</th>
+                  <th style="width: 170px">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-foot">
+            <span id="tableFoot">准备就绪</span>
+            <span id="statusBar">云端：百数云危化品台账</span>
+          </div>
+        </section>
+    </div>
+
+    <div id="formModal" class="modal-mask hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="modalTitle">新增危化品</h3>
+          <button id="closeModalBtn" type="button" class="btn">关闭</button>
+        </div>
+        <form id="recordForm">
+          <div class="modal-body">
+            <section class="section-card">
+              <h4>基本信息</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="codeInput">危化品编号</label>
+                  <input id="codeInput" class="input readonly" readonly placeholder="百数云自动生成" />
+                </div>
+                <div class="field">
+                  <label for="nameInput">危化品名称</label>
+                  <input id="nameInput" class="input" required />
+                </div>
+                <div class="field">
+                  <label for="statusInput">状态</label>
+                  <select id="statusInput" class="control">
+                    <option value="启用">启用</option>
+                    <option value="停用">停用</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="includedInput">是否纳入点检</label>
+                  <select id="includedInput" class="control">
+                    <option value="是">是</option>
+                    <option value="否">否</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="standardInput">点检标准</label>
+                  <select id="standardInput" class="control">
+                    <option value="">请选择点检标准</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="qrInput">二维码码值</label>
+                  <input id="qrInput" class="input" placeholder="留空则新增后自动写入编号或记录ID" />
+                </div>
+                <div class="field">
+                  <label for="ownerInput">责任人</label>
+                  <select id="ownerInput" class="control">
+                    <option value="">请选择责任人</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="accidentTypeInput">事故类型</label>
+                  <input id="accidentTypeInput" class="input" />
+                </div>
+              </div>
+            </section>
+
+            <section class="section-card">
+              <h4>存放与用量</h4>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="usageLocationInput">使用地点</label>
+                  <input id="usageLocationInput" class="input" />
+                </div>
+                <div class="field">
+                  <label for="storageLocationInput">存放位置</label>
+                  <select id="storageLocationInput" class="control">
+                    <option value="">请选择存放位置</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="maxStorageInput">最大存放量</label>
+                  <input id="maxStorageInput" class="input" />
+                </div>
+                <div class="field">
+                  <label for="usageAmountInput">使用量</label>
+                  <input id="usageAmountInput" class="input" />
+                </div>
+                <div class="field">
+                  <label for="packageFormInput">包装形式</label>
+                  <input id="packageFormInput" class="input" />
+                </div>
+              </div>
+            </section>
+
+            <section class="section-card">
+              <h4>风险辨识与备注</h4>
+              <div class="form-grid">
+                <div class="field full">
+                  <label for="hazardAnalysisInput">主要危险有害性辨识分析</label>
+                  <textarea id="hazardAnalysisInput" class="textarea" rows="4"></textarea>
+                </div>
+                <div class="field full">
+                  <label for="remarkInput">备注</label>
+                  <textarea id="remarkInput" class="textarea" rows="3"></textarea>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="modal-foot">
+            <button id="cancelModalBtn" type="button" class="btn">取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="detailModal" class="modal-mask hidden">
+      <div class="modal detail-modal">
+        <div class="modal-head">
+          <h3 id="detailModalTitle">危化品详情</h3>
+          <button id="closeDetailModalBtn" type="button" class="btn">关闭</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-modal-grid">
+            <section class="qr-card">
+              <div class="qr-preview">
+                <img id="detailQrImage" alt="危化品地点二维码" />
+              </div>
+              <div class="field">
+                <label for="detailQrCodeInput">库房二维码码值</label>
+                <input id="detailQrCodeInput" class="input readonly" readonly />
+              </div>
+              <div class="field" style="margin-top:10px">
+                <label for="detailReportLinkInput">扫码报工链接</label>
+                <input id="detailReportLinkInput" class="input readonly" readonly />
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button id="printDetailQrBtn" type="button" class="btn primary">打印二维码</button>
+              </div>
+            </section>
+            <section class="detail-fields" id="detailFields"></section>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button id="detailEditBtn" type="button" class="btn">编辑</button>
+          <button id="detailDeleteBtn" type="button" class="btn danger">删除</button>
+          <button id="closeDetailFootBtn" type="button" class="btn primary">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_CONFIG = {
+        baseUrl: resolveApiBaseUrl(),
+        appId: "5a94c4d1642bd8a84c772356",
+        chemicalEntryId: "9739459da9671a832692915d",
+        standardEntryId: "37204bb798aefcc5156f493e",
+        siteEntryId: "099e47809199d1d8214a984f",
+      };
+
+      const FIELD = {
+        code: "_widget_1776738897288",
+        name: "_widget_1776738897302",
+        status: "_widget_1776738897684",
+        included: "_widget_1776738897727",
+        usageLocation: "_widget_1776738897321",
+        storageLocation: "_widget_1776738897340",
+        maxStorage: "_widget_1776738897359",
+        usageAmount: "_widget_1776738897378",
+        packageForm: "_widget_1776738897397",
+        accidentType: "_widget_1776738897416",
+        owner: "_widget_1776739402004",
+        standardId: "_widget_1776738897791",
+        qrCode: "_widget_1776738897828",
+        hazardAnalysis: "_widget_1776738897534",
+        remark: "_widget_1776738897551",
+      };
+
+      const STANDARD_FIELD = {
+        code: "_widget_1775876696506",
+        name: "_widget_1775876696520",
+        category: "_widget_1775876696570",
+        status: "_widget_1775876697472",
+        applicableDeviceType: "_widget_1776740454451",
+        linkedDeviceRange: "_widget_1776078595037",
+      };
+
+      const SITE_FIELD = {
+        code: "_widget_1776300861592",
+        area: "_widget_1776754790282",
+        name: "_widget_1776300861606",
+        owner: "_widget_1776300861656",
+      };
+
+      const state = {
+        records: [],
+        standards: [],
+        sites: [],
+        users: [],
+        selectedId: "",
+        selectedLocationKey: "__all__",
+        detailRecordId: "",
+        keyword: "",
+        status: "",
+        included: "",
+        loading: false,
+        formMode: "add",
+        publicBaseUrl: "",
+        collapsedLocationKeys: new Set(),
+      };
+
+      const refs = {
+        addBtn: document.getElementById("addBtn"),
+        batchPrintQrBtn: document.getElementById("batchPrintQrBtn"),
+        printCurrentLocationQrBtn: document.getElementById("printCurrentLocationQrBtn"),
+        importBtn: document.getElementById("importBtn"),
+        exportBtn: document.getElementById("exportBtn"),
+        importFile: document.getElementById("importFile"),
+        keywordInput: document.getElementById("keywordInput"),
+        statusFilter: document.getElementById("statusFilter"),
+        includedFilter: document.getElementById("includedFilter"),
+        searchBtn: document.getElementById("searchBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        tableBody: document.getElementById("tableBody"),
+        tableFoot: document.getElementById("tableFoot"),
+        statusBar: document.getElementById("statusBar"),
+        locationTree: document.getElementById("locationTree"),
+        formModal: document.getElementById("formModal"),
+        modalTitle: document.getElementById("modalTitle"),
+        closeModalBtn: document.getElementById("closeModalBtn"),
+        cancelModalBtn: document.getElementById("cancelModalBtn"),
+        recordForm: document.getElementById("recordForm"),
+        codeInput: document.getElementById("codeInput"),
+        nameInput: document.getElementById("nameInput"),
+        statusInput: document.getElementById("statusInput"),
+        includedInput: document.getElementById("includedInput"),
+        standardInput: document.getElementById("standardInput"),
+        qrInput: document.getElementById("qrInput"),
+        usageLocationInput: document.getElementById("usageLocationInput"),
+        storageLocationInput: document.getElementById("storageLocationInput"),
+        ownerInput: document.getElementById("ownerInput"),
+        maxStorageInput: document.getElementById("maxStorageInput"),
+        usageAmountInput: document.getElementById("usageAmountInput"),
+        packageFormInput: document.getElementById("packageFormInput"),
+        accidentTypeInput: document.getElementById("accidentTypeInput"),
+        hazardAnalysisInput: document.getElementById("hazardAnalysisInput"),
+        remarkInput: document.getElementById("remarkInput"),
+        detailModal: document.getElementById("detailModal"),
+        detailModalTitle: document.getElementById("detailModalTitle"),
+        closeDetailModalBtn: document.getElementById("closeDetailModalBtn"),
+        closeDetailFootBtn: document.getElementById("closeDetailFootBtn"),
+        detailFields: document.getElementById("detailFields"),
+        detailQrImage: document.getElementById("detailQrImage"),
+        detailQrCodeInput: document.getElementById("detailQrCodeInput"),
+        detailReportLinkInput: document.getElementById("detailReportLinkInput"),
+        printDetailQrBtn: document.getElementById("printDetailQrBtn"),
+        detailEditBtn: document.getElementById("detailEditBtn"),
+        detailDeleteBtn: document.getElementById("detailDeleteBtn"),
+        toast: document.getElementById("toast"),
+      };
+
+      init();
+
+      async function init() {
+        bindEvents();
+        await loadPublicBaseUrl();
+        await refreshAll();
+      }
+
+      async function loadPublicBaseUrl() {
+        try {
+          const result = await requestApi("/public-base-url");
+          state.publicBaseUrl = String(result?.data?.baseUrl || "").replace(/\/+$/, "");
+        } catch (error) {
+          state.publicBaseUrl = "";
+          console.warn("load public base url failed:", error && error.message ? error.message : error);
+        }
+      }
+
+      function bindEvents() {
+        refs.addBtn.addEventListener("click", () => openForm("add"));
+        refs.batchPrintQrBtn.addEventListener("click", () => batchPrintQrCodes());
+        refs.printCurrentLocationQrBtn.addEventListener("click", () => printCurrentLocationQrCode());
+        refs.importBtn.addEventListener("click", () => refs.importFile.click());
+        refs.exportBtn.addEventListener("click", () => exportCsv());
+        refs.importFile.addEventListener("change", (event) => {
+          void importCsvFile(event.target.files && event.target.files[0]);
+          refs.importFile.value = "";
+        });
+        refs.searchBtn.addEventListener("click", () => {
+          state.keyword = refs.keywordInput.value.trim();
+          state.status = refs.statusFilter.value.trim();
+          state.included = refs.includedFilter.value.trim();
+          renderAll();
+        });
+        refs.resetBtn.addEventListener("click", () => {
+          state.keyword = "";
+          state.status = "";
+          state.included = "";
+          refs.keywordInput.value = "";
+          refs.statusFilter.value = "";
+          refs.includedFilter.value = "";
+          renderAll();
+        });
+        refs.keywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            refs.searchBtn.click();
+          }
+        });
+        refs.locationTree.addEventListener("click", (event) => {
+          const toggle = event.target.closest("[data-tree-toggle]");
+          if (toggle) {
+            toggleLocationNode(toggle.dataset.treeToggle || "__all__");
+            return;
+          }
+          const label = event.target.closest("[data-location-key]");
+          if (!label) {
+            return;
+          }
+          state.selectedLocationKey = label.dataset.locationKey || "__all__";
+          state.selectedId = "";
+          renderAll();
+        });
+        refs.storageLocationInput.addEventListener("change", () => {
+          const site = getSiteByStorageLocation(refs.storageLocationInput.value);
+          if (site) {
+            refs.usageLocationInput.value = site.area || "";
+          }
+        });
+        refs.tableBody.addEventListener("click", (event) => {
+          const actionButton = event.target.closest("[data-action]");
+          if (actionButton) {
+            const row = actionButton.closest("tr[data-id]");
+            const id = row ? row.dataset.id || "" : "";
+            if (!id) return;
+            state.selectedId = id;
+            const action = actionButton.dataset.action;
+            if (action === "detail") {
+              openDetailModal(id);
+              return;
+            }
+            if (action === "edit") {
+              openForm("edit", id);
+              return;
+            }
+            if (action === "delete") {
+              void deleteRecord(id);
+              return;
+            }
+          }
+          const row = event.target.closest("tr[data-id]");
+          if (!row) return;
+          state.selectedId = row.dataset.id || "";
+          renderAll();
+        });
+        refs.closeModalBtn.addEventListener("click", closeForm);
+        refs.cancelModalBtn.addEventListener("click", closeForm);
+        refs.formModal.addEventListener("click", (event) => {
+          if (event.target === refs.formModal) closeForm();
+        });
+        refs.recordForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          void saveForm();
+        });
+        refs.closeDetailModalBtn.addEventListener("click", closeDetailModal);
+        refs.closeDetailFootBtn.addEventListener("click", closeDetailModal);
+        refs.detailModal.addEventListener("click", (event) => {
+          if (event.target === refs.detailModal) closeDetailModal();
+        });
+        refs.printDetailQrBtn.addEventListener("click", () => {
+          const row = getDetailRecord();
+          if (row) printQrRecords([row]);
+        });
+        refs.detailEditBtn.addEventListener("click", () => {
+          const row = getDetailRecord();
+          if (!row) return;
+          closeDetailModal();
+          openForm("edit", row.id);
+        });
+        refs.detailDeleteBtn.addEventListener("click", () => {
+          const row = getDetailRecord();
+          if (row) void deleteRecord(row.id);
+        });
+      }
+
+      async function refreshAll({ preserveSelection = false } = {}) {
+        const previousId = preserveSelection ? state.selectedId : "";
+        setLoading(true);
+        setStatus("正在同步危化品台账...");
+        try {
+          const [records, standards, sites, users] = await Promise.all([
+            fetchEntryRecords(API_CONFIG.chemicalEntryId),
+            fetchEntryRecords(API_CONFIG.standardEntryId),
+            fetchEntryRecords(API_CONFIG.siteEntryId),
+            fetchContactsUsers().catch(() => []),
+          ]);
+          state.records = records.map(mapChemicalRecord).filter((item) => item.id && (item.code || item.name));
+          state.standards = recordsToStandards(standards);
+          state.sites = recordsToSites(sites);
+          state.users = users;
+          renderStandardOptions();
+          renderOwnerOptions();
+          renderStorageLocationOptions();
+          const validIds = new Set(state.records.map((item) => item.id));
+          state.selectedId = previousId && validIds.has(previousId) ? previousId : state.records[0]?.id || "";
+          ensureSelectedLocationExists();
+          renderAll();
+          setStatus(`同步完成，共 ${state.records.length} 条，危化品地点 ${getChemicalLocationItems().length} 个`);
+        } catch (error) {
+          renderAll();
+          setStatus(`同步失败：${error.message}`, true);
+          showToast(`同步失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function recordsToStandards(records) {
+        return records
+          .map((record) => ({
+            id: extractRecordId(record),
+            code: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.code)),
+            name: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.name)),
+            category: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.category)),
+            status: normalizeStatus(toDisplayText(getAliasRawValue(record, STANDARD_FIELD.status))),
+            applicableDeviceType: normalizeApplicableDeviceType(toDisplayText(getAliasRawValue(record, STANDARD_FIELD.applicableDeviceType))),
+            linkedDeviceRange: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.linkedDeviceRange)),
+          }))
+          .filter((item) => item.id && item.name)
+          .sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-Hans-CN"));
+      }
+
+      function recordsToSites(records) {
+        return records
+          .map((record) => {
+            const name = toDisplayText(getAliasRawValue(record, SITE_FIELD.name));
+            return {
+              id: extractRecordId(record) || name,
+              code: toDisplayText(getAliasRawValue(record, SITE_FIELD.code)),
+              area: toDisplayText(getAliasRawValue(record, SITE_FIELD.area)) || "未配置区域",
+              name,
+              owner: toDisplayText(getAliasRawValue(record, SITE_FIELD.owner)),
+            };
+          })
+          .filter((item) => item.name)
+          .sort((a, b) => {
+            const areaSort = String(a.area || "").localeCompare(String(b.area || ""), "zh-Hans-CN");
+            return areaSort || String(a.name || "").localeCompare(String(b.name || ""), "zh-Hans-CN");
+          });
+      }
+
+      function renderStandardOptions() {
+        const options = ['<option value="">请选择点检标准</option>'];
+        state.standards
+          .filter((item) => item.applicableDeviceType === "危化品" || item.name.includes("危化"))
+          .forEach((item) => {
+            options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}${item.code ? `（${escapeHtml(item.code)}）` : ""}</option>`);
+          });
+        refs.standardInput.innerHTML = options.join("");
+      }
+
+      function renderOwnerOptions() {
+        const options = ['<option value="">请选择责任人</option>'];
+        state.users.forEach((user) => {
+          options.push(`<option value="${escapeHtml(user.userId)}">${escapeHtml(user.name || user.userId)}</option>`);
+        });
+        refs.ownerInput.innerHTML = options.join("");
+      }
+
+      function renderStorageLocationOptions(selectedValue = refs.storageLocationInput.value) {
+        const grouped = new Map();
+        state.sites.forEach((site) => {
+          const area = site.area || "未配置区域";
+          if (!grouped.has(area)) {
+            grouped.set(area, []);
+          }
+          grouped.get(area).push(site);
+        });
+
+        const options = ['<option value="">请选择存放位置</option>'];
+        grouped.forEach((sites, area) => {
+          options.push(`<optgroup label="${escapeHtml(area)}">`);
+          sites.forEach((site) => {
+            const label = `${site.name}${site.code ? `（${site.code}）` : ""}`;
+            options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(label)}</option>`);
+          });
+          options.push("</optgroup>");
+        });
+
+        const text = String(selectedValue || "").trim();
+        if (text && !state.sites.some((site) => site.name === text)) {
+          options.push(`<option value="${escapeHtml(text)}">${escapeHtml(text)}（历史值）</option>`);
+        }
+        refs.storageLocationInput.innerHTML = options.join("");
+        refs.storageLocationInput.value = text || "";
+      }
+
+      function mapChemicalRecord(record) {
+        const ownerRaw = getAliasRawValue(record, FIELD.owner);
+        return {
+          id: extractRecordId(record),
+          code: toDisplayText(getAliasRawValue(record, FIELD.code)),
+          name: toDisplayText(getAliasRawValue(record, FIELD.name)),
+          status: normalizeStatus(toDisplayText(getAliasRawValue(record, FIELD.status))),
+          included: normalizeYesNo(toDisplayText(getAliasRawValue(record, FIELD.included))),
+          usageLocation: toDisplayText(getAliasRawValue(record, FIELD.usageLocation)),
+          storageLocation: toDisplayText(getAliasRawValue(record, FIELD.storageLocation)),
+          maxStorage: toDisplayText(getAliasRawValue(record, FIELD.maxStorage)),
+          usageAmount: toDisplayText(getAliasRawValue(record, FIELD.usageAmount)),
+          packageForm: toDisplayText(getAliasRawValue(record, FIELD.packageForm)),
+          accidentType: toDisplayText(getAliasRawValue(record, FIELD.accidentType)),
+          owner: toDisplayText(ownerRaw),
+          ownerId: extractComplexId(ownerRaw),
+          standardId: toDisplayText(getAliasRawValue(record, FIELD.standardId)),
+          qrCode: toDisplayText(getAliasRawValue(record, FIELD.qrCode)),
+          hazardAnalysis: toDisplayText(getAliasRawValue(record, FIELD.hazardAnalysis)),
+          remark: toDisplayText(getAliasRawValue(record, FIELD.remark)),
+        };
+      }
+
+      function renderAll() {
+        renderLocationTree();
+        renderTable();
+        renderActionDisabled();
+      }
+
+      function renderLocationTree() {
+        const selectedKey = state.selectedLocationKey || "__all__";
+        const total = state.records.length;
+        const grouped = buildLocationTreeGroups();
+        const rootExpanded = isLocationNodeExpanded("__all__");
+        const parts = [
+          `<div class="tree-root">
+          ${renderLocationTreeRow({
+            key: "__all__",
+            label: "全部地点",
+            count: total,
+            depth: 0,
+            selected: selectedKey === "__all__",
+            hasChildren: grouped.length > 0,
+            expanded: rootExpanded,
+            strong: true,
+          })}
+          <div class="tree-children">`,
+        ];
+
+        if (rootExpanded) {
+          grouped.forEach((group) => {
+            const groupExpanded = isLocationNodeExpanded(group.areaKey);
+            parts.push(
+              `<div class="tree-group">
+                ${renderLocationTreeRow({
+                  key: group.areaKey,
+                  label: group.area,
+                  count: group.count,
+                  depth: 1,
+                  selected: selectedKey === group.areaKey,
+                  hasChildren: group.sites.length > 0,
+                  expanded: groupExpanded,
+                  strong: true,
+                })}`
+            );
+            if (groupExpanded) {
+              group.sites.forEach((site) => {
+                parts.push(
+                  renderLocationTreeRow({
+                    key: site.key,
+                    label: site.name,
+                    count: site.count,
+                    depth: 2,
+                    selected: selectedKey === site.key,
+                    hasChildren: false,
+                    expanded: false,
+                    title: site.code || site.name,
+                  })
+                );
+              });
+            }
+            parts.push("</div>");
+          });
+        }
+
+        parts.push("</div></div>");
+        refs.locationTree.innerHTML = parts.join("");
+      }
+
+      function renderLocationTreeRow({ key, label, count, depth, selected, hasChildren, expanded, strong = false, title = "" }) {
+        const left = depth * 16 + 4;
+        const toggleText = hasChildren ? (expanded ? "▼" : "▶") : "";
+        const toggleAttr = hasChildren ? `data-tree-toggle="${escapeHtml(key)}"` : "disabled";
+        return `
+          <div class="tree-row${selected ? " is-selected" : ""}" style="padding-left:${left}px">
+            <button type="button" class="tree-toggle" ${toggleAttr} aria-label="${hasChildren ? "展开或收起" : ""}">${toggleText}</button>
+            <button type="button" class="tree-label${strong ? " is-strong" : ""}" data-location-key="${escapeHtml(key)}" title="${escapeHtml(title || label)}">
+              <span>${escapeHtml(label)}</span><span class="tree-count">${count}</span>
+            </button>
+          </div>`;
+      }
+
+      function isLocationNodeExpanded(key) {
+        return !state.collapsedLocationKeys.has(key);
+      }
+
+      function toggleLocationNode(key) {
+        if (state.collapsedLocationKeys.has(key)) {
+          state.collapsedLocationKeys.delete(key);
+        } else {
+          state.collapsedLocationKeys.add(key);
+        }
+        renderLocationTree();
+      }
+
+      function buildLocationTreeGroups() {
+        const grouped = new Map();
+        state.records.forEach((row) => {
+          const meta = resolveStorageLocationMeta(row.storageLocation);
+          const area = meta.area;
+          if (!grouped.has(area)) {
+            grouped.set(area, new Map());
+          }
+          const areaSites = grouped.get(area);
+          if (!areaSites.has(meta.key)) {
+            areaSites.set(meta.key, meta);
+          }
+          areaSites.get(meta.key).count += 1;
+        });
+
+        return Array.from(grouped.entries()).map(([area, siteMap]) => {
+          const areaKey = getAreaKey(area);
+          const sortedSites = Array.from(siteMap.values()).sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "zh-Hans-CN"));
+          const count = sortedSites.reduce((sum, site) => sum + site.count, 0);
+          return { area, areaKey, sites: sortedSites, count };
+        }).sort((a, b) => {
+          if (a.area === b.area) return 0;
+          if (a.area === "未归档地点") return 1;
+          if (b.area === "未归档地点") return -1;
+          return String(a.area || "").localeCompare(String(b.area || ""), "zh-Hans-CN");
+        });
+      }
+
+      function countRecordsByLocation() {
+        const map = new Map();
+        state.records.forEach((row) => {
+          const key = resolveStorageLocationMeta(row.storageLocation).key;
+          map.set(key, (map.get(key) || 0) + 1);
+        });
+        return map;
+      }
+
+      function getChemicalLocationItems() {
+        return buildLocationTreeGroups().flatMap((group) =>
+          group.sites.map((site) => ({
+            ...site,
+            area: group.area,
+            areaKey: group.areaKey,
+          }))
+        );
+      }
+
+      function ensureSelectedLocationExists() {
+        const selectedKey = state.selectedLocationKey || "__all__";
+        if (selectedKey === "__all__") return;
+        const validKeys = new Set(["__all__"]);
+        buildLocationTreeGroups().forEach((group) => {
+          validKeys.add(group.areaKey);
+          group.sites.forEach((site) => validKeys.add(site.key));
+        });
+        if (!validKeys.has(selectedKey)) {
+          state.selectedLocationKey = "__all__";
+        }
+      }
+
+      function renderTable() {
+        const rows = filterRecords();
+        refs.tableBody.innerHTML = "";
+        if (!rows.length) {
+          refs.tableBody.innerHTML = '<tr><td colspan="11" class="empty">暂无危化品数据</td></tr>';
+        } else {
+          rows.forEach((row, index) => {
+            const tr = document.createElement("tr");
+            tr.dataset.id = row.id;
+            tr.className = row.id === state.selectedId ? "active" : "";
+            tr.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${escapeHtml(row.code || "-")}</td>
+              <td>${escapeHtml(row.name || "-")}</td>
+              <td>${renderStatusTag(row.status)}</td>
+              <td>${renderYesNoTag(row.included)}</td>
+              <td>${escapeHtml(row.storageLocation || "-")}</td>
+              <td>${escapeHtml(row.maxStorage || "-")}</td>
+              <td>${escapeHtml(row.packageForm || "-")}</td>
+              <td>${escapeHtml(row.accidentType || "-")}</td>
+              <td>${escapeHtml(row.owner || "-")}</td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="text-btn" data-action="detail">详情</button>
+                  <button type="button" class="text-btn" data-action="edit">编辑</button>
+                  <button type="button" class="text-btn danger" data-action="delete">删除</button>
+                </div>
+              </td>
+            `;
+            refs.tableBody.appendChild(tr);
+          });
+        }
+        refs.tableFoot.textContent = `危化品共 ${state.records.length} 条，当前 ${rows.length} 条`;
+      }
+
+      function openDetailModal(id) {
+        const row = getRecordById(id);
+        if (!row) {
+          showToast("未找到记录");
+          return;
+        }
+        state.detailRecordId = row.id;
+        state.selectedId = row.id;
+        refs.detailModalTitle.textContent = row.name ? `危化品详情：${row.name}` : "危化品详情";
+        const qr = ensureChemicalQr(row);
+        refs.detailQrCodeInput.value = qr.qrCode || "";
+        refs.detailReportLinkInput.value = qr.reportLink || "";
+        refs.detailQrImage.src = buildQrImageUrl(qr.reportLink || qr.qrCode || row.code || row.id, 220);
+        refs.detailQrImage.alt = `${row.storageLocation || row.name || "危化品地点"} 二维码`;
+        const fields = [
+          ["危化品编号", row.code],
+          ["危化品名称", row.name],
+          ["状态", row.status],
+          ["是否纳入点检", row.included],
+          ["点检标准", getStandardLabel(row.standardId)],
+          ["库房二维码码值", qr.qrCode],
+          ["使用地点", row.usageLocation],
+          ["存放位置", row.storageLocation],
+          ["最大存放量", row.maxStorage],
+          ["使用量", row.usageAmount],
+          ["包装形式", row.packageForm],
+          ["事故类型", row.accidentType],
+          ["责任人", row.owner],
+          ["主要危险有害性辨识分析", row.hazardAnalysis],
+          ["备注", row.remark],
+        ];
+        refs.detailFields.innerHTML = fields
+          .map(([label, value]) => `<div class="kv"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || "-")}</strong></div>`)
+          .join("");
+        refs.detailModal.classList.remove("hidden");
+        renderAll();
+      }
+
+      function closeDetailModal() {
+        refs.detailModal.classList.add("hidden");
+      }
+
+      function getDetailRecord() {
+        return getRecordById(state.detailRecordId);
+      }
+
+      function filterRecords() {
+        const keyword = state.keyword.trim().toLowerCase();
+        const locationKey = state.selectedLocationKey || "__all__";
+        return state.records.filter((row) => {
+          if (state.status && normalizeStatus(row.status) !== state.status) return false;
+          if (state.included && normalizeYesNo(row.included) !== state.included) return false;
+          if (locationKey !== "__all__") {
+            const locationMeta = resolveStorageLocationMeta(row.storageLocation);
+            if (locationKey.startsWith("area:")) {
+              if (locationMeta.areaKey !== locationKey) return false;
+            } else if (locationMeta.key !== locationKey) {
+              return false;
+            }
+          }
+          if (!keyword) return true;
+          const text = [
+            row.code,
+            row.name,
+            row.usageLocation,
+            row.storageLocation,
+            row.maxStorage,
+            row.usageAmount,
+            row.packageForm,
+            row.accidentType,
+            row.owner,
+            row.hazardAnalysis,
+            row.remark,
+          ]
+            .join(" ")
+            .toLowerCase();
+          return text.includes(keyword);
+        });
+      }
+
+      function openForm(mode, recordId = "") {
+        if (recordId) {
+          state.selectedId = recordId;
+        }
+        const current = getSelectedRecord();
+        if (mode === "edit" && !current) {
+          showToast("请先选择记录");
+          return;
+        }
+        state.formMode = mode;
+        refs.modalTitle.textContent = mode === "edit" ? "编辑危化品" : "新增危化品";
+        refs.recordForm.reset();
+        renderStandardOptions();
+        renderOwnerOptions();
+        renderStorageLocationOptions("");
+        const row = mode === "edit" ? current : {
+          code: "",
+          name: "",
+          status: "启用",
+          included: "是",
+          standardId: "",
+          qrCode: "",
+          usageLocation: "",
+          storageLocation: "",
+          ownerId: "",
+          maxStorage: "",
+          usageAmount: "",
+          packageForm: "",
+          accidentType: "",
+          hazardAnalysis: "",
+          remark: "",
+        };
+        refs.codeInput.value = row.code || "";
+        refs.nameInput.value = row.name || "";
+        refs.statusInput.value = row.status || "启用";
+        refs.includedInput.value = row.included || "是";
+        refs.standardInput.value = row.standardId || "";
+        refs.qrInput.value = row.qrCode || "";
+        refs.usageLocationInput.value = row.usageLocation || "";
+        renderStorageLocationOptions(row.storageLocation || "");
+        refs.storageLocationInput.value = row.storageLocation || "";
+        refs.ownerInput.value = state.users.some((user) => user.userId === row.ownerId) ? row.ownerId : "";
+        refs.maxStorageInput.value = row.maxStorage || "";
+        refs.usageAmountInput.value = row.usageAmount || "";
+        refs.packageFormInput.value = row.packageForm || "";
+        refs.accidentTypeInput.value = row.accidentType || "";
+        refs.hazardAnalysisInput.value = row.hazardAnalysis || "";
+        refs.remarkInput.value = row.remark || "";
+        refs.formModal.classList.remove("hidden");
+      }
+
+      function closeForm() {
+        refs.formModal.classList.add("hidden");
+      }
+
+      async function saveForm() {
+        const current = getSelectedRecord();
+        const payload = collectFormPayload();
+        const previousStorageLocation = current?.storageLocation || "";
+        if (!payload[FIELD.name]) {
+          showToast("请填写危化品名称");
+          return;
+        }
+        setLoading(true);
+        setStatus("正在保存危化品...");
+        try {
+          if (state.formMode === "edit") {
+            if (!current) throw new Error("缺少记录ID");
+            await updateRecord(API_CONFIG.chemicalEntryId, current.id, payload);
+            await syncStandardsForStorageLocations([previousStorageLocation, payload[FIELD.storageLocation]], payload[FIELD.standardId]);
+            closeForm();
+            await refreshAll({ preserveSelection: true });
+            showToast("已更新");
+          } else {
+            const result = await requestEntry(API_CONFIG.chemicalEntryId, "data_create", { data: payload }, "POST");
+            const createdId = extractRecordId(result?.data || result);
+            if (createdId && !payload[FIELD.qrCode]) {
+              await updateRecord(API_CONFIG.chemicalEntryId, createdId, {
+                [FIELD.qrCode]: createdId,
+              });
+              state.selectedId = createdId;
+            }
+            await syncStandardsForStorageLocations([payload[FIELD.storageLocation]], payload[FIELD.standardId]);
+            closeForm();
+            await refreshAll({ preserveSelection: true });
+            showToast("已新增");
+          }
+        } catch (error) {
+          setStatus(`保存失败：${error.message}`, true);
+          showToast(`保存失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function collectFormPayload() {
+        const ownerId = refs.ownerInput.value.trim();
+        return {
+          [FIELD.name]: refs.nameInput.value.trim(),
+          [FIELD.status]: refs.statusInput.value.trim() || "启用",
+          [FIELD.included]: refs.includedInput.value.trim() || "否",
+          [FIELD.standardId]: refs.standardInput.value.trim(),
+          [FIELD.qrCode]: refs.qrInput.value.trim(),
+          [FIELD.usageLocation]: refs.usageLocationInput.value.trim(),
+          [FIELD.storageLocation]: refs.storageLocationInput.value.trim(),
+          [FIELD.maxStorage]: refs.maxStorageInput.value.trim(),
+          [FIELD.usageAmount]: refs.usageAmountInput.value.trim(),
+          [FIELD.packageForm]: refs.packageFormInput.value.trim(),
+          [FIELD.accidentType]: refs.accidentTypeInput.value.trim(),
+          [FIELD.owner]: ownerId || null,
+          [FIELD.hazardAnalysis]: refs.hazardAnalysisInput.value.trim(),
+          [FIELD.remark]: refs.remarkInput.value.trim(),
+        };
+      }
+
+      async function deleteRecord(recordId) {
+        const row = getRecordById(recordId);
+        if (!row) {
+          showToast("请先选择记录");
+          return;
+        }
+        const ok = window.confirm(`确认删除“${row.name || row.code}”吗？`);
+        if (!ok) return;
+        setLoading(true);
+        setStatus("正在删除...");
+        try {
+          await requestEntry(API_CONFIG.chemicalEntryId, "data_delete", { data_id: row.id }, "POST");
+          if (state.selectedId === row.id) state.selectedId = "";
+          if (state.detailRecordId === row.id) closeDetailModal();
+          await refreshAll();
+          showToast("已删除");
+        } catch (error) {
+          setStatus(`删除失败：${error.message}`, true);
+          showToast(`删除失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function getSelectedRecord() {
+        return getRecordById(state.selectedId);
+      }
+
+      function getRecordById(recordId) {
+        return state.records.find((item) => item.id === recordId) || null;
+      }
+
+      function getStandardLabel(standardId) {
+        const id = String(standardId || "").trim();
+        if (!id) return "";
+        const standard = state.standards.find((item) => item.id === id);
+        return standard ? `${standard.name}${standard.code ? `（${standard.code}）` : ""}` : id;
+      }
+
+      async function syncStandardsForStorageLocations(locations, explicitStandardId = "") {
+        const ids = new Set();
+        const explicit = String(explicitStandardId || "").trim();
+        if (explicit) {
+          ids.add(explicit);
+        }
+        (Array.isArray(locations) ? locations : [locations]).forEach((location) => {
+          findStandardsByStorageLocation(location).forEach((standard) => ids.add(standard.id));
+        });
+
+        if (!ids.size) {
+          return 0;
+        }
+
+        let synced = 0;
+        for (const standardId of ids) {
+          try {
+            await requestApi(
+              "/rule-config/sync-standard-tasks",
+              {},
+              {
+                method: "POST",
+                body: { standardId },
+              }
+            );
+            synced += 1;
+          } catch (error) {
+            console.warn("sync chemical standard tasks failed:", standardId, error && error.message ? error.message : error);
+          }
+        }
+        return synced;
+      }
+
+      function findStandardsByStorageLocation(storageLocation) {
+        const location = normalizeCompareText(storageLocation);
+        if (!location) {
+          return [];
+        }
+        return state.standards.filter((standard) => {
+          if (normalizeApplicableDeviceType(standard.applicableDeviceType) !== "危化品") {
+            return false;
+          }
+          if (normalizeStatus(standard.status) !== "启用") {
+            return false;
+          }
+          return splitLinkedRangeTexts(standard.linkedDeviceRange).some((item) => {
+            const target = normalizeCompareText(item);
+            return target && (target === location || target.includes(location) || location.includes(target));
+          });
+        });
+      }
+
+      function splitLinkedRangeTexts(value) {
+        return toDisplayText(value)
+          .split(/[、,，;；\n\r]+/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function ensureChemicalQr(row) {
+        const site = getSiteByStorageLocation(row?.storageLocation);
+        const qrCode = buildLocationScanValue(site || {
+          code: row?.qrCode,
+          name: row?.storageLocation || row?.code || row?.id,
+        });
+        return {
+          qrCode,
+          reportLink: buildReportLink(qrCode),
+        };
+      }
+
+      function buildLocationScanValue(site) {
+        const code = toDisplayText(site?.code);
+        const name = toDisplayText(site?.name);
+        return code || name;
+      }
+
+      function buildQrImageUrl(content, size = 320) {
+        const text = toDisplayText(content);
+        if (!text) return "";
+        return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+      }
+
+      function buildReportLink(scanValue) {
+        const text = toDisplayText(scanValue);
+        const relative = text ? `inspection-report.html?scan=${encodeURIComponent(text)}` : "inspection-report.html";
+        const publicBase = getReportBaseUrl();
+        if (publicBase) {
+          try {
+            return new URL(relative, publicBase).toString();
+          } catch {
+            // Fall through to current-page resolution.
+          }
+        }
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return toAbsoluteUrl(relative);
+        }
+        return relative;
+      }
+
+      function getReportBaseUrl() {
+        const publicBase = String(state.publicBaseUrl || "").trim();
+        if (publicBase) {
+          return publicBase.endsWith("/") ? publicBase : `${publicBase}/`;
+        }
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/`;
+        }
+        try {
+          const apiUrl = new URL(API_CONFIG.baseUrl || resolveApiBaseUrl());
+          apiUrl.pathname = apiUrl.pathname.replace(/\/api(?:\/.*)?$/, "/") || "/";
+          apiUrl.search = "";
+          apiUrl.hash = "";
+          return apiUrl.toString();
+        } catch {
+          return "";
+        }
+      }
+
+      function toAbsoluteUrl(url) {
+        try {
+          return new URL(url, window.location.href).toString();
+        } catch {
+          return url;
+        }
+      }
+
+      function batchPrintQrCodes() {
+        const rows = getLocationPrintItemsBySelection();
+        if (!rows.length) {
+          showToast("当前没有可打印二维码的危化品地点");
+          return;
+        }
+        printQrRecords(rows);
+      }
+
+      function printCurrentLocationQrCode() {
+        const rows = getLocationPrintItemsBySelection();
+        if (!rows.length) {
+          showToast("请先选择一个危化品地点");
+          return;
+        }
+        printQrRecords(rows);
+      }
+
+      function getLocationPrintItemsBySelection() {
+        const selectedKey = state.selectedLocationKey || "__all__";
+        let sites = getChemicalLocationItems();
+        if (selectedKey.startsWith("area:")) {
+          sites = sites.filter((site) => site.areaKey === selectedKey);
+        } else if (selectedKey !== "__all__") {
+          sites = sites.filter((site) => site.key === selectedKey);
+        }
+        return sites.map((site) => ({
+          type: "location",
+          code: site.code,
+          name: site.name,
+          area: site.area,
+          owner: site.owner,
+          count: site.count,
+        }));
+      }
+
+      function printQrRecords(rows) {
+        const list = Array.isArray(rows) ? rows.filter(Boolean) : [];
+        if (!list.length) return;
+        const html = buildQrPrintHtml(list);
+        const printWindow = window.open("", "_blank");
+        if (!printWindow) {
+          showToast("浏览器拦截了打印窗口，请允许弹窗后重试");
+          return;
+        }
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+        showToast(`已打开 ${list.length} 个危化品地点二维码打印页`);
+      }
+
+      function buildQrPrintHtml(rows) {
+        const cards = rows
+          .map((row) => {
+            const qrCode = buildLocationScanValue(row);
+            const qr = {
+              qrCode,
+              reportLink: buildReportLink(qrCode),
+            };
+            const imageUrl = buildQrImageUrl(qr.reportLink || qr.qrCode, 260);
+            return `
+              <section class="card">
+                <h2>${escapeHtml(row.name || "危化品地点")}</h2>
+                <img src="${escapeHtml(imageUrl)}" alt="二维码" />
+                <p><span>场地编码：</span>${escapeHtml(row.code || "-")}</p>
+                <p><span>所属区域：</span>${escapeHtml(row.area || "-")}</p>
+                <p><span>危化品数：</span>${escapeHtml(row.count ?? "-")}</p>
+                <p><span>扫码码值：</span>${escapeHtml(qr.qrCode || "-")}</p>
+              </section>
+            `;
+          })
+          .join("");
+        return `<!doctype html>
+          <html lang="zh-CN">
+            <head>
+              <meta charset="UTF-8" />
+              <title>危化品地点二维码打印</title>
+              <style>
+                body { margin: 0; padding: 18px; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; color: #1f2a3a; }
+                .head { margin-bottom: 14px; }
+                .head h1 { margin: 0 0 6px; font-size: 20px; }
+                .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+                .card { border: 1px solid #222; padding: 12px; break-inside: avoid; text-align: center; }
+                .card h2 { margin: 0 0 10px; font-size: 17px; }
+                .card img { width: 180px; height: 180px; object-fit: contain; }
+                .card p { margin: 6px 0 0; font-size: 12px; text-align: left; word-break: break-all; }
+                .card span { color: #64748b; }
+                @media print { body { padding: 8mm; } .head { display: none; } }
+              </style>
+            </head>
+            <body>
+              <header class="head">
+                <h1>危化品地点二维码打印</h1>
+                <p>打印数量：${rows.length} 个</p>
+                <button onclick="window.print()">打印</button>
+              </header>
+              <main class="grid">${cards}</main>
+            </body>
+          </html>`;
+      }
+
+      function exportCsv() {
+        const rows = filterRecords();
+        const headers = [
+          "危化品编号",
+          "危化品名称",
+          "状态",
+          "是否纳入点检",
+          "使用地点",
+          "存放位置",
+          "最大存放量",
+          "使用量",
+          "包装形式",
+          "事故类型",
+          "责任人",
+          "点检标准ID",
+          "二维码",
+          "主要危险有害性辨识分析",
+          "备注",
+        ];
+        const body = rows.map((row) => [
+          row.code,
+          row.name,
+          row.status,
+          row.included,
+          row.usageLocation,
+          row.storageLocation,
+          row.maxStorage,
+          row.usageAmount,
+          row.packageForm,
+          row.accidentType,
+          row.owner,
+          row.standardId,
+          ensureChemicalQr(row).qrCode,
+          row.hazardAnalysis,
+          row.remark,
+        ]);
+        const csv = [headers, ...body].map((line) => line.map(escapeCsvCell).join(",")).join("\n");
+        const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        link.href = url;
+        link.download = `危化品台账_${dateTag}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function escapeCsvCell(value) {
+        const text = String(value ?? "");
+        if (/[",\n\r]/.test(text)) {
+          return `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      }
+
+      async function importCsvFile(file) {
+        if (!file) return;
+        setLoading(true);
+        setStatus("正在导入危化品 CSV...");
+        try {
+          const text = await file.text();
+          const rows = parseCsv(text);
+          if (rows.length < 2) {
+            throw new Error("CSV 内容为空");
+          }
+          const headers = rows[0].map((item) => item.trim());
+          let created = 0;
+          for (const row of rows.slice(1)) {
+            const source = {};
+            headers.forEach((header, index) => {
+              source[header] = row[index] || "";
+            });
+            if (!String(source["危化品名称"] || "").trim()) {
+              continue;
+            }
+            await requestEntry(API_CONFIG.chemicalEntryId, "data_create", {
+              data: buildImportPayload(source),
+            }, "POST");
+            created += 1;
+          }
+          await refreshAll({ preserveSelection: true });
+          showToast(`导入完成：${created} 条`);
+        } catch (error) {
+          setStatus(`导入失败：${error.message}`, true);
+          showToast(`导入失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function buildImportPayload(source) {
+        return {
+          [FIELD.name]: source["危化品名称"] || "",
+          [FIELD.status]: normalizeStatus(source["状态"] || "启用"),
+          [FIELD.included]: normalizeYesNo(source["是否纳入点检"] || "是"),
+          [FIELD.usageLocation]: source["使用地点"] || "",
+          [FIELD.storageLocation]: source["存放位置"] || "",
+          [FIELD.maxStorage]: source["最大存放量"] || "",
+          [FIELD.usageAmount]: source["使用量"] || "",
+          [FIELD.packageForm]: source["包装形式"] || "",
+          [FIELD.accidentType]: source["事故类型"] || "",
+          [FIELD.owner]: null,
+          [FIELD.standardId]: resolveStandardId(source["点检标准ID"] || source["点检标准"] || ""),
+          [FIELD.qrCode]: source["二维码"] || "",
+          [FIELD.hazardAnalysis]: source["主要危险有害性辨识分析"] || "",
+          [FIELD.remark]: source["备注"] || "",
+        };
+      }
+
+      function resolveStandardId(value) {
+        const text = String(value || "").trim();
+        if (!text) return "";
+        const matched = state.standards.find((item) => item.id === text || item.code === text || item.name === text || `${item.name}（${item.code}）` === text);
+        return matched ? matched.id : text;
+      }
+
+      function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let cell = "";
+        let inQuotes = false;
+        const source = String(text || "").replace(/^\ufeff/, "");
+        for (let i = 0; i < source.length; i += 1) {
+          const char = source[i];
+          const next = source[i + 1];
+          if (inQuotes) {
+            if (char === '"' && next === '"') {
+              cell += '"';
+              i += 1;
+            } else if (char === '"') {
+              inQuotes = false;
+            } else {
+              cell += char;
+            }
+            continue;
+          }
+          if (char === '"') {
+            inQuotes = true;
+            continue;
+          }
+          if (char === ",") {
+            row.push(cell);
+            cell = "";
+            continue;
+          }
+          if (char === "\n") {
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+            continue;
+          }
+          if (char === "\r") {
+            continue;
+          }
+          cell += char;
+        }
+        row.push(cell);
+        if (row.some((item) => String(item || "").trim())) rows.push(row);
+        return rows;
+      }
+
+      function renderActionDisabled() {
+        refs.addBtn.disabled = state.loading;
+        refs.batchPrintQrBtn.disabled = state.loading;
+        refs.printCurrentLocationQrBtn.disabled = state.loading;
+        refs.importBtn.disabled = state.loading;
+        refs.exportBtn.disabled = state.loading;
+      }
+
+      function setLoading(flag) {
+        state.loading = flag;
+        renderActionDisabled();
+      }
+
+      function setStatus(message, isError = false) {
+        refs.statusBar.textContent = message;
+        refs.statusBar.classList.toggle("error", Boolean(isError));
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => refs.toast.classList.remove("show"), 2200);
+      }
+
+      function renderStatusTag(status) {
+        const text = normalizeStatus(status);
+        return `<span class="tag ${text === "启用" ? "ok" : "stop"}">${escapeHtml(text)}</span>`;
+      }
+
+      function renderYesNoTag(value) {
+        const text = normalizeYesNo(value);
+        return `<span class="tag ${text === "是" ? "ok" : "warn"}">${escapeHtml(text)}</span>`;
+      }
+
+      function normalizeStatus(value) {
+        const text = toDisplayText(value);
+        return text.includes("停") ? "停用" : "启用";
+      }
+
+      function normalizeYesNo(value) {
+        const text = toDisplayText(value);
+        if (!text) return "否";
+        return text === "1" || text.toLowerCase() === "true" || text.includes("是") ? "是" : "否";
+      }
+
+      function normalizeApplicableDeviceType(value) {
+        const text = toDisplayText(value);
+        return text.includes("危") || text.includes("化") ? "危化品" : "设备";
+      }
+
+      function getSiteByStorageLocation(value) {
+        const key = getLocationKey(value);
+        return state.sites.find((site) => getLocationKey(site.name) === key || normalizeCompareText(site.code) === key) || null;
+      }
+
+      function resolveStorageLocationMeta(value) {
+        const rawLocation = toDisplayText(value).trim();
+        const site = rawLocation ? getSiteByStorageLocation(rawLocation) : null;
+        const area = site?.area || "未归档地点";
+        const name = site?.name || rawLocation || "未填写存放位置";
+        const key = rawLocation ? getLocationKey(site?.name || rawLocation) : "__empty__";
+        return {
+          id: site?.id || key,
+          key,
+          code: site?.code || "",
+          area,
+          areaKey: getAreaKey(area),
+          name,
+          owner: site?.owner || "",
+          rawLocation,
+          matched: Boolean(site),
+          count: 0,
+        };
+      }
+
+      function getAreaKey(area) {
+        return `area:${normalizeCompareText(area || "未归档地点")}`;
+      }
+
+      function getLocationKey(value) {
+        return normalizeCompareText(value) || "__empty__";
+      }
+
+      function normalizeCompareText(value) {
+        return toDisplayText(value).replace(/\s+/g, "").toLowerCase();
+      }
+
+      async function fetchContactsUsers() {
+        const result = await requestApi("/contacts/users");
+        const rows = result?.data?.users || [];
+        return rows
+          .map((row) => ({
+            userId: toDisplayText(row.userId || row.uniqueId || row.id),
+            name: toDisplayText(row.userName || row.user || row.name),
+          }))
+          .filter((row) => row.userId || row.name)
+          .sort((a, b) => String(a.name || a.userId).localeCompare(String(b.name || b.userId), "zh-Hans-CN"));
+      }
+
+      async function fetchEntryRecords(entryId) {
+        const actionCandidates = ["data", "data_search", "data_list"];
+        const payloadCandidates = [{ page: 1, limit: 1000 }, { page_no: 1, page_size: 1000 }, { limit: 1000 }, {}];
+        const errors = [];
+        for (const action of actionCandidates) {
+          for (const payload of payloadCandidates) {
+            try {
+              const response = await requestEntry(entryId, action, payload, "POST");
+              const records = extractRecordArray(response);
+              if (Array.isArray(records)) return records;
+            } catch (error) {
+              errors.push(`${action}: ${error.message}`);
+            }
+          }
+        }
+        throw new Error(errors[errors.length - 1] || "未能获取列表数据");
+      }
+
+      async function updateRecord(entryId, dataId, data) {
+        if (!dataId) throw new Error("缺少 data_id");
+        await requestEntry(entryId, "data_update", { data_id: dataId, data }, "POST");
+      }
+
+      async function requestApi(path, query = {}, options = {}) {
+        const url = new URL(`${API_CONFIG.baseUrl}${path}`);
+        Object.entries(query || {}).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
+        });
+        const method = String(options.method || "GET").toUpperCase();
+        const fetchOptions = { method, headers: { "Content-Type": "application/json" } };
+        if (method !== "GET" && method !== "HEAD") {
+          fetchOptions.body = JSON.stringify(options.body || {});
+        }
+        const response = await fetch(url.toString(), fetchOptions);
+        return parseApiResponse(response);
+      }
+
+      async function requestEntry(entryId, action, body = {}, method = "POST") {
+        const url = `${API_CONFIG.baseUrl}/app/${API_CONFIG.appId}/entry/${entryId}/${action}`;
+        const options = { method, headers: { "Content-Type": "application/json" } };
+        if (method !== "GET") options.body = JSON.stringify(body || {});
+        const response = await fetch(url, options);
+        return parseApiResponse(response);
+      }
+
+      async function parseApiResponse(response) {
+        const text = await response.text();
+        const result = safeJsonParse(text);
+        if (!response.ok) {
+          throw new Error(extractApiMessage(result) || text || `HTTP ${response.status}`);
+        }
+        if (!isApiSuccess(result)) {
+          throw new Error(extractApiMessage(result) || "接口返回失败");
+        }
+        return result;
+      }
+
+      function extractRecordArray(result) {
+        const queue = [result];
+        const visited = new Set();
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object" || visited.has(current)) continue;
+          visited.add(current);
+          if (Array.isArray(current)) return current;
+          for (const key of ["data_list", "data", "list", "rows", "items", "result", "records", "entry_data_list"]) {
+            const value = current[key];
+            if (Array.isArray(value)) return value;
+            const values = objectValuesAsObjectArray(value);
+            if (values) return values;
+          }
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") queue.push(value);
+          });
+        }
+        return [];
+      }
+
+      function objectValuesAsObjectArray(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+        const values = Object.values(value);
+        if (!values.length) return [];
+        return values.every((item) => item && typeof item === "object") ? values : null;
+      }
+
+      function extractRecordId(record) {
+        if (!record || typeof record !== "object") return "";
+        const candidates = [record.data_id, record.id, record._id, record.entry_data_id, record.record_id, record.data && record.data._id, record.data && record.data.id];
+        for (const value of candidates) {
+          if (value !== undefined && value !== null && String(value).trim()) return String(value);
+        }
+        return "";
+      }
+
+      function getAliasRawValue(record, alias) {
+        if (!record || !alias) return "";
+        const containers = [record, record.data, record.entry_data, record.widget_data, record.form_data];
+        for (const container of containers) {
+          if (container && typeof container === "object" && Object.prototype.hasOwnProperty.call(container, alias)) {
+            return container[alias];
+          }
+        }
+        return "";
+      }
+
+      function extractComplexId(value) {
+        if (value === null || value === undefined) return "";
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value).trim();
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const id = extractComplexId(item);
+            if (id) return id;
+          }
+          return "";
+        }
+        if (typeof value === "object") {
+          for (const key of ["_id", "id", "user_id", "userId", "value", "code", "key"]) {
+            if (Object.prototype.hasOwnProperty.call(value, key) && String(value[key] || "").trim()) return String(value[key]).trim();
+          }
+        }
+        return "";
+      }
+
+      function toDisplayText(value) {
+        if (value === null || value === undefined) return "";
+        if (Array.isArray(value)) return value.map((item) => toDisplayText(item)).filter(Boolean).join("、");
+        if (typeof value === "object") {
+          const candidate = value.name || value.label || value.title || value.text || value.value || value.userName || value.user || value._id || value.id;
+          return candidate === undefined || candidate === null ? "" : String(candidate).trim();
+        }
+        return String(value).trim();
+      }
+
+      function isApiSuccess(result) {
+        if (!result || typeof result !== "object") return false;
+        if (result.ok === true || result.success === true) return true;
+        const code = result.code ?? result.errcode ?? result.status;
+        if (code === undefined || code === null || code === "") return true;
+        return String(code) === "0" || String(code).toLowerCase() === "success";
+      }
+
+      function extractApiMessage(result) {
+        if (!result || typeof result !== "object") return "";
+        return String(result.message || result.msg || result.error || result.errmsg || result.detail || "").trim();
+      }
+
+      function safeJsonParse(text) {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { raw: text };
+        }
+      }
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,5275 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>点检标准</title>
+    <style>
+      :root {
+        --bg: #f3f5f8;
+        --panel: #ffffff;
+        --line: #d9dee7;
+        --line-soft: #e8edf4;
+        --text: #1f2736;
+        --muted: #6f7d93;
+        --blue: #2c79ea;
+        --blue-soft: #eef4ff;
+        --danger: #e34a4a;
+        --success: #2faa66;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      .app-layout {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+      }
+
+      .side-panel {
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+        min-height: 0;
+      }
+
+      .main-panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        min-height: 0;
+      }
+
+      .main-switch-row {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 4px 10px 0;
+        border-bottom: 0;
+      }
+
+      .panel-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .panel-head h1,
+      .panel-head h2,
+      .panel-head h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .minor {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .top-meta {
+        margin-top: 4px;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .switch-actions {
+        padding-bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(3, 56px);
+        gap: 6px;
+        justify-content: end;
+      }
+
+      .switch-actions .btn {
+        width: 56px;
+        padding: 0;
+      }
+
+      .toolbar {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .toolbar.row {
+        grid-template-columns: minmax(180px, 1fr) 56px 56px;
+      }
+
+      .btn {
+        height: 32px;
+        border: 1px solid #cfd7e3;
+        background: #fff;
+        color: #2b3444;
+        padding: 0 12px;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .btn:hover:not(:disabled) {
+        border-color: #a9b7cc;
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .btn.primary {
+        border-color: #2c79ea;
+        background: #2c79ea;
+        color: #fff;
+      }
+
+      .btn.primary:hover:not(:disabled) {
+        filter: brightness(1.02);
+      }
+
+      .input-group {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .field-tip {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #7c8aa1;
+      }
+
+      .btn.danger {
+        color: var(--danger);
+        border-color: #efb9b9;
+        background: #fff8f8;
+      }
+
+      .input,
+      .select,
+      textarea.input {
+        width: 100%;
+        border: 1px solid #cad3e1;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .input,
+      .select {
+        height: 32px;
+        padding: 0 8px;
+      }
+
+      .select.is-placeholder {
+        color: #8a97ad;
+      }
+
+      .select option {
+        color: var(--text);
+      }
+
+      .date-field {
+        position: relative;
+      }
+
+      .date-display-input {
+        padding-right: 36px;
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .date-field-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6f7d93;
+        pointer-events: none;
+      }
+
+      .date-field:focus-within .date-field-icon,
+      .date-field:hover .date-field-icon {
+        color: #2c79ea;
+      }
+
+      .date-field-icon svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .date-native-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        pointer-events: auto;
+        cursor: pointer;
+        z-index: 2;
+      }
+
+      textarea.input {
+        min-height: 70px;
+        padding: 8px;
+        resize: vertical;
+      }
+
+      .input:focus,
+      .select:focus,
+      textarea.input:focus {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .readonly {
+        background: #f6f8fb;
+        color: #6d7c93;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 2px;
+        padding: 0;
+        background: transparent;
+      }
+
+      .tab-btn {
+        height: 36px;
+        padding: 0 14px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        background: transparent;
+        color: #4f6078;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+      }
+
+      .tab-btn:hover {
+        background: #f7faff;
+        color: #2f528d;
+      }
+
+      .tab-btn.active {
+        background: transparent;
+        border-bottom-color: #2c79ea;
+        color: #1e65cf;
+        font-weight: 600;
+      }
+
+      .tab-panel {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 8px 10px 10px;
+        background: #fff;
+      }
+
+      .tab-panel.hidden {
+        display: none;
+      }
+
+      .list-wrap {
+        overflow: auto;
+        padding: 6px;
+      }
+
+      .std-item {
+        width: 100%;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        text-align: left;
+        padding: 8px;
+        cursor: pointer;
+        background: #fff;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .std-item:hover {
+        background: #f7faff;
+      }
+
+      .std-item.active {
+        border-color: #97bbee;
+        background: var(--blue-soft);
+      }
+
+      .std-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        align-items: baseline;
+      }
+
+      .std-name {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .std-code {
+        font-size: 12px;
+        color: #5d6f8a;
+      }
+
+      .std-sub {
+        margin-top: 5px;
+        font-size: 12px;
+        color: #70809a;
+      }
+
+      .empty {
+        margin: 8px;
+        padding: 16px 10px;
+        text-align: center;
+        border: 1px dashed #cdd8e8;
+        background: #fafcff;
+        color: #7b8799;
+        font-size: 12px;
+      }
+
+      .table-wrap {
+        min-height: 0;
+        overflow: auto;
+        background: #fff;
+        padding: 0 8px 8px;
+      }
+
+      .tab-panel > .toolbar {
+        border: 0;
+        border-radius: 0;
+        border-bottom: 0;
+        background: transparent;
+        padding: 0;
+      }
+
+      .toolbar.row > .btn {
+        width: 56px;
+        padding: 0;
+      }
+
+      .tab-panel > .table-wrap {
+        border: 0;
+        border-radius: 0;
+        padding: 0 0 8px;
+        background: transparent;
+      }
+
+      .tab-panel > .table-wrap th,
+      .tab-panel > .table-wrap td {
+        border-color: #e7edf7;
+      }
+
+      .tab-panel > .table-wrap th {
+        border-top: 0;
+      }
+
+      table {
+        width: 100%;
+        min-width: 980px;
+        border-collapse: collapse;
+      }
+
+      .table-wrap.compact table {
+        min-width: 860px;
+      }
+
+      th,
+      td {
+        border: 1px solid #e4eaf3;
+        font-size: 12px;
+        padding: 7px 8px;
+        text-align: left;
+        vertical-align: middle;
+        background: #fff;
+      }
+
+      th {
+        background: #f3f6fb;
+        color: #3f4d61;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      tr:hover td {
+        background: #f9fbfe;
+      }
+
+      tr.row-editor td {
+        background: #f7fbff;
+      }
+
+      .row-editor .input,
+      .row-editor .select {
+        height: 30px;
+        font-size: 12px;
+      }
+
+      .cell-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .text-btn {
+        border: 0;
+        background: transparent;
+        color: #2c79ea;
+        padding: 0;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .text-btn.danger {
+        color: var(--danger);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 20px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .tag.ok {
+        background: #ebf8f0;
+        color: #1d8650;
+      }
+
+      .tag.stop {
+        background: #fff2f2;
+        color: #bf3b3b;
+      }
+
+      .foot {
+        border-top: 1px solid var(--line);
+        padding: 7px 10px;
+        font-size: 12px;
+        color: #6f7d93;
+      }
+
+      .tab-panel > .foot {
+        border: 0;
+        border-top: 0;
+        border-radius: 0;
+        background: transparent;
+        padding: 2px 2px 0;
+      }
+
+      .status-bar {
+        border-top: 1px solid var(--line);
+        background: #fbfcfe;
+        padding: 7px 10px;
+        font-size: 12px;
+        color: #526179;
+      }
+
+      .status-bar.error {
+        color: #b13f3f;
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(17, 28, 44, 0.32);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+      }
+
+      .modal-mask.hidden {
+        display: none;
+      }
+
+      .modal {
+        width: min(1260px, 100%);
+        max-height: calc(100vh - 30px);
+        background: #fff;
+        border: 1px solid #cfd8e6;
+        border-radius: 6px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        overflow: hidden;
+      }
+
+      .modal.small {
+        width: min(900px, 100%);
+      }
+
+      .modal-head {
+        border-bottom: 1px solid var(--line);
+        padding: 9px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-head h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .modal-body {
+        overflow: auto;
+        padding: 10px 12px;
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--line);
+        padding: 8px 12px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .card {
+        border: 1px solid #d7deea;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .card-head h4 {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .grid.cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: #48586f;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .required {
+        color: #df4f4f;
+        margin-right: 2px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 60;
+        background: rgba(23, 35, 55, 0.92);
+        color: #fff;
+        font-size: 12px;
+        padding: 8px 11px;
+        border-radius: 5px;
+        opacity: 0;
+        transform: translateY(7px);
+        pointer-events: none;
+        transition: all 0.2s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 1160px) {
+        .app-layout {
+          grid-template-columns: 1fr;
+          grid-template-rows: 320px minmax(0, 1fr);
+        }
+
+        .grid.cols-4,
+        .grid.cols-3 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .toolbar,
+        .toolbar.row {
+          grid-template-columns: 1fr;
+        }
+
+        .main-switch-row {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 4px;
+          padding-top: 6px;
+        }
+
+        .switch-actions {
+          display: flex;
+          justify-content: flex-end;
+          padding-bottom: 6px;
+        }
+
+        .switch-actions .btn,
+        .toolbar.row > .btn {
+          width: auto;
+          padding: 0 12px;
+        }
+
+        .grid.cols-4,
+        .grid.cols-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="panel side-panel">
+        <div class="panel-head">
+          <h2>点检标准</h2>
+        </div>
+        <div class="toolbar">
+          <input id="standardKeywordInput" class="input" type="text" placeholder="标准编号/名称/执行规则" />
+          <button id="standardSearchBtn" class="btn">搜索</button>
+          <button id="standardResetBtn" class="btn">重置</button>
+        </div>
+        <div id="standardList" class="list-wrap"></div>
+      </aside>
+
+      <section class="panel main-panel">
+        <div class="main-switch-row">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="details">点检明细列表</button>
+            <button id="objectsTabBtn" class="tab-btn" data-tab="devices">适用范围</button>
+          </div>
+          <div class="actions switch-actions">
+            <button id="addStandardTopBtn" class="btn primary">新建</button>
+            <button id="editStandardBtn" class="btn">编辑</button>
+            <button id="deleteStandardBtn" class="btn danger">删除</button>
+          </div>
+        </div>
+
+        <section id="detailsPanel" class="tab-panel">
+          <div class="toolbar row">
+            <input id="detailKeywordInput" class="input" type="text" placeholder="点检项目/点检部位/点检标准" />
+            <button id="detailSearchBtn" class="btn">搜索</button>
+            <button id="detailResetBtn" class="btn">重置</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 62px">序号</th>
+                  <th style="width: 120px">点检部位</th>
+                  <th>点检项目名称</th>
+                  <th style="width: 110px">执行方式</th>
+                  <th style="width: 110px">点检类型</th>
+                  <th style="width: 220px">标准内容</th>
+                  <th style="width: 90px">参数单位</th>
+                  <th style="width: 160px">判断标准</th>
+                </tr>
+              </thead>
+              <tbody id="detailTableBody"></tbody>
+            </table>
+          </div>
+          <div id="detailFoot" class="foot"></div>
+        </section>
+
+        <section id="devicesPanel" class="tab-panel hidden">
+          <div class="toolbar row">
+            <input id="deviceKeywordInput" class="input" type="text" placeholder="对象编号/对象名称/类型/位置" />
+            <button id="deviceSearchBtn" class="btn">搜索</button>
+            <button id="deviceResetBtn" class="btn">重置</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="deviceTableHead">
+                <tr>
+                  <th style="width: 62px">序</th>
+                  <th style="width: 130px">对象编号</th>
+                  <th>对象名称</th>
+                  <th style="width: 120px">对象类型</th>
+                  <th style="width: 120px">位置</th>
+                  <th style="width: 120px">责任人/部门</th>
+                  <th style="width: 90px">状态</th>
+                  <th style="width: 120px">风险/事故类型</th>
+                </tr>
+              </thead>
+              <tbody id="deviceTableBody"></tbody>
+            </table>
+          </div>
+          <div id="deviceFoot" class="foot"></div>
+        </section>
+
+        <div id="statusBar" class="status-bar">准备就绪</div>
+      </section>
+    </div>
+
+    <div id="standardModal" class="modal-mask hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="standardModalTitle">新建点检标准</h3>
+          <button id="closeStandardModalBtn" type="button" class="btn">关闭</button>
+        </div>
+        <form id="standardForm">
+          <div class="modal-body">
+            <section class="card">
+              <div class="card-head">
+                <h4>标准主表</h4>
+              </div>
+              <div class="grid cols-4">
+                <div class="field">
+                  <label for="stdCodeInput">标准编号</label>
+                  <input id="stdCodeInput" class="input readonly" type="text" readonly />
+                </div>
+                <div class="field">
+                  <label for="stdNameInput"><span class="required">*</span>标准名称</label>
+                  <input id="stdNameInput" class="input" type="text" required />
+                </div>
+                <div class="field">
+                  <label for="stdCategoryInput"><span class="required">*</span>执行规则</label>
+                  <select id="stdCategoryInput" class="select" required>
+                    <option value="">请选择执行规则</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="stdApplicableDeviceTypeInput"><span class="required">*</span>适用设备类型</label>
+                  <select id="stdApplicableDeviceTypeInput" class="select" required>
+                    <option value="设备">设备</option>
+                    <option value="危化品">危化品</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="stdVersionInput">标准版本</label>
+                  <input id="stdVersionInput" class="input" type="text" placeholder="例如 V1.0" />
+                </div>
+
+                <div class="field">
+                  <label for="stdWorkshopInput">所属车间</label>
+                  <input id="stdWorkshopInput" class="input" type="text" list="workshopOptions" />
+                  <datalist id="workshopOptions"></datalist>
+                </div>
+                <div class="field">
+                  <label for="stdAreaInput">所属区域</label>
+                  <input id="stdAreaInput" class="input" type="text" />
+                </div>
+                <div class="field">
+                  <label for="stdPostInput">责任岗位</label>
+                  <input id="stdPostInput" class="input" type="text" />
+                </div>
+                <div class="field">
+                  <label for="stdStatusInput">状态</label>
+                  <select id="stdStatusInput" class="select">
+                    <option value="启用">启用</option>
+                    <option value="停用">停用</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="stdDeptInput">责任部门</label>
+                  <select id="stdDeptInput" class="select">
+                    <option value="">请选择责任部门</option>
+                  </select>
+                  <input id="stdDeptIdInput" type="hidden" />
+                </div>
+                <div class="field">
+                  <label for="stdOwnerInput">默认负责人</label>
+                  <select id="stdOwnerInput" class="select">
+                    <option value="">请选择默认负责人</option>
+                  </select>
+                  <input id="stdOwnerIdInput" type="hidden" />
+                </div>
+                <div class="field">
+                  <label for="stdStartDisplayInput">生效日期</label>
+                  <div id="stdStartDateField" class="date-field">
+                    <input id="stdStartDisplayInput" class="input date-display-input" type="text" placeholder="YYYY-MM-DD" readonly />
+                    <input id="stdStartInput" class="date-native-input" type="date" tabindex="-1" aria-hidden="true" />
+                    <span class="date-field-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="17" rx="2"></rect>
+                        <path d="M8 2v4M16 2v4M3 10h18"></path>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="stdEndDisplayInput">失效日期</label>
+                  <div id="stdEndDateField" class="date-field">
+                    <input id="stdEndDisplayInput" class="input date-display-input" type="text" placeholder="YYYY-MM-DD" readonly />
+                    <input id="stdEndInput" class="date-native-input" type="date" tabindex="-1" aria-hidden="true" />
+                    <span class="date-field-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="17" rx="2"></rect>
+                        <path d="M8 2v4M16 2v4M3 10h18"></path>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="field full">
+                  <label for="stdRemarkInput">备注</label>
+                  <textarea id="stdRemarkInput" class="input"></textarea>
+                </div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <h4>点检明细</h4>
+                <div class="actions">
+                  <button id="modalAddDetailBtn" type="button" class="btn primary">新增</button>
+                </div>
+              </div>
+              <div class="table-wrap compact" style="max-height: 250px">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width: 62px">序号</th>
+                      <th style="width: 120px">点检部位</th>
+                      <th>点检项目名称</th>
+                      <th style="width: 110px">执行方式</th>
+                      <th style="width: 110px">点检类型</th>
+                      <th style="width: 180px">标准内容</th>
+                      <th style="width: 90px">参数单位</th>
+                      <th style="width: 150px">判断标准</th>
+                      <th style="width: 90px">是否报工</th>
+                      <th style="width: 90px">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modalDetailTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head">
+                <h4 id="modalObjectSectionTitle">适用范围</h4>
+                <div class="actions">
+                  <button id="modalBindDeviceBtn" type="button" class="btn primary">关联对象</button>
+                  <button id="modalUnbindDeviceBtn" type="button" class="btn danger">移除关联</button>
+                </div>
+              </div>
+              <div class="table-wrap compact" style="max-height: 240px">
+                <table>
+                  <thead id="modalDeviceTableHead">
+                    <tr>
+                      <th style="width: 42px"><input id="modalDeviceCheckAll" type="checkbox" /></th>
+                      <th style="width: 62px">序</th>
+                      <th style="width: 130px">对象编号</th>
+                      <th>对象名称</th>
+                      <th style="width: 120px">对象类型</th>
+                      <th style="width: 120px">位置</th>
+                      <th style="width: 120px">责任人/部门</th>
+                      <th style="width: 90px">状态</th>
+                      <th style="width: 120px">风险/事故类型</th>
+                    </tr>
+                  </thead>
+                  <tbody id="modalDeviceTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+          <div class="modal-foot">
+            <button id="cancelStandardBtn" type="button" class="btn">取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="detailModal" class="modal-mask hidden">
+      <div class="modal small">
+        <div class="modal-head">
+          <h3 id="detailModalTitle">新增点检明细</h3>
+          <button id="closeDetailModalBtn" type="button" class="btn">关闭</button>
+        </div>
+        <form id="detailForm">
+          <div class="modal-body">
+            <div class="grid cols-3">
+              <div class="field">
+                <label for="detNoInput">序号</label>
+                <input id="detNoInput" class="input" type="number" min="1" step="1" />
+              </div>
+              <div class="field">
+                <label for="detPartInput">点检部位</label>
+                <input id="detPartInput" class="input" type="text" />
+              </div>
+              <div class="field">
+                <label for="detUnitInput">参数单位</label>
+                <input id="detUnitInput" class="input" type="text" />
+              </div>
+
+              <div class="field full">
+                <label for="detItemInput"><span class="required">*</span>点检项目名称</label>
+                <input id="detItemInput" class="input" type="text" required />
+              </div>
+              <div class="field">
+                <label for="detExecuteModeInput">执行方式</label>
+                <select id="detExecuteModeInput" class="select">
+                  <option value="普通">普通</option>
+                  <option value="状态">状态</option>
+                  <option value="抄表">抄表</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="detInspectTypeInput">点检类型</label>
+                <select id="detInspectTypeInput" class="select">
+                  <option value="日常点检">日常点检</option>
+                  <option value="重点点检">重点点检</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="detReportRequiredInput">是否报工</label>
+                <select id="detReportRequiredInput" class="select">
+                  <option value="启用">是</option>
+                  <option value="停用">否</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="detStandardTextInput">判断标准</label>
+                <input id="detStandardTextInput" class="input" type="text" placeholder="例如 正常,异常" />
+              </div>
+
+              <div class="field full">
+                <label for="detStandardInput">标准内容</label>
+                <textarea id="detStandardInput" class="input"></textarea>
+              </div>
+              <div class="field full">
+                <label for="detRemarkInput">备注</label>
+                <textarea id="detRemarkInput" class="input"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button id="cancelDetailBtn" type="button" class="btn">取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="devicePickerModal" class="modal-mask hidden">
+      <div class="modal small">
+        <div class="modal-head">
+          <h3 id="pickerTitle">选择对象</h3>
+          <button id="closePickerBtn" type="button" class="btn">关闭</button>
+        </div>
+        <form id="devicePickerForm">
+          <div class="modal-body">
+            <div class="toolbar">
+              <input id="pickerKeywordInput" class="input" type="text" placeholder="对象编号/名称/类型/位置" />
+              <button id="pickerSearchBtn" type="button" class="btn">搜索</button>
+              <button id="pickerResetBtn" type="button" class="btn">重置</button>
+            </div>
+            <div class="table-wrap compact" style="max-height: 480px">
+              <table>
+                <thead id="pickerTableHead">
+                  <tr>
+                    <th style="width: 42px"><input id="pickerCheckAll" type="checkbox" /></th>
+                    <th style="width: 62px">序</th>
+                    <th style="width: 130px">对象编号</th>
+                    <th>对象名称</th>
+                    <th style="width: 120px">对象类型</th>
+                    <th style="width: 120px">位置</th>
+                    <th style="width: 120px">责任人/部门</th>
+                    <th style="width: 90px">状态</th>
+                    <th style="width: 120px">风险/事故类型</th>
+                  </tr>
+                </thead>
+                <tbody id="pickerTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button id="cancelPickerBtn" type="button" class="btn">取消</button>
+            <button type="submit" class="btn primary">确认关联</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_CONFIG = {
+        baseUrl: resolveApiBaseUrl(),
+        appId: "5a94c4d1642bd8a84c772356",
+        masterEntryId: "37204bb798aefcc5156f493e",
+        detailEntryId: "99a2496eb8db1bcf9f1aae69",
+        deviceEntryId: "38104b6c9d74ce86a7c395b6",
+        chemicalEntryId: "9739459da9671a832692915d",
+        siteEntryId: "099e47809199d1d8214a984f",
+      };
+
+      const MASTER_FIELD = {
+        code: "_widget_1775876696506",
+        name: "_widget_1775876696520",
+        category: "_widget_1775876696570",
+        deviceName: "_widget_1775876696841",
+        deviceCode: "_widget_1775876696897",
+        deviceType: "_widget_1775876696860",
+        workshop: "_widget_1775876696798",
+        area: "_widget_1775876696822",
+        responsibilityPost: "_widget_1775876696934",
+        responsibilityDept: "_widget_1775876697303",
+        defaultOwner: "_widget_1775876697322",
+        status: "_widget_1775876697472",
+        version: "_widget_1776078594892",
+        effectiveDate: "_widget_1776078594911",
+        expiryDate: "_widget_1776078594976",
+        linkedDeviceType: "_widget_1776078595000",
+        linkedDeviceRange: "_widget_1776078595037",
+        applicableDeviceType: "_widget_1776740454451",
+        scanRequired: "_widget_1776078595056",
+        activeRuleId: "_widget_1776078595077",
+        remark: "_widget_1775876697564",
+      };
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      const DETAIL_FIELD = {
+        code: "_widget_1775877903634",
+        standardId: "_widget_1775877903686",
+        standardName: "_widget_1775877903705",
+        seq: "_widget_1775877903724",
+        level1: "_widget_1775877903770",
+        part: "_widget_1775877903789",
+        item: "_widget_1775877903808",
+        method: "_widget_1775877903827",
+        content: "_widget_1775877903850",
+        standard: "_widget_1775877903867",
+        judge: "_widget_1775877903964",
+        lower: "_widget_1775877903988",
+        upper: "_widget_1775877904009",
+        standardText: "_widget_1775877904093",
+        unit: "_widget_1775877904112",
+        resultType: "_widget_1775877904131",
+        resultOptions: "_widget_1775877904155",
+        keyItem: "_widget_1775877904252",
+        abnormalDescRequired: "_widget_1775877904219",
+        abnormalPhotoRequired: "_widget_1775877904306",
+        sortNo: "_widget_1775877904343",
+        enabledStatus: "_widget_1775877904398",
+        executeMode: "_widget_1776078715566",
+        inspectType: "_widget_1776078715585",
+        mobileInputMode: "_widget_1776078715604",
+        remark: "_widget_1775877904447",
+      };
+
+      const DEVICE_FIELD = {
+        code: "_widget_1775562607984",
+        name: "_widget_1775562608011",
+        category: "_widget_1775562608080",
+        deviceType: "_widget_1775803708083",
+        workshop: "_widget_1775562609597",
+        area: "_widget_1775562609479",
+        department: "_widget_1775562609756",
+        riskLevel: "_widget_1775629050798",
+        status: "_widget_1775562609528",
+        inspectStandardId: "_widget_1776079114010",
+        inspectStandardCode: "_widget_1776079114066",
+      };
+
+      const CHEMICAL_FIELD = {
+        code: "_widget_1776738897288",
+        name: "_widget_1776738897302",
+        status: "_widget_1776738897684",
+        included: "_widget_1776738897727",
+        usageLocation: "_widget_1776738897321",
+        storageLocation: "_widget_1776738897340",
+        maxStorage: "_widget_1776738897359",
+        usageAmount: "_widget_1776738897378",
+        packageForm: "_widget_1776738897397",
+        accidentType: "_widget_1776738897416",
+        owner: "_widget_1776739402004",
+        inspectStandardId: "_widget_1776738897791",
+        qrCode: "_widget_1776738897828",
+        hazardAnalysis: "_widget_1776738897534",
+        remark: "_widget_1776738897551",
+      };
+
+      const SITE_FIELD = {
+        code: "_widget_1776300861592",
+        area: "_widget_1776754790282",
+        name: "_widget_1776300861606",
+        owner: "_widget_1776300861656",
+      };
+
+      const OPTIONS = {
+        category: ["日检", "周检", "月检", "定期点检"],
+        applicableDeviceType: ["设备", "危化品"],
+        workshop: ["冲压车间", "热处理车间", "打磨车间", "仓储物流区", "燃气站", "成品库", "公共动力区"],
+      };
+
+      const state = {
+        loading: false,
+        standards: [],
+        rules: [],
+        devicePool: [],
+        chemicalPool: [],
+        sitePool: [],
+        contacts: {
+          loaded: false,
+          loading: false,
+          loadPromise: null,
+          departments: [],
+          users: [],
+        },
+        selectedStandardId: "",
+        activeTab: "details",
+        search: {
+          standard: "",
+          detail: "",
+          device: "",
+        },
+        selected: {
+          detailIds: new Set(),
+          deviceIds: new Set(),
+        },
+        inlineDetail: {
+          target: "",
+          mode: "",
+          rowId: "",
+          draft: null,
+        },
+        modal: {
+          standard: {
+            mode: "add",
+            draft: null,
+            selectedDetailIds: new Set(),
+            selectedDeviceIds: new Set(),
+            originDeviceIds: new Set(),
+            originDeviceType: "设备",
+          },
+          detail: {
+            target: "active",
+            mode: "add",
+            editingId: "",
+          },
+          picker: {
+            target: "active",
+            keyword: "",
+            selectedIds: new Set(),
+            excludedIds: new Set(),
+          },
+        },
+      };
+
+      const refs = {
+        standardList: document.getElementById("standardList"),
+        standardKeywordInput: document.getElementById("standardKeywordInput"),
+        standardSearchBtn: document.getElementById("standardSearchBtn"),
+        standardResetBtn: document.getElementById("standardResetBtn"),
+
+        addStandardTopBtn: document.getElementById("addStandardTopBtn"),
+        editStandardBtn: document.getElementById("editStandardBtn"),
+        deleteStandardBtn: document.getElementById("deleteStandardBtn"),
+
+        tabs: Array.from(document.querySelectorAll(".tab-btn")),
+        detailsPanel: document.getElementById("detailsPanel"),
+        devicesPanel: document.getElementById("devicesPanel"),
+
+        detailKeywordInput: document.getElementById("detailKeywordInput"),
+        detailSearchBtn: document.getElementById("detailSearchBtn"),
+        detailResetBtn: document.getElementById("detailResetBtn"),
+        detailTableBody: document.getElementById("detailTableBody"),
+        detailFoot: document.getElementById("detailFoot"),
+
+        deviceKeywordInput: document.getElementById("deviceKeywordInput"),
+        deviceSearchBtn: document.getElementById("deviceSearchBtn"),
+        deviceResetBtn: document.getElementById("deviceResetBtn"),
+        deviceTableBody: document.getElementById("deviceTableBody"),
+        deviceFoot: document.getElementById("deviceFoot"),
+
+        statusBar: document.getElementById("statusBar"),
+
+        standardModal: document.getElementById("standardModal"),
+        standardModalTitle: document.getElementById("standardModalTitle"),
+        closeStandardModalBtn: document.getElementById("closeStandardModalBtn"),
+        cancelStandardBtn: document.getElementById("cancelStandardBtn"),
+        standardForm: document.getElementById("standardForm"),
+
+        stdCodeInput: document.getElementById("stdCodeInput"),
+        stdNameInput: document.getElementById("stdNameInput"),
+        stdCategoryInput: document.getElementById("stdCategoryInput"),
+        stdApplicableDeviceTypeInput: document.getElementById("stdApplicableDeviceTypeInput"),
+        stdVersionInput: document.getElementById("stdVersionInput"),
+        stdWorkshopInput: document.getElementById("stdWorkshopInput"),
+        stdAreaInput: document.getElementById("stdAreaInput"),
+        stdPostInput: document.getElementById("stdPostInput"),
+        stdStatusInput: document.getElementById("stdStatusInput"),
+        stdDeptInput: document.getElementById("stdDeptInput"),
+        stdOwnerInput: document.getElementById("stdOwnerInput"),
+        stdDeptIdInput: document.getElementById("stdDeptIdInput"),
+        stdOwnerIdInput: document.getElementById("stdOwnerIdInput"),
+        fillCurrentOwnerBtn: document.getElementById("fillCurrentOwnerBtn"),
+        stdStartDateField: document.getElementById("stdStartDateField"),
+        stdEndDateField: document.getElementById("stdEndDateField"),
+        stdStartDisplayInput: document.getElementById("stdStartDisplayInput"),
+        stdEndDisplayInput: document.getElementById("stdEndDisplayInput"),
+        stdStartInput: document.getElementById("stdStartInput"),
+        stdEndInput: document.getElementById("stdEndInput"),
+        stdRemarkInput: document.getElementById("stdRemarkInput"),
+
+        modalAddDetailBtn: document.getElementById("modalAddDetailBtn"),
+        modalDetailTableBody: document.getElementById("modalDetailTableBody"),
+
+        modalBindDeviceBtn: document.getElementById("modalBindDeviceBtn"),
+        modalUnbindDeviceBtn: document.getElementById("modalUnbindDeviceBtn"),
+        modalDeviceCheckAll: document.getElementById("modalDeviceCheckAll"),
+        modalObjectSectionTitle: document.getElementById("modalObjectSectionTitle"),
+        modalDeviceTableHead: document.getElementById("modalDeviceTableHead"),
+        modalDeviceTableBody: document.getElementById("modalDeviceTableBody"),
+
+        detailModal: document.getElementById("detailModal"),
+        detailModalTitle: document.getElementById("detailModalTitle"),
+        closeDetailModalBtn: document.getElementById("closeDetailModalBtn"),
+        cancelDetailBtn: document.getElementById("cancelDetailBtn"),
+        detailForm: document.getElementById("detailForm"),
+
+        detNoInput: document.getElementById("detNoInput"),
+        detPartInput: document.getElementById("detPartInput"),
+        detItemInput: document.getElementById("detItemInput"),
+        detExecuteModeInput: document.getElementById("detExecuteModeInput"),
+        detInspectTypeInput: document.getElementById("detInspectTypeInput"),
+        detReportRequiredInput: document.getElementById("detReportRequiredInput"),
+        detStandardTextInput: document.getElementById("detStandardTextInput"),
+        detUnitInput: document.getElementById("detUnitInput"),
+        detStandardInput: document.getElementById("detStandardInput"),
+        detRemarkInput: document.getElementById("detRemarkInput"),
+
+        workshopOptions: document.getElementById("workshopOptions"),
+
+        devicePickerModal: document.getElementById("devicePickerModal"),
+        pickerTitle: document.getElementById("pickerTitle"),
+        closePickerBtn: document.getElementById("closePickerBtn"),
+        cancelPickerBtn: document.getElementById("cancelPickerBtn"),
+        devicePickerForm: document.getElementById("devicePickerForm"),
+        pickerKeywordInput: document.getElementById("pickerKeywordInput"),
+        pickerSearchBtn: document.getElementById("pickerSearchBtn"),
+        pickerResetBtn: document.getElementById("pickerResetBtn"),
+        pickerCheckAll: document.getElementById("pickerCheckAll"),
+        pickerTableHead: document.getElementById("pickerTableHead"),
+        pickerTableBody: document.getElementById("pickerTableBody"),
+
+        objectsTabBtn: document.getElementById("objectsTabBtn"),
+        deviceTableHead: document.getElementById("deviceTableHead"),
+
+        toast: document.getElementById("toast"),
+      };
+
+      init();
+
+      async function init() {
+        renderDatalistOptions();
+        bindEvents();
+        await refreshAll();
+      }
+
+      function renderDatalistOptions() {
+        renderRuleSelectOptions();
+        refs.stdApplicableDeviceTypeInput.innerHTML = OPTIONS.applicableDeviceType
+          .map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`)
+          .join("");
+        refs.workshopOptions.innerHTML = OPTIONS.workshop.map((item) => `<option value="${escapeHtml(item)}"></option>`).join("");
+        renderDepartmentSelectOptions();
+        renderOwnerSelectOptions();
+        syncModalSelectPlaceholderState();
+      }
+
+      function ensureSelectOption(selectElement, value) {
+        const text = String(value || "").trim();
+        if (!text || !(selectElement instanceof HTMLSelectElement)) {
+          return;
+        }
+        const exists = Array.from(selectElement.options).some((option) => String(option.value) === text);
+        if (exists) {
+          return;
+        }
+        const option = document.createElement("option");
+        option.value = text;
+        option.textContent = text;
+        selectElement.appendChild(option);
+      }
+
+      function renderRuleSelectOptions(selectedValue = String(refs.stdCategoryInput?.value || "").trim()) {
+        const options = ['<option value="">请选择执行规则</option>'];
+        const seen = new Set();
+
+        state.rules.forEach((rule) => {
+          const value = String(rule.name || "").trim();
+          if (!value || seen.has(value)) {
+            return;
+          }
+          seen.add(value);
+          options.push(`<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`);
+        });
+
+        refs.stdCategoryInput.innerHTML = options.join("");
+        ensureSelectOption(refs.stdCategoryInput, selectedValue);
+        refs.stdCategoryInput.value = selectedValue || "";
+        updateSelectPlaceholderState(refs.stdCategoryInput);
+      }
+
+      function syncModalSelectPlaceholderState() {
+        updateSelectPlaceholderState(refs.stdCategoryInput);
+        updateSelectPlaceholderState(refs.stdApplicableDeviceTypeInput);
+        updateSelectPlaceholderState(refs.stdDeptInput);
+        updateSelectPlaceholderState(refs.stdOwnerInput);
+      }
+
+      function updateSelectPlaceholderState(selectElement) {
+        if (!(selectElement instanceof HTMLSelectElement)) {
+          return;
+        }
+        const hasValue = Boolean(String(selectElement.value || "").trim());
+        selectElement.classList.toggle("is-placeholder", !hasValue);
+      }
+
+      function makeDepartmentSelectValue(deptId, deptName) {
+        const id = String(deptId || "").trim();
+        if (id) {
+          return `id:${id}`;
+        }
+        const name = String(deptName || "").trim();
+        if (name) {
+          return `name:${name}`;
+        }
+        return "";
+      }
+
+      function makeOwnerSelectValue(userId, userName) {
+        const id = String(userId || "").trim();
+        if (id) {
+          return `id:${id}`;
+        }
+        const name = String(userName || "").trim();
+        if (name) {
+          return `name:${name}`;
+        }
+        return "";
+      }
+
+      function parsePrefixedSelectValue(value, prefix) {
+        const text = String(value || "").trim();
+        if (!text.startsWith(`${prefix}:`)) {
+          return "";
+        }
+        return text.slice(prefix.length + 1).trim();
+      }
+
+      function getSelectedDepartmentMeta() {
+        const value = String(refs.stdDeptInput.value || "").trim();
+        if (!value) {
+          return {
+            value: "",
+            deptId: "",
+            name: "",
+          };
+        }
+
+        const option = refs.stdDeptInput.selectedOptions[0] || null;
+        const deptId = String(option?.dataset?.deptId || parsePrefixedSelectValue(value, "id")).trim();
+        const name = String(option?.dataset?.name || parsePrefixedSelectValue(value, "name") || option?.textContent || "").trim();
+
+        return {
+          value,
+          deptId,
+          name,
+        };
+      }
+
+      function getSelectedOwnerMeta() {
+        const value = String(refs.stdOwnerInput.value || "").trim();
+        if (!value) {
+          return {
+            value: "",
+            userId: "",
+            name: "",
+            mainDeptId: "",
+            mainDeptName: "",
+          };
+        }
+
+        const option = refs.stdOwnerInput.selectedOptions[0] || null;
+        const userId = String(option?.dataset?.userId || parsePrefixedSelectValue(value, "id")).trim();
+        const name = String(option?.dataset?.name || parsePrefixedSelectValue(value, "name") || option?.textContent || "").trim();
+        const mainDeptId = String(option?.dataset?.mainDeptId || "").trim();
+        const mainDeptName = String(option?.dataset?.mainDeptName || "").trim();
+
+        return {
+          value,
+          userId,
+          name,
+          mainDeptId,
+          mainDeptName,
+        };
+      }
+
+      function syncSelectedOwnerIdInput() {
+        const selected = getSelectedOwnerMeta();
+        refs.stdOwnerIdInput.value = selected.userId || "";
+      }
+
+      function setSelectOptions(selectElement, { placeholder, options, selectedValue = "", fallbackOption = null }) {
+        if (!(selectElement instanceof HTMLSelectElement)) {
+          return;
+        }
+
+        const currentValue = String(selectedValue || "").trim();
+        const fragment = document.createDocumentFragment();
+        const placeholderOption = document.createElement("option");
+        placeholderOption.value = "";
+        placeholderOption.textContent = placeholder || "请选择";
+        fragment.appendChild(placeholderOption);
+
+        const values = new Set();
+        (Array.isArray(options) ? options : []).forEach((item) => {
+          if (!item) {
+            return;
+          }
+          const value = String(item.value || "").trim();
+          const label = String(item.label || "").trim();
+          if (!value || !label || values.has(value)) {
+            return;
+          }
+          values.add(value);
+
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = label;
+
+          const meta = item.meta && typeof item.meta === "object" ? item.meta : {};
+          Object.entries(meta).forEach(([key, val]) => {
+            if (val === undefined || val === null) {
+              return;
+            }
+            option.dataset[key] = String(val);
+          });
+
+          fragment.appendChild(option);
+        });
+
+        if (currentValue && !values.has(currentValue) && fallbackOption) {
+          const option = document.createElement("option");
+          option.value = String(fallbackOption.value || "").trim();
+          option.textContent = String(fallbackOption.label || "").trim() || option.value;
+          const meta = fallbackOption.meta && typeof fallbackOption.meta === "object" ? fallbackOption.meta : {};
+          Object.entries(meta).forEach(([key, val]) => {
+            if (val === undefined || val === null) {
+              return;
+            }
+            option.dataset[key] = String(val);
+          });
+          fragment.appendChild(option);
+        }
+
+        selectElement.innerHTML = "";
+        selectElement.appendChild(fragment);
+
+        if (currentValue) {
+          selectElement.value = currentValue;
+        }
+        if (selectElement.value !== currentValue) {
+          selectElement.value = "";
+        }
+      }
+
+      function normalizeDepartmentContactList(list) {
+        const output = [];
+        const seen = new Set();
+
+        (Array.isArray(list) ? list : []).forEach((item) => {
+          if (!item || typeof item !== "object") {
+            return;
+          }
+          const deptId = readFirstObjectText(item, ["deptId", "dept_id", "id", "_id", "value", "key"]);
+          const name = readFirstObjectText(item, ["name", "dept_name", "label", "title"]);
+          if (!deptId && !name) {
+            return;
+          }
+          const key = deptId || name;
+          if (seen.has(key)) {
+            return;
+          }
+          seen.add(key);
+          output.push({
+            deptId,
+            name,
+            parentId: readFirstObjectText(item, ["parentId", "parent_id", "parent_dept_id"]),
+            parentNo: readFirstObjectText(item, ["parentNo", "parent_no"]),
+            deptNo: readFirstObjectText(item, ["deptNo", "dept_no"]),
+          });
+        });
+
+        return sortDepartmentsByHierarchy(output);
+      }
+
+      function normalizeUserContactList(list) {
+        const output = [];
+        const seen = new Set();
+
+        (Array.isArray(list) ? list : []).forEach((item) => {
+          if (!item || typeof item !== "object") {
+            return;
+          }
+
+          const category = readFirstObjectText(item, ["category", "status"]);
+          if (category === "-2") {
+            return;
+          }
+
+          const userId = readFirstObjectText(item, ["userId", "user_id", "id", "_id", "uniqueid", "uniqueId"]);
+          const name = readFirstObjectText(item, ["name", "userName", "user_name", "nickname", "label", "title"]);
+          if (!userId && !name) {
+            return;
+          }
+
+          const key = userId || name;
+          if (seen.has(key)) {
+            return;
+          }
+          seen.add(key);
+
+          const departments = normalizeDepartmentContactList(Array.isArray(item.departments) ? item.departments : []);
+          const mainDeptId =
+            readFirstObjectText(item, ["mainDeptId", "main_department_id", "mainDepartmentId", "dept_id"]) ||
+            (departments[0] ? departments[0].deptId : "");
+          const mainDeptName =
+            readFirstObjectText(item, ["mainDeptName", "main_department_name", "mainDepartmentName", "dept_name"]) ||
+            (departments[0] ? departments[0].name : "");
+
+          output.push({
+            userId,
+            name,
+            account: readFirstObjectText(item, ["account", "username", "loginName", "login_name"]),
+            mobile: readFirstObjectText(item, ["mobile", "phone", "tel"]),
+            email: readFirstObjectText(item, ["email", "mail"]),
+            mainDeptId,
+            mainDeptName,
+            departments,
+          });
+        });
+
+        output.sort((a, b) => (a.name || a.userId).localeCompare(b.name || b.userId, "zh-Hans-CN"));
+        return output;
+      }
+
+      function readFirstObjectText(source, keys) {
+        for (const key of keys) {
+          if (!Object.prototype.hasOwnProperty.call(source, key)) {
+            continue;
+          }
+          const text = String(source[key] || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+        return "";
+      }
+
+      function sortDepartmentsByHierarchy(list) {
+        const rows = Array.isArray(list) ? list.filter((item) => item && typeof item === "object") : [];
+        if (!rows.length) {
+          return [];
+        }
+
+        const compareDept = (a, b) => {
+          const aNo = Number(a?.deptNo);
+          const bNo = Number(b?.deptNo);
+          const hasANo = Number.isFinite(aNo);
+          const hasBNo = Number.isFinite(bNo);
+          if (hasANo && hasBNo && aNo !== bNo) {
+            return aNo - bNo;
+          }
+          if (hasANo !== hasBNo) {
+            return hasANo ? -1 : 1;
+          }
+          return String(a?.name || a?.deptId || "").localeCompare(String(b?.name || b?.deptId || ""), "zh-Hans-CN");
+        };
+
+        const idSet = new Set(rows.map((item) => String(item.deptId || "").trim()).filter(Boolean));
+        const childrenMap = new Map();
+        const keyOf = (item) => String(item.deptId || item.name || "").trim();
+        const normalizeParentId = (item) => {
+          const parentId = String(item.parentId || "").trim();
+          if (!parentId) {
+            return "";
+          }
+          return idSet.has(parentId) ? parentId : "";
+        };
+
+        rows.forEach((item) => {
+          const parentId = normalizeParentId(item);
+          if (!childrenMap.has(parentId)) {
+            childrenMap.set(parentId, []);
+          }
+          childrenMap.get(parentId).push(item);
+        });
+        childrenMap.forEach((items) => items.sort(compareDept));
+
+        const ordered = [];
+        const visited = new Set();
+        const walk = (parentId) => {
+          const children = childrenMap.get(parentId) || [];
+          children.forEach((item) => {
+            const key = keyOf(item);
+            if (!key || visited.has(key)) {
+              return;
+            }
+            visited.add(key);
+            ordered.push(item);
+            const id = String(item.deptId || "").trim();
+            if (id) {
+              walk(id);
+            }
+          });
+        };
+
+        walk("");
+
+        rows
+          .filter((item) => {
+            const key = keyOf(item);
+            return key && !visited.has(key);
+          })
+          .sort(compareDept)
+          .forEach((item) => ordered.push(item));
+
+        return ordered;
+      }
+
+      function renderDepartmentSelectOptions({ selectedDeptId, selectedDeptName } = {}) {
+        const hasDeptSelection = selectedDeptId !== undefined || selectedDeptName !== undefined;
+        const current = getSelectedDepartmentMeta();
+        const targetDeptId = hasDeptSelection ? String(selectedDeptId || "").trim() : current.deptId;
+        const targetDeptName = hasDeptSelection ? String(selectedDeptName || "").trim() : current.name;
+        const targetValue = makeDepartmentSelectValue(targetDeptId, targetDeptName);
+        const loadingPlaceholder = state.contacts.loading ? "责任部门加载中..." : "请选择责任部门";
+
+        const options = (Array.isArray(state.contacts.departments) ? state.contacts.departments : []).map((dept) => {
+          const deptId = String(dept.deptId || "").trim();
+          const name = String(dept.name || deptId).trim();
+          return {
+            value: makeDepartmentSelectValue(deptId, name),
+            label: name,
+            meta: {
+              deptId,
+              name,
+            },
+          };
+        });
+
+        const fallbackOption =
+          targetValue && (targetDeptName || targetDeptId)
+            ? {
+                value: targetValue,
+                label: targetDeptName || targetDeptId,
+                meta: {
+                  deptId: targetDeptId,
+                  name: targetDeptName,
+                },
+              }
+            : null;
+
+        setSelectOptions(refs.stdDeptInput, {
+          placeholder: loadingPlaceholder,
+          options,
+          selectedValue: targetValue,
+          fallbackOption,
+        });
+        refs.stdDeptIdInput.value = targetDeptId || "";
+        updateSelectPlaceholderState(refs.stdDeptInput);
+      }
+
+      function renderOwnerSelectOptions({ selectedOwnerId, selectedOwnerName, preserveCurrent = false, allowFallback = true } = {}) {
+        const hasOwnerSelection = selectedOwnerId !== undefined || selectedOwnerName !== undefined;
+        const current = getSelectedOwnerMeta();
+        const targetOwnerId = hasOwnerSelection ? String(selectedOwnerId || "").trim() : current.userId;
+        const targetOwnerName = hasOwnerSelection ? String(selectedOwnerName || "").trim() : current.name;
+        const targetValue = preserveCurrent ? current.value : makeOwnerSelectValue(targetOwnerId, targetOwnerName);
+        const loadingPlaceholder = state.contacts.loading ? "默认负责人加载中..." : "请选择默认负责人";
+
+        const users = Array.isArray(state.contacts.users) ? state.contacts.users : [];
+        const options = users.map((user) => {
+          const userId = String(user.userId || "").trim();
+          const name = String(user.name || userId).trim();
+          const mainDeptId = String(user.mainDeptId || "").trim();
+          const mainDeptName = String(user.mainDeptName || "").trim();
+          const deptLabel = mainDeptName ? `（${mainDeptName}）` : "";
+          return {
+            value: makeOwnerSelectValue(userId, name),
+            label: `${name}${deptLabel}`,
+            meta: {
+              userId,
+              name,
+              mainDeptId,
+              mainDeptName,
+            },
+          };
+        });
+
+        const fallbackOption =
+          allowFallback && targetValue && (targetOwnerName || targetOwnerId)
+            ? {
+                value: targetValue,
+                label: targetOwnerName || targetOwnerId,
+                meta: {
+                  userId: targetOwnerId,
+                  name: targetOwnerName,
+                },
+              }
+            : null;
+
+        setSelectOptions(refs.stdOwnerInput, {
+          placeholder: loadingPlaceholder,
+          options,
+          selectedValue: targetValue,
+          fallbackOption,
+        });
+        syncSelectedOwnerIdInput();
+        updateSelectPlaceholderState(refs.stdOwnerInput);
+      }
+
+      function upsertContactDepartment(deptId, deptName) {
+        const id = String(deptId || "").trim();
+        const name = String(deptName || "").trim();
+        if (!id && !name) {
+          return;
+        }
+        const exists = state.contacts.departments.some((item) => {
+          if (!item || typeof item !== "object") {
+            return false;
+          }
+          if (id && String(item.deptId || "").trim() === id) {
+            return true;
+          }
+          return !id && name && String(item.name || "").trim() === name;
+        });
+        if (!exists) {
+          state.contacts.departments.push({
+            deptId: id,
+            name: name || id,
+            parentId: "",
+            parentNo: "",
+            deptNo: "",
+          });
+          state.contacts.departments.sort((a, b) => (a.name || a.deptId).localeCompare(b.name || b.deptId, "zh-Hans-CN"));
+        }
+      }
+
+      function upsertContactUser(userId, userName, deptId, deptName) {
+        const id = String(userId || "").trim();
+        const name = String(userName || "").trim();
+        if (!id && !name) {
+          return;
+        }
+
+        const targetKey = id || name;
+        let current = state.contacts.users.find((item) => (item.userId || item.name) === targetKey);
+        if (!current) {
+          current = {
+            userId: id,
+            name: name || id,
+            account: "",
+            mobile: "",
+            email: "",
+            mainDeptId: String(deptId || "").trim(),
+            mainDeptName: String(deptName || "").trim(),
+            departments: [],
+          };
+          state.contacts.users.push(current);
+        }
+
+        const resolvedDeptId = String(deptId || current.mainDeptId || "").trim();
+        const resolvedDeptName = String(deptName || current.mainDeptName || "").trim();
+        if (resolvedDeptId || resolvedDeptName) {
+          current.mainDeptId = resolvedDeptId;
+          current.mainDeptName = resolvedDeptName;
+          const hasDept = current.departments.some((item) => String(item.deptId || "").trim() === resolvedDeptId);
+          if (!hasDept) {
+            current.departments.push({
+              deptId: resolvedDeptId,
+              name: resolvedDeptName,
+            });
+          }
+        }
+
+        state.contacts.users.sort((a, b) => (a.name || a.userId).localeCompare(b.name || b.userId, "zh-Hans-CN"));
+      }
+
+      async function ensureContactsLoaded({ force = false, silent = false } = {}) {
+        if (!force && state.contacts.loaded) {
+          return;
+        }
+
+        if (state.contacts.loading && state.contacts.loadPromise) {
+          await state.contacts.loadPromise;
+          return;
+        }
+
+        state.contacts.loading = true;
+        renderDepartmentSelectOptions();
+        renderOwnerSelectOptions();
+
+        const loadTask = (async () => {
+          const [deptResult, userResult] = await Promise.allSettled([
+            requestApi("/contacts/departments"),
+            requestApi("/contacts/users"),
+          ]);
+
+          const messages = [];
+
+          if (deptResult.status === "fulfilled") {
+            const rows = deptResult.value?.data?.departments || [];
+            state.contacts.departments = normalizeDepartmentContactList(rows);
+          } else {
+            messages.push(`部门：${deptResult.reason?.message || "获取失败"}`);
+            state.contacts.departments = [];
+          }
+
+          if (userResult.status === "fulfilled") {
+            const rows = userResult.value?.data?.users || [];
+            state.contacts.users = normalizeUserContactList(rows);
+          } else {
+            messages.push(`成员：${userResult.reason?.message || "获取失败"}`);
+            state.contacts.users = [];
+          }
+
+          if (deptResult.status !== "fulfilled" && userResult.status !== "fulfilled") {
+            throw new Error(messages.join("；") || "通讯录加载失败");
+          }
+
+          state.contacts.loaded = deptResult.status === "fulfilled" && userResult.status === "fulfilled";
+
+          if (messages.length && !silent) {
+            showToast(`通讯录部分加载失败：${messages.join("；")}`);
+          }
+        })();
+
+        state.contacts.loadPromise = loadTask;
+        try {
+          await loadTask;
+        } finally {
+          state.contacts.loading = false;
+          state.contacts.loadPromise = null;
+
+          const draft = state.modal.standard.draft;
+          renderDepartmentSelectOptions({
+            selectedDeptId: draft?.responsibilityDeptId || "",
+            selectedDeptName: draft?.responsibilityDept || "",
+          });
+          renderOwnerSelectOptions({
+            selectedOwnerId: draft?.defaultOwnerId || "",
+            selectedOwnerName: draft?.defaultOwner || "",
+          });
+          syncModalSelectPlaceholderState();
+        }
+      }
+
+      function bindEvents() {
+        refs.standardSearchBtn.addEventListener("click", () => {
+          state.search.standard = refs.standardKeywordInput.value.trim();
+          renderStandardList();
+        });
+
+        refs.standardResetBtn.addEventListener("click", () => {
+          state.search.standard = "";
+          refs.standardKeywordInput.value = "";
+          renderStandardList();
+        });
+
+        refs.standardKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            refs.standardSearchBtn.click();
+          }
+        });
+
+        refs.addStandardTopBtn.addEventListener("click", () => {
+          void openStandardModal("add");
+        });
+
+        refs.editStandardBtn.addEventListener("click", () => {
+          void openStandardModal("edit");
+        });
+
+        refs.deleteStandardBtn.addEventListener("click", () => {
+          void deleteSelectedStandard();
+        });
+
+        refs.standardList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const card = target.closest(".std-item");
+          if (!card) {
+            return;
+          }
+          const id = card.dataset.id;
+          if (!id) {
+            return;
+          }
+          void selectStandard(id);
+        });
+
+        refs.tabs.forEach((tabBtn) => {
+          tabBtn.addEventListener("click", () => {
+            const tab = tabBtn.dataset.tab;
+            if (!tab || state.activeTab === tab) {
+              return;
+            }
+            state.activeTab = tab;
+            renderTabState();
+          });
+        });
+
+        refs.detailSearchBtn.addEventListener("click", () => {
+          state.search.detail = refs.detailKeywordInput.value.trim();
+          renderDetailsTable();
+        });
+
+        refs.detailResetBtn.addEventListener("click", () => {
+          state.search.detail = "";
+          refs.detailKeywordInput.value = "";
+          state.selected.detailIds.clear();
+          renderDetailsTable();
+        });
+
+        refs.detailKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            refs.detailSearchBtn.click();
+          }
+        });
+
+        refs.deviceSearchBtn.addEventListener("click", () => {
+          state.search.device = refs.deviceKeywordInput.value.trim();
+          renderDeviceTable();
+        });
+
+        refs.deviceResetBtn.addEventListener("click", () => {
+          state.search.device = "";
+          refs.deviceKeywordInput.value = "";
+          state.selected.deviceIds.clear();
+          renderDeviceTable();
+        });
+
+        refs.deviceKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            refs.deviceSearchBtn.click();
+          }
+        });
+
+        refs.closeStandardModalBtn.addEventListener("click", closeStandardModal);
+        refs.cancelStandardBtn.addEventListener("click", closeStandardModal);
+        refs.standardModal.addEventListener("click", (event) => {
+          if (event.target === refs.standardModal) {
+            closeStandardModal();
+          }
+        });
+        refs.standardForm.addEventListener("submit", (event) => {
+          void saveStandard(event);
+        });
+        if (refs.fillCurrentOwnerBtn) {
+          refs.fillCurrentOwnerBtn.addEventListener("click", () => {
+            void fillCurrentOwnerFromApi();
+          });
+        }
+        refs.stdCategoryInput.addEventListener("change", () => {
+          updateSelectPlaceholderState(refs.stdCategoryInput);
+        });
+        refs.stdApplicableDeviceTypeInput.addEventListener("change", () => {
+          const draft = state.modal.standard.draft;
+          const nextType = normalizeApplicableDeviceType(refs.stdApplicableDeviceTypeInput.value);
+          if (draft && normalizeApplicableDeviceType(draft.applicableDeviceType) !== nextType && (draft.devices || []).length) {
+            const ok = window.confirm("切换适用设备类型会清空当前已关联对象，确认切换吗？");
+            if (!ok) {
+              refs.stdApplicableDeviceTypeInput.value = normalizeApplicableDeviceType(draft.applicableDeviceType);
+              return;
+            }
+            draft.devices = [];
+            state.modal.standard.selectedDeviceIds.clear();
+          }
+          if (draft) {
+            draft.applicableDeviceType = nextType;
+          }
+          updateSelectPlaceholderState(refs.stdApplicableDeviceTypeInput);
+          renderDraftDeviceTable();
+        });
+        refs.stdDeptInput.addEventListener("change", () => {
+          updateSelectPlaceholderState(refs.stdDeptInput);
+          const selectedDept = getSelectedDepartmentMeta();
+          refs.stdDeptIdInput.value = selectedDept.deptId || "";
+        });
+        refs.stdOwnerInput.addEventListener("change", () => {
+          updateSelectPlaceholderState(refs.stdOwnerInput);
+          syncSelectedOwnerIdInput();
+        });
+        bindStandardDateField(refs.stdStartDateField, refs.stdStartDisplayInput, refs.stdStartInput);
+        bindStandardDateField(refs.stdEndDateField, refs.stdEndDisplayInput, refs.stdEndInput);
+
+        refs.modalAddDetailBtn.addEventListener("click", () => {
+          addDraftDetailRow();
+        });
+
+        refs.modalDetailTableBody.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement)) {
+            return;
+          }
+          const rowId = target.dataset.rowId;
+          const field = target.dataset.inlineField;
+          if (!rowId || !field) {
+            return;
+          }
+          updateDraftDetailRowField(rowId, field, target.value);
+          if (field === "executeMode" || field === "standard" || field === "standardText") {
+            renderDraftDetailTable();
+          }
+        });
+
+        refs.modalDetailTableBody.addEventListener("input", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
+            return;
+          }
+          const rowId = target.dataset.rowId;
+          const field = target.dataset.inlineField;
+          if (!rowId || !field) {
+            return;
+          }
+          updateDraftDetailRowField(rowId, field, target.value);
+        });
+
+        refs.modalDetailTableBody.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const action = target.dataset.action;
+          const id = target.dataset.id;
+          if (!action) {
+            return;
+          }
+          if (action === "delete" && id) {
+            removeDraftDetailRow(id);
+          }
+        });
+
+        refs.modalBindDeviceBtn.addEventListener("click", () => {
+          openDevicePicker("draft");
+        });
+
+        refs.modalUnbindDeviceBtn.addEventListener("click", () => {
+          void removeDevices("draft", Array.from(state.modal.standard.selectedDeviceIds));
+        });
+
+        refs.modalDeviceCheckAll.addEventListener("change", () => {
+          const rows = getDraftDevices();
+          if (refs.modalDeviceCheckAll.checked) {
+            rows.forEach((row) => state.modal.standard.selectedDeviceIds.add(row.id));
+          } else {
+            rows.forEach((row) => state.modal.standard.selectedDeviceIds.delete(row.id));
+          }
+          renderDraftDeviceTable();
+        });
+
+        refs.modalDeviceTableBody.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
+            return;
+          }
+          const id = target.dataset.id;
+          if (!id) {
+            return;
+          }
+          if (target.checked) {
+            state.modal.standard.selectedDeviceIds.add(id);
+          } else {
+            state.modal.standard.selectedDeviceIds.delete(id);
+          }
+          renderDraftDeviceTable();
+        });
+
+        refs.modalDeviceTableBody.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const action = target.dataset.action;
+          const id = target.dataset.id;
+          if (!action || !id) {
+            return;
+          }
+          if (action === "remove") {
+            void removeDevices("draft", [id]);
+          }
+        });
+
+        refs.closeDetailModalBtn.addEventListener("click", closeDetailModal);
+        refs.cancelDetailBtn.addEventListener("click", closeDetailModal);
+        refs.detailModal.addEventListener("click", (event) => {
+          if (event.target === refs.detailModal) {
+            closeDetailModal();
+          }
+        });
+        refs.detailForm.addEventListener("submit", (event) => {
+          void saveDetail(event);
+        });
+
+        refs.closePickerBtn.addEventListener("click", closeDevicePicker);
+        refs.cancelPickerBtn.addEventListener("click", closeDevicePicker);
+        refs.devicePickerModal.addEventListener("click", (event) => {
+          if (event.target === refs.devicePickerModal) {
+            closeDevicePicker();
+          }
+        });
+
+        refs.pickerSearchBtn.addEventListener("click", () => {
+          state.modal.picker.keyword = refs.pickerKeywordInput.value.trim();
+          renderPickerTable();
+        });
+
+        refs.pickerResetBtn.addEventListener("click", () => {
+          state.modal.picker.keyword = "";
+          refs.pickerKeywordInput.value = "";
+          state.modal.picker.selectedIds.clear();
+          renderPickerTable();
+        });
+
+        refs.pickerKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            refs.pickerSearchBtn.click();
+          }
+        });
+
+        refs.pickerCheckAll.addEventListener("change", () => {
+          const rows = filterPickerDevices();
+          if (refs.pickerCheckAll.checked) {
+            rows.forEach((row) => state.modal.picker.selectedIds.add(row.id));
+          } else {
+            rows.forEach((row) => state.modal.picker.selectedIds.delete(row.id));
+          }
+          renderPickerTable();
+        });
+
+        refs.pickerTableBody.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
+            return;
+          }
+          const id = target.dataset.id;
+          if (!id) {
+            return;
+          }
+          if (target.checked) {
+            state.modal.picker.selectedIds.add(id);
+          } else {
+            state.modal.picker.selectedIds.delete(id);
+          }
+          renderPickerTable();
+        });
+
+        refs.devicePickerForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          void confirmPickDevices();
+        });
+      }
+
+      function bindStandardDateField(fieldWrapper, displayInput, nativeInput) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(nativeInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+
+        fieldWrapper.addEventListener("click", () => {
+          openNativeDatePicker(nativeInput);
+          displayInput.focus();
+        });
+
+        displayInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+            event.preventDefault();
+            openNativeDatePicker(nativeInput);
+          }
+        });
+
+        nativeInput.addEventListener("input", () => {
+          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+        });
+        nativeInput.addEventListener("change", () => {
+          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+        });
+
+        syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+      }
+
+      function syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(nativeInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+        const normalized = normalizeDateInput(nativeInput.value);
+        displayInput.value = normalized || "";
+        fieldWrapper.classList.toggle("has-value", Boolean(normalized));
+      }
+
+      function syncStandardDateFields() {
+        syncDateFieldDisplay(refs.stdStartDateField, refs.stdStartDisplayInput, refs.stdStartInput);
+        syncDateFieldDisplay(refs.stdEndDateField, refs.stdEndDisplayInput, refs.stdEndInput);
+      }
+
+      function openNativeDatePicker(input) {
+        if (!(input instanceof HTMLInputElement)) {
+          return;
+        }
+        if (typeof input.showPicker === "function") {
+          try {
+            input.showPicker();
+            return;
+          } catch (error) {
+            // Some browsers require direct user gestures. Fallback below.
+          }
+        }
+        input.focus();
+        input.click();
+      }
+
+      async function refreshAll({ preserveSelectedId = "" } = {}) {
+        const previousId = preserveSelectedId || state.selectedStandardId;
+        clearInlineDetailState("active");
+        setLoading(true);
+        setStatus("正在同步数据...");
+        try {
+          await Promise.all([syncRuleOptions(), syncDevicePool(), syncStandards(previousId)]);
+          renderRuleSelectOptions();
+          const current = getSelectedStandard();
+          if (current) {
+            await ensureStandardDetailsLoaded(current, { force: true });
+          }
+          renderAll();
+          setStatus(`同步完成 ${formatTime(new Date())}`);
+        } catch (error) {
+          renderAll();
+          setStatus(`同步失败：${error.message}`, true);
+          showToast(`同步失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function syncDevicePool() {
+        const [deviceRecords, chemicalRecords, siteRecords] = await Promise.all([
+          fetchEntryRecords(API_CONFIG.deviceEntryId),
+          fetchEntryRecords(API_CONFIG.chemicalEntryId),
+          fetchEntryRecords(API_CONFIG.siteEntryId),
+        ]);
+        state.devicePool = deviceRecords
+          .map((record) => mapDeviceRecord(record))
+          .filter((item) => item.cloudId && (item.code || item.name));
+        state.chemicalPool = chemicalRecords
+          .map((record) => mapChemicalRecord(record))
+          .filter((item) => item.cloudId && (item.code || item.name));
+        state.sitePool = siteRecords
+          .map((record) => mapSiteRecord(record))
+          .filter((item) => item.id && item.name)
+          .map((site) => ({
+            ...site,
+            chemicalCount: state.chemicalPool.filter((chemical) => isChemicalInStore(chemical, site)).length,
+          }));
+      }
+
+      async function syncRuleOptions() {
+        const result = await requestApi("/rule-config/bootstrap");
+        const rows = Array.isArray(result?.data?.rules) ? result.data.rules : [];
+        state.rules = rows
+          .map((item) => ({
+            id: String(item.id || "").trim(),
+            code: String(item.code || "").trim(),
+            name: String(item.name || "").trim(),
+            category: String(item.category || "").trim(),
+            generationType: String(item.generationType || "").trim(),
+            status: normalizeStatus(item.status || "启用"),
+          }))
+          .filter((item) => item.id && item.name)
+          .sort((a, b) => {
+            const enabledSort = Number(b.status === "启用") - Number(a.status === "启用");
+            if (enabledSort) {
+              return enabledSort;
+            }
+            return String(a.name).localeCompare(String(b.name), "zh-CN");
+          });
+      }
+
+      async function syncStandards(preferredId = "") {
+        const records = await fetchEntryRecords(API_CONFIG.masterEntryId);
+        state.standards = records
+          .map((record) => mapStandardRecord(record))
+          .filter((item) => item.cloudId && (item.code || item.name))
+          .sort((a, b) => String(b.code || "").localeCompare(String(a.code || ""), "zh-CN"));
+
+        const validIds = new Set(state.standards.map((item) => item.id));
+        let selected = preferredId || state.selectedStandardId;
+        if (!selected || !validIds.has(selected)) {
+          selected = state.standards[0]?.id || "";
+        }
+
+        state.selectedStandardId = selected;
+        state.selected.detailIds.clear();
+        state.selected.deviceIds.clear();
+      }
+
+      async function selectStandard(id) {
+        if (state.selectedStandardId === id) {
+          return;
+        }
+        clearInlineDetailState("active");
+        state.selectedStandardId = id;
+        state.selected.detailIds.clear();
+        state.selected.deviceIds.clear();
+        renderAll();
+
+        const current = getSelectedStandard();
+        if (!current) {
+          return;
+        }
+        setStatus("正在加载明细...");
+        try {
+          await ensureStandardDetailsLoaded(current);
+          renderDetailsTable();
+          setStatus(`已切换：${current.name || current.code}`);
+        } catch (error) {
+          setStatus(`明细加载失败：${error.message}`, true);
+          showToast(`明细加载失败：${error.message}`);
+        }
+      }
+
+      async function ensureStandardDetailsLoaded(standard, { force = false } = {}) {
+        if (!standard || !standard.cloudId) {
+          return;
+        }
+        if (standard.detailsLoaded && !force) {
+          return;
+        }
+
+        const records = await fetchEntryRecords(API_CONFIG.detailEntryId);
+        const filtered = records.filter((record) => isDetailBelongsToStandard(record, standard));
+        standard.details = filtered
+          .map((record) => mapDetailRecord(record))
+          .sort((a, b) => Number(a.sortNo || a.no || 0) - Number(b.sortNo || b.no || 0));
+        standard.detailsLoaded = true;
+      }
+
+      function isDetailBelongsToStandard(record, standard) {
+        const stdId = toDisplayText(getAliasRawValue(record, DETAIL_FIELD.standardId));
+        const stdName = toDisplayText(getAliasRawValue(record, DETAIL_FIELD.standardName));
+        if (standard.cloudId && stdId) {
+          return stdId === standard.cloudId;
+        }
+        if (standard.cloudId && !stdId) {
+          return stdName && stdName === standard.name;
+        }
+        return stdName && stdName === standard.name;
+      }
+
+      function mapStandardRecord(record) {
+        const cloudId = extractRecordId(record);
+        const rawDept = getAliasRawValue(record, MASTER_FIELD.responsibilityDept);
+        const rawOwner = getAliasRawValue(record, MASTER_FIELD.defaultOwner);
+        const deptId = extractComplexId(rawDept);
+        const ownerId = extractComplexId(rawOwner);
+        return {
+          id: cloudId || uid("std"),
+          cloudId,
+          code: toDisplayText(getAliasRawValue(record, MASTER_FIELD.code)),
+          name: toDisplayText(getAliasRawValue(record, MASTER_FIELD.name)),
+          category: toDisplayText(getAliasRawValue(record, MASTER_FIELD.category)),
+          applicableDeviceType: normalizeApplicableDeviceType(toDisplayText(getAliasRawValue(record, MASTER_FIELD.applicableDeviceType))),
+          workshop: toDisplayText(getAliasRawValue(record, MASTER_FIELD.workshop)),
+          area: toDisplayText(getAliasRawValue(record, MASTER_FIELD.area)),
+          responsibilityPost: toDisplayText(getAliasRawValue(record, MASTER_FIELD.responsibilityPost)),
+          responsibilityDept: toDisplayText(rawDept),
+          defaultOwner: toDisplayText(rawOwner),
+          responsibilityDeptId: deptId,
+          defaultOwnerId: ownerId,
+          responsibilityDeptRaw: rawDept || null,
+          defaultOwnerRaw: rawOwner || null,
+          status: normalizeStatus(toDisplayText(getAliasRawValue(record, MASTER_FIELD.status))),
+          version: toDisplayText(getAliasRawValue(record, MASTER_FIELD.version)),
+          effectiveDate: normalizeDateInput(getAliasRawValue(record, MASTER_FIELD.effectiveDate)),
+          expiryDate: normalizeDateInput(getAliasRawValue(record, MASTER_FIELD.expiryDate)),
+          scanRequired: normalizeYesNo(toDisplayText(getAliasRawValue(record, MASTER_FIELD.scanRequired))),
+          remark: toDisplayText(getAliasRawValue(record, MASTER_FIELD.remark)),
+          backendDeviceName: toDisplayText(getAliasRawValue(record, MASTER_FIELD.deviceName)),
+          backendDeviceCode: toDisplayText(getAliasRawValue(record, MASTER_FIELD.deviceCode)),
+          backendDeviceType: toDisplayText(getAliasRawValue(record, MASTER_FIELD.deviceType)),
+          backendLinkedType: toDisplayText(getAliasRawValue(record, MASTER_FIELD.linkedDeviceType)),
+          backendLinkedRange: toDisplayText(getAliasRawValue(record, MASTER_FIELD.linkedDeviceRange)),
+          activeRuleId: toDisplayText(getAliasRawValue(record, MASTER_FIELD.activeRuleId)),
+          details: [],
+          detailsLoaded: false,
+        };
+      }
+
+      function mapDetailRecord(record) {
+        const cloudId = extractRecordId(record);
+        const executeMode = normalizeExecuteMode(
+          toDisplayText(getAliasRawValue(record, DETAIL_FIELD.executeMode)) ||
+            toDisplayText(getAliasRawValue(record, DETAIL_FIELD.method)) ||
+            "普通"
+        );
+        const inspectType = toDisplayText(getAliasRawValue(record, DETAIL_FIELD.inspectType)) || "日常点检";
+        const standardContent =
+          toDisplayText(getAliasRawValue(record, DETAIL_FIELD.standard)) ||
+          toDisplayText(getAliasRawValue(record, DETAIL_FIELD.content));
+        const standardTextRaw =
+          toDisplayText(getAliasRawValue(record, DETAIL_FIELD.standardText)) ||
+          toDisplayText(getAliasRawValue(record, DETAIL_FIELD.judge));
+
+        const standardText =
+          executeMode === "抄表" ? standardTextRaw : standardTextRaw || standardContent || defaultJudgeByMode(executeMode);
+        return {
+          id: cloudId || uid("det"),
+          cloudId,
+          no: toIntOrDefault(getAliasRawValue(record, DETAIL_FIELD.seq), 1),
+          part: toDisplayText(getAliasRawValue(record, DETAIL_FIELD.part)),
+          item: toDisplayText(getAliasRawValue(record, DETAIL_FIELD.item)),
+          executeMode,
+          inspectType,
+          standard: standardContent || defaultStandardByMode(executeMode),
+          unit: toDisplayText(getAliasRawValue(record, DETAIL_FIELD.unit)),
+          standardText,
+          sortNo: toIntOrDefault(getAliasRawValue(record, DETAIL_FIELD.sortNo), 1),
+          enabledStatus: normalizeStatus(toDisplayText(getAliasRawValue(record, DETAIL_FIELD.enabledStatus))),
+          remark: toDisplayText(getAliasRawValue(record, DETAIL_FIELD.remark)),
+        };
+      }
+
+      function mapDeviceRecord(record) {
+        const cloudId = extractRecordId(record);
+        const category = toDisplayText(getAliasRawValue(record, DEVICE_FIELD.category));
+        const deviceType = toDisplayText(getAliasRawValue(record, DEVICE_FIELD.deviceType));
+        const workshop = toDisplayText(getAliasRawValue(record, DEVICE_FIELD.workshop));
+        const area = toDisplayText(getAliasRawValue(record, DEVICE_FIELD.area));
+        const department = toDisplayText(getAliasRawValue(record, DEVICE_FIELD.department));
+        const riskLevel = toDisplayText(getAliasRawValue(record, DEVICE_FIELD.riskLevel));
+        return {
+          id: cloudId || uid("dev"),
+          cloudId,
+          code: toDisplayText(getAliasRawValue(record, DEVICE_FIELD.code)),
+          name: toDisplayText(getAliasRawValue(record, DEVICE_FIELD.name)),
+          category,
+          deviceType,
+          workshop,
+          area,
+          department,
+          riskLevel,
+          location: area || workshop,
+          status: normalizeStatus(toDisplayText(getAliasRawValue(record, DEVICE_FIELD.status))),
+          inspectStandardId: toDisplayText(getAliasRawValue(record, DEVICE_FIELD.inspectStandardId)),
+          inspectStandardCode: toDisplayText(getAliasRawValue(record, DEVICE_FIELD.inspectStandardCode)),
+        };
+      }
+
+      function mapChemicalRecord(record) {
+        const cloudId = extractRecordId(record);
+        const usageLocation = toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.usageLocation));
+        const storageLocation = toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.storageLocation));
+        const packageForm = toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.packageForm));
+        const accidentType = toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.accidentType));
+        return {
+          id: cloudId || uid("chem"),
+          cloudId,
+          code: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.code)),
+          name: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.name)),
+          category: "危化品",
+          deviceType: packageForm || "危化品",
+          workshop: usageLocation,
+          area: storageLocation,
+          department: "",
+          owner: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.owner)),
+          riskLevel: accidentType,
+          location: storageLocation || usageLocation,
+          status: normalizeStatus(toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.status))),
+          included: normalizeYesNo(toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.included))),
+          inspectStandardId: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.inspectStandardId)),
+          inspectStandardCode: "",
+          qrCode: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.qrCode)),
+          maxStorage: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.maxStorage)),
+          usageAmount: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.usageAmount)),
+          hazardAnalysis: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.hazardAnalysis)),
+          remark: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.remark)),
+        };
+      }
+
+      function mapSiteRecord(record) {
+        const cloudId = extractRecordId(record);
+        const code = toDisplayText(getAliasRawValue(record, SITE_FIELD.code));
+        const name = toDisplayText(getAliasRawValue(record, SITE_FIELD.name));
+        const area = toDisplayText(getAliasRawValue(record, SITE_FIELD.area)) || "未配置区域";
+        return {
+          id: cloudId || code || name,
+          cloudId,
+          code,
+          name,
+          category: "危化品库",
+          deviceType: "危化品库",
+          workshop: area,
+          area,
+          department: "",
+          owner: toDisplayText(getAliasRawValue(record, SITE_FIELD.owner)),
+          riskLevel: "",
+          location: name,
+          status: "启用",
+          objectType: "危化品库",
+          chemicalCount: 0,
+        };
+      }
+
+      function renderAll() {
+        renderStandardList();
+        renderTabState();
+        renderActionDisabled();
+      }
+
+      function renderStandardList() {
+        const rows = filterStandards();
+        refs.standardList.innerHTML = "";
+
+        if (!rows.length) {
+          refs.standardList.innerHTML = '<div class="empty">暂无点检标准</div>';
+          return;
+        }
+
+        rows.forEach((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `std-item${item.id === state.selectedStandardId ? " active" : ""}`;
+          button.dataset.id = item.id;
+          button.innerHTML = `
+            <div class="std-row">
+              <span class="std-name">${escapeHtml(item.name || "未命名标准")}</span>
+              <span class="std-code">${escapeHtml(item.code || "-")}</span>
+            </div>
+            <div class="std-sub">${escapeHtml(item.category || "未配置规则")} | ${escapeHtml(item.applicableDeviceType || "设备")} | ${escapeHtml(item.status || "-")}</div>
+          `;
+          refs.standardList.appendChild(button);
+        });
+      }
+
+      function renderTabState() {
+        const current = getSelectedStandard();
+        const objectType = normalizeApplicableDeviceType(current?.applicableDeviceType);
+        refs.objectsTabBtn.textContent = "适用范围";
+        refs.deviceKeywordInput.placeholder = getObjectSearchPlaceholder(objectType);
+        renderObjectTableHead(refs.deviceTableHead, objectType, { selectable: false });
+        refs.tabs.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.tab === state.activeTab);
+        });
+        refs.detailsPanel.classList.toggle("hidden", state.activeTab !== "details");
+        refs.devicesPanel.classList.toggle("hidden", state.activeTab !== "devices");
+        renderDetailsTable();
+        renderDeviceTable();
+      }
+
+      function renderDetailsTable() {
+        const current = getSelectedStandard();
+        refs.detailTableBody.innerHTML = "";
+
+        if (!current) {
+          refs.detailTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#7e8a9b;padding:20px">请先选择标准</td></tr>';
+          refs.detailFoot.textContent = "未选择标准";
+          return;
+        }
+
+        const rows = filterCurrentDetails();
+        if (!rows.length) {
+          refs.detailTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#7e8a9b;padding:20px">暂无明细</td></tr>';
+        } else {
+          rows.forEach((row) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${escapeHtml(row.no)}</td>
+              <td>${escapeHtml(row.part || "-")}</td>
+              <td>${escapeHtml(row.item || "-")}</td>
+              <td>${escapeHtml(row.executeMode || "-")}</td>
+              <td>${escapeHtml(row.inspectType || "-")}</td>
+              <td>${escapeHtml(row.standard || "-")}</td>
+              <td>${escapeHtml(row.unit || "-")}</td>
+              <td>${escapeHtml(row.standardText || "-")}</td>
+            `;
+            refs.detailTableBody.appendChild(tr);
+          });
+        }
+
+        refs.detailFoot.textContent = `明细共 ${current.details.length} 条，当前 ${rows.length} 条`;
+      }
+
+      function renderDeviceTable() {
+        const current = getSelectedStandard();
+        refs.deviceTableBody.innerHTML = "";
+        const objectType = normalizeApplicableDeviceType(current?.applicableDeviceType);
+        renderObjectTableHead(refs.deviceTableHead, objectType, { selectable: false });
+
+        if (!current) {
+          refs.deviceTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#7e8a9b;padding:20px">请先选择标准</td></tr>';
+          refs.deviceFoot.textContent = "未选择标准";
+          return;
+        }
+
+        const rows = filterCurrentDevices();
+        if (!rows.length) {
+          refs.deviceTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#7e8a9b;padding:20px">暂无适用范围</td></tr>';
+        } else {
+          rows.forEach((row, index) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = renderObjectTableRow(row, index, objectType, { selectable: false });
+            refs.deviceTableBody.appendChild(tr);
+          });
+        }
+
+        refs.deviceFoot.textContent = `适用范围共 ${getCurrentLinkedDevices().length} 个，当前 ${rows.length} 个`;
+      }
+
+      function renderActionDisabled() {
+        const hasStandard = Boolean(getSelectedStandard());
+
+        refs.editStandardBtn.disabled = state.loading || !hasStandard;
+        refs.deleteStandardBtn.disabled = state.loading || !hasStandard;
+
+        refs.addStandardTopBtn.disabled = state.loading;
+      }
+
+      async function openStandardModal(mode) {
+        clearInlineDetailState("draft");
+        if (mode === "edit") {
+          const current = getSelectedStandard();
+          if (!current) {
+            showToast("请先选择标准");
+            return;
+          }
+          try {
+            await ensureStandardDetailsLoaded(current);
+          } catch (error) {
+            showToast(`加载明细失败：${error.message}`);
+            return;
+          }
+        }
+
+        state.modal.standard.mode = mode;
+        state.modal.standard.selectedDetailIds.clear();
+        state.modal.standard.selectedDeviceIds.clear();
+
+        if (mode === "edit") {
+          const current = getSelectedStandard();
+          const draft = deepClone(current);
+          draft.devices = getCurrentLinkedDevices();
+          state.modal.standard.draft = draft;
+          state.modal.standard.originDeviceIds = new Set(draft.devices.map((item) => item.deviceId));
+          state.modal.standard.originDeviceType = normalizeApplicableDeviceType(draft.applicableDeviceType);
+          refs.standardModalTitle.textContent = "编辑点检标准";
+        } else {
+          const draft = createEmptyStandardDraft();
+          state.modal.standard.draft = draft;
+          state.modal.standard.originDeviceIds = new Set();
+          state.modal.standard.originDeviceType = normalizeApplicableDeviceType(draft.applicableDeviceType);
+          refs.standardModalTitle.textContent = "新建点检标准";
+        }
+
+        try {
+          await ensureContactsLoaded({ silent: true });
+        } catch (error) {
+          showToast(`通讯录加载失败：${error.message}`);
+        }
+
+        populateStandardFormByDraft();
+        renderDraftDetailTable();
+        renderDraftDeviceTable();
+        refs.standardModal.classList.remove("hidden");
+
+        if (mode === "add" && !state.modal.standard.draft.defaultOwnerId) {
+          void fillCurrentOwnerFromApi({ silent: true });
+        }
+      }
+
+      function closeStandardModal() {
+        clearInlineDetailState("draft");
+        refs.standardModal.classList.add("hidden");
+      }
+
+      function createEmptyStandardDraft() {
+        return {
+          id: uid("std"),
+          cloudId: "",
+          code: "自动生成",
+          name: "",
+          category: "",
+          workshop: "",
+          area: "",
+          responsibilityPost: "",
+          responsibilityDept: "",
+          responsibilityDeptId: "",
+          responsibilityDeptRaw: null,
+          defaultOwner: "",
+          defaultOwnerId: "",
+          defaultOwnerRaw: null,
+          status: "启用",
+          version: "V1.0",
+          applicableDeviceType: "设备",
+          effectiveDate: "",
+          expiryDate: "",
+          scanRequired: "是",
+          remark: "",
+          activeRuleId: "",
+          details: [],
+          detailsLoaded: true,
+          devices: [],
+        };
+      }
+
+      function populateStandardFormByDraft() {
+        const draft = state.modal.standard.draft;
+        if (!draft) {
+          return;
+        }
+
+        refs.stdCodeInput.value = draft.code || "自动生成";
+        refs.stdNameInput.value = draft.name || "";
+        renderRuleSelectOptions(draft.category);
+        ensureSelectOption(refs.stdCategoryInput, draft.category);
+        refs.stdCategoryInput.value = draft.category || "";
+        refs.stdApplicableDeviceTypeInput.value = normalizeApplicableDeviceType(draft.applicableDeviceType);
+        refs.stdVersionInput.value = draft.version || "";
+        refs.stdWorkshopInput.value = draft.workshop || "";
+        refs.stdAreaInput.value = draft.area || "";
+        refs.stdPostInput.value = draft.responsibilityPost || "";
+        refs.stdStatusInput.value = draft.status || "启用";
+        renderDepartmentSelectOptions({
+          selectedDeptId: draft.responsibilityDeptId || "",
+          selectedDeptName: draft.responsibilityDept || "",
+        });
+        renderOwnerSelectOptions({
+          selectedOwnerId: draft.defaultOwnerId || "",
+          selectedOwnerName: draft.defaultOwner || "",
+        });
+        refs.stdStartInput.value = draft.effectiveDate || "";
+        refs.stdEndInput.value = draft.expiryDate || "";
+        syncStandardDateFields();
+        refs.stdRemarkInput.value = draft.remark || "";
+        syncModalSelectPlaceholderState();
+      }
+
+      async function saveStandard(event) {
+        event.preventDefault();
+        const draft = state.modal.standard.draft;
+        if (!draft) {
+          return;
+        }
+
+        applyStandardFormToDraft(draft);
+
+        if (!draft.name) {
+          showToast("请填写标准名称");
+          return;
+        }
+
+        if (!draft.category) {
+          showToast("请选择执行规则");
+          return;
+        }
+
+        const detailValidation = validateAndNormalizeDraftDetails(draft.details || []);
+        if (!detailValidation.ok) {
+          showToast(detailValidation.message);
+          return;
+        }
+        draft.details = detailValidation.rows;
+
+        setLoading(true);
+        setStatus("正在保存标准...");
+
+        try {
+          if (state.modal.standard.mode === "add") {
+            const createdId = await createStandardWithRelations(draft);
+            const taskSync = await syncStandardTasksAfterSave(createdId);
+            closeStandardModal();
+            await refreshAll({ preserveSelectedId: createdId });
+            const message = formatSaveTaskSyncMessage("标准已新增", taskSync);
+            showToast(message);
+            setStatus(message, !taskSync.ok);
+          } else {
+            const updatedId = await updateStandardWithRelations(draft);
+            const taskSync = await syncStandardTasksAfterSave(updatedId);
+            closeStandardModal();
+            await refreshAll({ preserveSelectedId: updatedId });
+            const message = formatSaveTaskSyncMessage("标准已更新", taskSync);
+            showToast(message);
+            setStatus(message, !taskSync.ok);
+          }
+        } catch (error) {
+          showToast(`保存失败：${error.message}`);
+          setStatus(`保存失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function syncStandardTasksAfterSave(standardId) {
+        if (!standardId) {
+          return {
+            ok: false,
+            message: "缺少点检标准ID，未触发任务生成",
+          };
+        }
+
+        try {
+          const result = await requestApi(
+            "/rule-config/sync-standard-tasks",
+            {},
+            {
+              method: "POST",
+              body: {
+                standardId,
+              },
+            }
+          );
+          return {
+            ok: true,
+            ...(result?.data || {}),
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            message: `任务生成失败：${error.message}`,
+          };
+        }
+      }
+
+      function formatSaveTaskSyncMessage(prefix, taskSync) {
+        if (!taskSync) {
+          return prefix;
+        }
+
+        if (!taskSync.ok) {
+          return `${prefix}，但${taskSync.message || "任务生成失败"}`;
+        }
+
+        const sync = taskSync.sync || {};
+        const created = Number(sync.created || 0);
+        const skipped = Number(sync.skipped || 0);
+        if (created > 0) {
+          return `${prefix}，已生成今日任务 ${created} 条`;
+        }
+        if (skipped > 0) {
+          return `${prefix}，今日任务已存在`;
+        }
+        return `${prefix}，${taskSync.message || "未生成今日任务"}`;
+      }
+
+      function applyStandardFormToDraft(draft) {
+        syncStandardDateFields();
+        draft.name = refs.stdNameInput.value.trim();
+        draft.category = refs.stdCategoryInput.value.trim();
+        draft.applicableDeviceType = normalizeApplicableDeviceType(refs.stdApplicableDeviceTypeInput.value);
+        draft.version = refs.stdVersionInput.value.trim();
+        draft.workshop = refs.stdWorkshopInput.value.trim();
+        draft.area = refs.stdAreaInput.value.trim();
+        draft.responsibilityPost = refs.stdPostInput.value.trim();
+        draft.status = normalizeStatus(refs.stdStatusInput.value);
+        const selectedDept = getSelectedDepartmentMeta();
+        draft.responsibilityDept = selectedDept.name || "";
+        draft.responsibilityDeptId = selectedDept.deptId || "";
+        draft.responsibilityDeptRaw = draft.responsibilityDeptId || draft.responsibilityDept || null;
+        refs.stdDeptIdInput.value = draft.responsibilityDeptId || "";
+
+        const selectedOwner = getSelectedOwnerMeta();
+        draft.defaultOwner = selectedOwner.name || "";
+        draft.defaultOwnerId = selectedOwner.userId || "";
+        draft.defaultOwnerRaw = draft.defaultOwnerId || draft.defaultOwner || null;
+        refs.stdOwnerIdInput.value = draft.defaultOwnerId || "";
+        if (!draft.defaultOwnerId) {
+          draft.defaultOwnerId = extractComplexId(draft.defaultOwnerRaw);
+          refs.stdOwnerIdInput.value = draft.defaultOwnerId || "";
+        }
+        draft.effectiveDate = refs.stdStartInput.value.trim();
+        draft.expiryDate = refs.stdEndInput.value.trim();
+        draft.scanRequired = "是";
+        draft.remark = refs.stdRemarkInput.value.trim();
+      }
+
+      async function fillCurrentOwnerFromApi({ silent = false } = {}) {
+        const draft = state.modal.standard.draft;
+        if (!draft) {
+          return;
+        }
+
+        try {
+          const result = await requestApi("/inspection-report/current-member");
+          const data = result?.data || {};
+          const member = data.member || null;
+          if (!member) {
+            if (!silent) {
+              showToast(data.lookupError || "未识别到当前成员，请从下拉列表选择负责人");
+            }
+            return;
+          }
+
+          const ownerName = toDisplayText(member.userName || member.user);
+          const ownerId = extractComplexId(member.userId || member.uniqueId || member.id);
+          const deptName = toDisplayText(member.mainDepartmentName || member.departmentsName);
+          const deptId = extractComplexId(member.mainDepartmentId);
+
+          if (!ownerId) {
+            if (!silent) {
+              showToast("当前成员缺少 userId，无法自动写入负责人");
+            }
+            return;
+          }
+
+          draft.defaultOwner = ownerName || ownerId;
+          draft.defaultOwnerId = ownerId;
+          draft.defaultOwnerRaw = ownerId;
+          draft.responsibilityDept = deptName;
+          draft.responsibilityDeptId = deptId;
+          draft.responsibilityDeptRaw = deptId || deptName || null;
+          upsertContactDepartment(deptId, deptName);
+          upsertContactUser(ownerId, ownerName || ownerId, deptId, deptName);
+          populateStandardFormByDraft();
+
+          if (!silent) {
+            showToast(`已带入当前成员：${draft.defaultOwner}`);
+          }
+        } catch (error) {
+          if (!silent) {
+            showToast(`带入失败：${error.message}`);
+          }
+        }
+      }
+
+      async function createStandardWithRelations(draft) {
+        const payload = buildMasterPayload(draft, draft.devices || [], "");
+        const result = await requestEntry(API_CONFIG.masterEntryId, "data_create", { data: payload }, "POST");
+
+        let cloudId = extractRecordId(result?.data || result);
+        if (!cloudId) {
+          throw new Error("主表新增成功但未返回记录ID");
+        }
+
+        let created = null;
+        try {
+          const retrieve = await requestEntry(API_CONFIG.masterEntryId, "data_retrieve", { data_id: cloudId }, "POST");
+          created = mapStandardRecord(retrieve?.data || retrieve);
+        } catch (error) {
+          created = null;
+        }
+
+        const standard = created || {
+          ...deepClone(draft),
+          id: cloudId,
+          cloudId,
+          code: draft.code === "自动生成" ? "" : draft.code,
+          detailsLoaded: true,
+        };
+
+        if (standard.status === "启用") {
+          await updateRecord(API_CONFIG.masterEntryId, cloudId, {
+            [MASTER_FIELD.activeRuleId]: cloudId,
+          });
+          standard.activeRuleId = cloudId;
+        }
+
+        await replaceStandardDetails(standard, draft.details || []);
+        await bindDevicesToStandard((draft.devices || []).map((item) => item.deviceId), standard);
+
+        return cloudId;
+      }
+
+      async function updateStandardWithRelations(draft) {
+        if (!draft.cloudId) {
+          throw new Error("缺少标准记录ID");
+        }
+
+        const desiredDeviceIds = new Set((draft.devices || []).map((item) => item.deviceId));
+        const originDeviceIds = state.modal.standard.originDeviceIds;
+
+        const payload = buildMasterPayload(draft, draft.devices || [], draft.status === "启用" ? draft.cloudId : "");
+        await updateRecord(API_CONFIG.masterEntryId, draft.cloudId, payload);
+
+        const standard = {
+          ...deepClone(draft),
+          code: draft.code === "自动生成" ? "" : draft.code,
+        };
+
+        await replaceStandardDetails(standard, draft.details || []);
+
+        const toBind = Array.from(desiredDeviceIds);
+        const toUnbind = Array.from(originDeviceIds).filter((id) => !desiredDeviceIds.has(id));
+
+        await bindDevicesToStandard(toBind, standard);
+        await unbindDevicesFromStandard(toUnbind, {
+          ...standard,
+          applicableDeviceType: state.modal.standard.originDeviceType || standard.applicableDeviceType,
+        });
+
+        return draft.cloudId;
+      }
+
+      async function deleteSelectedStandard() {
+        const current = getSelectedStandard();
+        if (!current) {
+          showToast("请先选择标准");
+          return;
+        }
+
+        const ok = window.confirm(`确认删除标准“${current.name || current.code}”吗？`);
+        if (!ok) {
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在删除标准...");
+
+        try {
+          await ensureStandardDetailsLoaded(current, { force: true });
+
+          const linked = getStandardLinkedDevices(current);
+          await unbindDevicesFromStandard(
+            linked.map((item) => item.deviceId),
+            current
+          );
+
+          const detailRecords = await fetchDetailRecordsByStandard(current);
+          for (const row of detailRecords) {
+            if (row.cloudId) {
+              await requestEntry(API_CONFIG.detailEntryId, "data_delete", { data_id: row.cloudId }, "POST");
+            }
+          }
+
+          await requestEntry(API_CONFIG.masterEntryId, "data_delete", { data_id: current.cloudId }, "POST");
+
+          await refreshAll();
+          showToast("标准已删除");
+        } catch (error) {
+          showToast(`删除失败：${error.message}`);
+          setStatus(`删除失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function buildMasterPayload(draft, linkedDevices, activeRuleId) {
+        const deviceNames = unique(linkedDevices.map((item) => item.name)).join("、");
+        const deviceCodes = unique(linkedDevices.map((item) => item.code)).join("、");
+        const deviceTypes = unique(linkedDevices.map((item) => item.deviceType || item.category)).join("、");
+        const deviceRanges = unique(
+          linkedDevices.map((item) => {
+            if (item.deviceType === "危化品库") {
+              return item.location || item.name || item.area || item.workshop;
+            }
+            return item.workshop || item.area || item.location;
+          })
+        ).join("、");
+        const deptValue = coerceDepartmentSingleValue(
+          draft.responsibilityDeptId,
+          draft.responsibilityDeptRaw,
+          draft.responsibilityDept
+        );
+        const ownerValue = coerceMemberSingleValue(draft.defaultOwnerId, draft.defaultOwnerRaw, draft.defaultOwner);
+
+        const payload = {
+          [MASTER_FIELD.name]: draft.name || "",
+          [MASTER_FIELD.category]: draft.category || "",
+          [MASTER_FIELD.applicableDeviceType]: normalizeApplicableDeviceType(draft.applicableDeviceType),
+          [MASTER_FIELD.workshop]: draft.workshop || "",
+          [MASTER_FIELD.area]: draft.area || "",
+          [MASTER_FIELD.responsibilityPost]: draft.responsibilityPost || "",
+          [MASTER_FIELD.responsibilityDept]: deptValue,
+          [MASTER_FIELD.defaultOwner]: ownerValue,
+          [MASTER_FIELD.status]: draft.status || "启用",
+          [MASTER_FIELD.version]: draft.version || "",
+          [MASTER_FIELD.effectiveDate]: formatDateTimeForApi(draft.effectiveDate),
+          [MASTER_FIELD.expiryDate]: formatDateTimeForApi(draft.expiryDate),
+          [MASTER_FIELD.scanRequired]: draft.scanRequired || "否",
+          [MASTER_FIELD.remark]: draft.remark || "",
+
+          [MASTER_FIELD.deviceName]: deviceNames,
+          [MASTER_FIELD.deviceCode]: deviceCodes,
+          [MASTER_FIELD.deviceType]: deviceTypes,
+          [MASTER_FIELD.linkedDeviceType]: deviceTypes,
+          [MASTER_FIELD.linkedDeviceRange]: deviceRanges,
+          [MASTER_FIELD.activeRuleId]: activeRuleId || "",
+        };
+
+        return payload;
+      }
+
+      function coerceDepartmentSingleValue(deptId, rawValue, fallbackText) {
+        const directId = String(deptId || "").trim();
+        if (directId) {
+          return directId;
+        }
+
+        const rawId = String(extractComplexId(rawValue) || "").trim();
+        if (rawId) {
+          return rawId;
+        }
+
+        const text = String(fallbackText || "").trim();
+        if (text && /^[A-Za-z0-9_-]{8,}$/.test(text)) {
+          return text;
+        }
+
+        return null;
+      }
+
+      function coerceMemberSingleValue(ownerId, rawValue, fallbackText) {
+        const directId = normalizeMemberId(ownerId);
+        if (directId) {
+          return directId;
+        }
+
+        const rawId = normalizeMemberId(extractComplexId(rawValue));
+        if (rawId) {
+          return rawId;
+        }
+
+        const parsed = parseJsonMaybe(String(fallbackText || "").trim());
+        const parsedId = normalizeMemberId(extractComplexId(parsed));
+        if (parsedId) {
+          return parsedId;
+        }
+
+        const text = normalizeMemberId(fallbackText);
+        if (text && isLikelyMemberId(text)) {
+          return text;
+        }
+
+        return null;
+      }
+
+      function normalizeMemberId(value) {
+        return String(value || "").trim();
+      }
+
+      function isLikelyMemberId(text) {
+        return /^[A-Za-z0-9_-]{8,}$/.test(String(text || "").trim());
+      }
+
+      function extractComplexId(value) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return String(value).trim();
+        }
+
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const id = extractComplexId(item);
+            if (id) {
+              return id;
+            }
+          }
+          return "";
+        }
+
+        if (typeof value === "object") {
+          const keys = ["_id", "id", "user_id", "userId", "value", "code", "key"];
+          for (const key of keys) {
+            if (Object.prototype.hasOwnProperty.call(value, key)) {
+              const text = String(value[key] || "").trim();
+              if (text) {
+                return text;
+              }
+            }
+          }
+        }
+
+        return "";
+      }
+
+      function parseJsonMaybe(text) {
+        if (!text) {
+          return null;
+        }
+        if (!(text.startsWith("{") || text.startsWith("["))) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      async function replaceStandardDetails(standard, detailRows) {
+        const existing = await fetchDetailRecordsByStandard(standard);
+        for (const row of existing) {
+          if (row.cloudId) {
+            await requestEntry(API_CONFIG.detailEntryId, "data_delete", { data_id: row.cloudId }, "POST");
+          }
+        }
+
+        for (const row of detailRows) {
+          const payload = buildDetailPayload(row, standard);
+          await requestEntry(API_CONFIG.detailEntryId, "data_create", { data: payload }, "POST");
+        }
+      }
+
+      async function fetchDetailRecordsByStandard(standard) {
+        const records = await fetchEntryRecords(API_CONFIG.detailEntryId);
+        return records
+          .filter((record) => isDetailBelongsToStandard(record, standard))
+          .map((record) => mapDetailRecord(record));
+      }
+
+      function buildDetailPayload(detail, standard) {
+        const normalized = deriveDetailByMode(detail);
+        const executeMode = normalized.executeMode;
+        const inspectType = normalized.inspectType || "日常点检";
+        const standardContent = normalized.standard || "";
+        const standardText = normalized.standardText || "";
+        const range = executeMode === "抄表" ? parseNumericRange(standardText) : null;
+        const lower = range ? range.min : "";
+        const upper = range ? range.max : "";
+        const judgeValue = executeMode === "抄表" ? standardText : "枚举判断";
+        const resultOptions = executeMode === "抄表" ? "" : standardContent;
+        const mobileInputMode = executeMode === "抄表" ? "数值录入" : "单选";
+
+        return {
+          [DETAIL_FIELD.standardId]: standard.cloudId || "",
+          [DETAIL_FIELD.standardName]: standard.name || "",
+          [DETAIL_FIELD.seq]: toIntOrDefault(normalized.no, 1),
+          [DETAIL_FIELD.part]: normalized.part || "",
+          [DETAIL_FIELD.item]: normalized.item || "",
+          [DETAIL_FIELD.executeMode]: executeMode,
+          [DETAIL_FIELD.method]: null,
+          [DETAIL_FIELD.inspectType]: inspectType,
+          [DETAIL_FIELD.standard]: standardContent,
+          [DETAIL_FIELD.content]: standardContent,
+          [DETAIL_FIELD.standardText]: standardText,
+          [DETAIL_FIELD.judge]: judgeValue,
+          [DETAIL_FIELD.lower]: lower,
+          [DETAIL_FIELD.upper]: upper,
+          [DETAIL_FIELD.resultType]: null,
+          [DETAIL_FIELD.resultOptions]: resultOptions,
+          [DETAIL_FIELD.mobileInputMode]: mobileInputMode,
+          [DETAIL_FIELD.unit]: normalized.unit || "",
+          [DETAIL_FIELD.sortNo]: toIntOrDefault(normalized.sortNo || normalized.no, 1),
+          [DETAIL_FIELD.enabledStatus]: normalized.enabledStatus || "启用",
+          [DETAIL_FIELD.remark]: normalized.remark || "",
+        };
+      }
+
+      async function bindDevicesToStandard(deviceIds, standard) {
+        if (!deviceIds.length) {
+          return;
+        }
+
+        const objectType = normalizeApplicableDeviceType(standard?.applicableDeviceType);
+        const pool = getObjectPool(objectType);
+        for (const deviceId of deviceIds) {
+          const device = pool.find((item) => item.id === deviceId);
+          if (!device) {
+            continue;
+          }
+          if (objectType === "危化品") {
+            const chemicals = state.chemicalPool.filter((chemical) => isChemicalInStore(chemical, device));
+            for (const chemical of chemicals) {
+              if (!chemical.cloudId) continue;
+              await updateRecord(API_CONFIG.chemicalEntryId, chemical.cloudId, {
+                [CHEMICAL_FIELD.inspectStandardId]: standard.cloudId || "",
+              });
+              chemical.inspectStandardId = standard.cloudId || "";
+            }
+          } else {
+            if (!device.cloudId) {
+              continue;
+            }
+            await updateRecord(API_CONFIG.deviceEntryId, device.cloudId, {
+              [DEVICE_FIELD.inspectStandardId]: standard.cloudId || "",
+              [DEVICE_FIELD.inspectStandardCode]: standard.code || "",
+            });
+          }
+
+          device.inspectStandardId = standard.cloudId || "";
+          device.inspectStandardCode = standard.code || "";
+        }
+      }
+
+      async function unbindDevicesFromStandard(deviceIds, standard) {
+        if (!deviceIds.length) {
+          return;
+        }
+
+        const objectType = normalizeApplicableDeviceType(standard?.applicableDeviceType);
+        const pool = getObjectPool(objectType);
+        for (const deviceId of deviceIds) {
+          const device = pool.find((item) => item.id === deviceId);
+          if (!device) {
+            continue;
+          }
+
+          if (objectType === "危化品") {
+            const chemicals = state.chemicalPool.filter((chemical) => {
+              return isChemicalInStore(chemical, device) && standard.cloudId && String(chemical.inspectStandardId || "") === String(standard.cloudId || "");
+            });
+            for (const chemical of chemicals) {
+              if (!chemical.cloudId) continue;
+              await updateRecord(API_CONFIG.chemicalEntryId, chemical.cloudId, {
+                [CHEMICAL_FIELD.inspectStandardId]: "",
+              });
+              chemical.inspectStandardId = "";
+            }
+          } else {
+            if (!device.cloudId) {
+              continue;
+            }
+            const shouldClearById = standard.cloudId && String(device.inspectStandardId || "") === String(standard.cloudId || "");
+            const shouldClearByCode = standard.code && String(device.inspectStandardCode || "") === String(standard.code || "");
+            if (!shouldClearById && !shouldClearByCode) {
+              continue;
+            }
+            await updateRecord(API_CONFIG.deviceEntryId, device.cloudId, {
+              [DEVICE_FIELD.inspectStandardId]: "",
+              [DEVICE_FIELD.inspectStandardCode]: "",
+            });
+          }
+
+          device.inspectStandardId = "";
+          device.inspectStandardCode = "";
+        }
+      }
+
+      async function openDetailModal({ target, mode, detailId = "" }) {
+        if (target === "active") {
+          const current = getSelectedStandard();
+          if (!current) {
+            showToast("请先选择标准");
+            return;
+          }
+          try {
+            await ensureStandardDetailsLoaded(current);
+          } catch (error) {
+            showToast(`加载明细失败：${error.message}`);
+            return;
+          }
+        }
+
+        const list = getDetailList(target);
+        const currentRow = list.find((item) => item.id === detailId);
+
+        state.modal.detail.target = target;
+        state.modal.detail.mode = mode;
+        state.modal.detail.editingId = mode === "edit" ? detailId : "";
+
+        refs.detailForm.reset();
+
+        if (mode === "edit" && currentRow) {
+          refs.detNoInput.value = toIntOrDefault(currentRow.no, 1);
+          refs.detPartInput.value = currentRow.part || "";
+          refs.detItemInput.value = currentRow.item || "";
+          refs.detExecuteModeInput.value = currentRow.executeMode || "普通";
+          refs.detInspectTypeInput.value = currentRow.inspectType || "日常点检";
+          refs.detReportRequiredInput.value = normalizeStatus(currentRow.enabledStatus || "启用");
+          refs.detStandardTextInput.value = currentRow.standardText || "";
+          refs.detUnitInput.value = currentRow.unit || "";
+          refs.detStandardInput.value = currentRow.standard || "";
+          refs.detRemarkInput.value = currentRow.remark || "";
+          refs.detailModalTitle.textContent = "编辑点检明细";
+        } else {
+          refs.detNoInput.value = nextDetailNo(list);
+          refs.detExecuteModeInput.value = "普通";
+          refs.detInspectTypeInput.value = "日常点检";
+          refs.detReportRequiredInput.value = "启用";
+          refs.detailModalTitle.textContent = "新增点检明细";
+        }
+
+        refs.detailModal.classList.remove("hidden");
+      }
+
+      function closeDetailModal() {
+        refs.detailModal.classList.add("hidden");
+      }
+
+      async function saveDetail(event) {
+        event.preventDefault();
+
+        const target = state.modal.detail.target;
+        const mode = state.modal.detail.mode;
+        const editingId = state.modal.detail.editingId;
+        const list = getDetailList(target);
+
+        const detail = {
+          id: mode === "edit" ? editingId : uid("det"),
+          cloudId: mode === "edit" ? list.find((item) => item.id === editingId)?.cloudId || "" : "",
+          no: toIntOrDefault(refs.detNoInput.value, 1),
+          part: refs.detPartInput.value.trim(),
+          item: refs.detItemInput.value.trim(),
+          executeMode: refs.detExecuteModeInput.value.trim() || "普通",
+          inspectType: refs.detInspectTypeInput.value.trim() || "日常点检",
+          standardText: refs.detStandardTextInput.value.trim(),
+          unit: refs.detUnitInput.value.trim(),
+          standard: refs.detStandardInput.value.trim(),
+          remark: refs.detRemarkInput.value.trim(),
+          sortNo: toIntOrDefault(refs.detNoInput.value, 1),
+          enabledStatus: normalizeStatus(refs.detReportRequiredInput.value || "启用"),
+        };
+
+        if (!detail.item) {
+          showToast("请填写点检项目");
+          return;
+        }
+
+        if (target === "draft") {
+          if (mode === "edit") {
+            const idx = list.findIndex((item) => item.id === editingId);
+            if (idx >= 0) {
+              list[idx] = detail;
+            }
+            showToast("明细已更新");
+          } else {
+            list.push(detail);
+            showToast("明细已新增");
+          }
+
+          normalizeDetailList(list);
+          closeDetailModal();
+          renderDraftDetailTable();
+          return;
+        }
+
+        const standard = getSelectedStandard();
+        if (!standard || !standard.cloudId) {
+          showToast("请先选择标准");
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在保存明细...");
+
+        try {
+          if (mode === "edit") {
+            if (!detail.cloudId) {
+              throw new Error("明细记录缺少ID，无法更新");
+            }
+            await updateRecord(API_CONFIG.detailEntryId, detail.cloudId, buildDetailPayload(detail, standard));
+            const idx = list.findIndex((item) => item.id === editingId);
+            if (idx >= 0) {
+              list[idx] = detail;
+            }
+            showToast("明细已更新");
+          } else {
+            const result = await requestEntry(
+              API_CONFIG.detailEntryId,
+              "data_create",
+              { data: buildDetailPayload(detail, standard) },
+              "POST"
+            );
+            const cloudId = extractRecordId(result?.data || result);
+            detail.cloudId = cloudId;
+            detail.id = cloudId || detail.id;
+            list.push(detail);
+            showToast("明细已新增");
+          }
+
+          normalizeDetailList(list);
+          closeDetailModal();
+          renderDetailsTable();
+          setStatus("明细保存成功");
+        } catch (error) {
+          showToast(`明细保存失败：${error.message}`);
+          setStatus(`明细保存失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function removeDetails(target, ids) {
+        if (!ids.length) {
+          showToast("请先选择要删除的明细");
+          return;
+        }
+
+        const ok = window.confirm(`确认删除 ${ids.length} 条明细吗？`);
+        if (!ok) {
+          return;
+        }
+
+        const list = getDetailList(target);
+        const inline = getInlineDetail(target);
+        if (inline && inline.mode === "edit" && ids.includes(inline.rowId)) {
+          clearInlineDetailState(target);
+          renderActionDisabled();
+        }
+
+        if (target === "draft") {
+          const idSet = new Set(ids);
+          for (let i = list.length - 1; i >= 0; i -= 1) {
+            if (idSet.has(list[i].id)) {
+              list.splice(i, 1);
+            }
+          }
+          ids.forEach((id) => state.modal.standard.selectedDetailIds.delete(id));
+          renderDraftDetailTable();
+          showToast(`已删除 ${ids.length} 条明细`);
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在删除明细...");
+
+        try {
+          const idSet = new Set(ids);
+          const toDelete = list.filter((item) => idSet.has(item.id));
+
+          for (const row of toDelete) {
+            if (row.cloudId) {
+              await requestEntry(API_CONFIG.detailEntryId, "data_delete", { data_id: row.cloudId }, "POST");
+            }
+          }
+
+          for (let i = list.length - 1; i >= 0; i -= 1) {
+            if (idSet.has(list[i].id)) {
+              list.splice(i, 1);
+            }
+          }
+
+          ids.forEach((id) => state.selected.detailIds.delete(id));
+          renderDetailsTable();
+          showToast(`已删除 ${ids.length} 条明细`);
+          setStatus("明细已删除");
+        } catch (error) {
+          showToast(`删除失败：${error.message}`);
+          setStatus(`删除失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function normalizeDetailList(list) {
+        list.sort((a, b) => Number(a.sortNo || a.no || 0) - Number(b.sortNo || b.no || 0));
+      }
+
+      function nextDetailNo(list) {
+        if (!list.length) {
+          return 1;
+        }
+        let maxNo = 0;
+        list.forEach((row) => {
+          maxNo = Math.max(maxNo, toIntOrDefault(row.no, 0));
+        });
+        return maxNo + 1;
+      }
+
+      function getDetailList(target) {
+        if (target === "draft") {
+          return getDraftDetails();
+        }
+        return getSelectedStandard()?.details || [];
+      }
+
+      function getInlineDetail(target) {
+        if (state.inlineDetail.target !== target || !state.inlineDetail.draft) {
+          return null;
+        }
+        return state.inlineDetail;
+      }
+
+      function clearInlineDetailState(target = "") {
+        if (target && state.inlineDetail.target !== target) {
+          return;
+        }
+        state.inlineDetail.target = "";
+        state.inlineDetail.mode = "";
+        state.inlineDetail.rowId = "";
+        state.inlineDetail.draft = null;
+      }
+
+      async function beginInlineDetailEdit(target, mode, detailId = "") {
+        if (target === "active") {
+          const current = getSelectedStandard();
+          if (!current) {
+            showToast("请先选择标准");
+            return;
+          }
+          try {
+            await ensureStandardDetailsLoaded(current);
+          } catch (error) {
+            showToast(`加载明细失败：${error.message}`);
+            return;
+          }
+        }
+
+        const list = getDetailList(target);
+        const editingRow = mode === "edit" ? list.find((item) => item.id === detailId) : null;
+        if (mode === "edit" && !editingRow) {
+          showToast("未找到要编辑的明细");
+          return;
+        }
+
+        if (state.inlineDetail.draft) {
+          const sameEditing =
+            state.inlineDetail.target === target &&
+            state.inlineDetail.mode === mode &&
+            (mode === "add" || state.inlineDetail.rowId === detailId);
+          if (sameEditing) {
+            return;
+          }
+          const ok = window.confirm("当前有未保存的明细编辑，是否放弃并继续？");
+          if (!ok) {
+            return;
+          }
+          clearInlineDetailState();
+        }
+
+        const fallbackNo = mode === "add" ? nextDetailNo(list) : toIntOrDefault(editingRow?.no, 1);
+        state.inlineDetail.target = target;
+        state.inlineDetail.mode = mode;
+        state.inlineDetail.rowId = mode === "edit" ? detailId : uid("det_inline");
+        state.inlineDetail.draft = normalizeInlineDraftByMode({
+          id: mode === "edit" ? editingRow.id : uid("det"),
+          cloudId: mode === "edit" ? editingRow.cloudId || "" : "",
+          no: fallbackNo,
+          part: editingRow?.part || "",
+          item: editingRow?.item || "",
+          executeMode: editingRow?.executeMode || "普通",
+          inspectType: editingRow?.inspectType || "日常点检",
+          standard: editingRow?.standard || "",
+          unit: editingRow?.unit || "",
+          standardText: editingRow?.standardText || "",
+          remark: editingRow?.remark || "",
+          sortNo: toIntOrDefault(editingRow?.sortNo || fallbackNo, fallbackNo),
+          enabledStatus: editingRow?.enabledStatus || "启用",
+        });
+
+        if (target === "active") {
+          state.selected.detailIds.clear();
+          renderDetailsTable();
+        } else {
+          state.modal.standard.selectedDetailIds.clear();
+          renderDraftDetailTable();
+        }
+        renderActionDisabled();
+      }
+
+      function updateInlineDetailField(target, field, value) {
+        const inline = getInlineDetail(target);
+        if (!inline) {
+          return;
+        }
+        const draft = { ...inline.draft, [field]: value };
+        if (field === "no") {
+          draft.no = toIntOrDefault(value, 1);
+          draft.sortNo = draft.no;
+        }
+        inline.draft = normalizeInlineDraftByMode(draft, { trigger: field });
+      }
+
+      function cancelInlineDetail(target, { silent = false } = {}) {
+        if (!getInlineDetail(target)) {
+          return;
+        }
+        clearInlineDetailState(target);
+        if (target === "active") {
+          renderDetailsTable();
+        } else {
+          renderDraftDetailTable();
+        }
+        renderActionDisabled();
+        if (!silent) {
+          showToast("已取消编辑");
+        }
+      }
+
+      async function saveInlineDetail(target) {
+        const inline = getInlineDetail(target);
+        if (!inline) {
+          return;
+        }
+
+        const list = getDetailList(target);
+        const existing = inline.mode === "edit" ? list.find((item) => item.id === inline.rowId) : null;
+        const fallbackNo = inline.mode === "edit" ? toIntOrDefault(existing?.no, 1) : nextDetailNo(list);
+        const no = toIntOrDefault(inline.draft.no, fallbackNo);
+
+        const detail = {
+          id: inline.mode === "edit" ? inline.rowId : inline.draft.id || uid("det"),
+          cloudId: inline.mode === "edit" ? existing?.cloudId || inline.draft.cloudId || "" : "",
+          no,
+          part: String(inline.draft.part || "").trim(),
+          item: String(inline.draft.item || "").trim(),
+          executeMode: String(inline.draft.executeMode || "普通").trim() || "普通",
+          inspectType: String(inline.draft.inspectType || "日常点检").trim() || "日常点检",
+          standard: String(inline.draft.standard || "").trim(),
+          unit: String(inline.draft.unit || "").trim(),
+          standardText: String(inline.draft.standardText || "").trim(),
+          remark: String(inline.draft.remark || "").trim(),
+          sortNo: no,
+          enabledStatus: normalizeStatus(inline.draft.enabledStatus || "启用"),
+        };
+        const normalizedDetail = deriveDetailByMode(detail);
+
+        if (!normalizedDetail.item) {
+          showToast("请填写点检项目名称");
+          return;
+        }
+
+        if (normalizedDetail.executeMode === "状态") {
+          const options = splitStateOptions(normalizedDetail.standard);
+          if (options.length < 2) {
+            showToast('执行方式为“状态”时，标准内容请至少填写2个状态（用英文逗号分隔）');
+            return;
+          }
+        }
+
+        if (normalizedDetail.executeMode === "抄表") {
+          if (!normalizedDetail.unit || normalizedDetail.unit === "-") {
+            showToast('执行方式为“抄表”时，请填写参数单位');
+            return;
+          }
+          if (!parseNumericRange(normalizedDetail.standardText)) {
+            showToast('执行方式为“抄表”时，判断标准请填写数值范围，如 48-80');
+            return;
+          }
+        }
+
+        if (target === "draft") {
+          if (inline.mode === "edit") {
+            const index = list.findIndex((item) => item.id === inline.rowId);
+            if (index >= 0) {
+              list[index] = normalizedDetail;
+            }
+            showToast("明细已更新");
+          } else {
+            list.push(normalizedDetail);
+            showToast("明细已新增");
+          }
+          normalizeDetailList(list);
+          clearInlineDetailState("draft");
+          renderDraftDetailTable();
+          renderActionDisabled();
+          return;
+        }
+
+        const standard = getSelectedStandard();
+        if (!standard || !standard.cloudId) {
+          showToast("请先选择标准");
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在保存明细...");
+        try {
+          if (inline.mode === "edit") {
+            if (!normalizedDetail.cloudId) {
+              throw new Error("明细记录缺少ID，无法更新");
+            }
+            await updateRecord(API_CONFIG.detailEntryId, normalizedDetail.cloudId, buildDetailPayload(normalizedDetail, standard));
+            const index = list.findIndex((item) => item.id === inline.rowId);
+            if (index >= 0) {
+              list[index] = normalizedDetail;
+            }
+            showToast("明细已更新");
+          } else {
+            const result = await requestEntry(
+              API_CONFIG.detailEntryId,
+              "data_create",
+              { data: buildDetailPayload(normalizedDetail, standard) },
+              "POST"
+            );
+            const cloudId = extractRecordId(result?.data || result);
+            normalizedDetail.cloudId = cloudId;
+            normalizedDetail.id = cloudId || normalizedDetail.id;
+            list.push(normalizedDetail);
+            showToast("明细已新增");
+          }
+
+          normalizeDetailList(list);
+          clearInlineDetailState("active");
+          renderDetailsTable();
+          renderActionDisabled();
+          setStatus("明细保存成功");
+        } catch (error) {
+          showToast(`明细保存失败：${error.message}`);
+          setStatus(`明细保存失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function appendInlineDetailRow(container, inline) {
+        const row = normalizeInlineDraftByMode(inline.draft || {});
+        const executeMode = normalizeExecuteMode(row.executeMode || "普通");
+        const standardReadonly = executeMode === "状态" ? "" : "readonly";
+        const judgeReadonly = executeMode === "抄表" ? "" : "readonly";
+        const standardPlaceholder = executeMode === "状态" ? "例如 前进,待修,停用" : defaultStandardByMode(executeMode);
+        const judgePlaceholder =
+          executeMode === "抄表" ? "例如 48-80" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
+        const tr = document.createElement("tr");
+        tr.className = "row-editor";
+        tr.innerHTML = `
+          <td style="text-align:center;color:#7e8a9b">-</td>
+          <td><input class="input" type="number" min="1" step="1" data-inline-field="no" value="${escapeHtml(row.no ?? "")}" /></td>
+          <td><input class="input" type="text" data-inline-field="part" value="${escapeHtml(row.part || "")}" /></td>
+          <td><input class="input" type="text" data-inline-field="item" value="${escapeHtml(row.item || "")}" /></td>
+          <td>
+            <select class="select" data-inline-field="executeMode">
+              ${renderInlineSelectOptions(["普通", "状态", "抄表"], executeMode)}
+            </select>
+          </td>
+          <td>
+            <select class="select" data-inline-field="inspectType">
+              ${renderInlineSelectOptions(["日常点检", "重点点检"], row.inspectType || "日常点检")}
+            </select>
+          </td>
+          <td><input class="input" type="text" data-inline-field="standard" ${standardReadonly} placeholder="${escapeHtml(standardPlaceholder)}" value="${escapeHtml(row.standard || "")}" /></td>
+          <td><input class="input" type="text" data-inline-field="unit" value="${escapeHtml(row.unit || "")}" /></td>
+          <td><input class="input" type="text" data-inline-field="standardText" ${judgeReadonly} placeholder="${escapeHtml(judgePlaceholder)}" value="${escapeHtml(row.standardText || "")}" /></td>
+          <td>
+            <div class="cell-actions">
+              <button class="text-btn" data-action="save">保存</button>
+              <button class="text-btn danger" data-action="cancel">取消</button>
+            </div>
+          </td>
+        `;
+        container.appendChild(tr);
+      }
+
+      function renderInlineSelectOptions(options, selectedValue) {
+        const current = String(selectedValue || "");
+        return options
+          .map((item) => {
+            const selected = item === current ? "selected" : "";
+            return `<option value="${escapeHtml(item)}" ${selected}>${escapeHtml(item)}</option>`;
+          })
+          .join("");
+      }
+
+      function renderReportRequiredOptions(enabledStatus) {
+        const current = normalizeStatus(enabledStatus || "启用");
+        return [
+          { value: "启用", label: "是" },
+          { value: "停用", label: "否" },
+        ]
+          .map((item) => {
+            const selected = item.value === current ? "selected" : "";
+            return `<option value="${escapeHtml(item.value)}" ${selected}>${escapeHtml(item.label)}</option>`;
+          })
+          .join("");
+      }
+
+      function renderDraftDetailTable() {
+        const rows = getDraftDetails();
+        refs.modalDetailTableBody.innerHTML = "";
+
+        if (!rows.length) {
+          refs.modalDetailTableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#7e8a9b;padding:16px">暂无明细</td></tr>';
+          return;
+        }
+
+        rows.forEach((rawRow) => {
+          const row = normalizeInlineDraftByMode(rawRow);
+          if (row !== rawRow) {
+            Object.assign(rawRow, row);
+          }
+          const executeMode = normalizeExecuteMode(row.executeMode || "普通");
+          const standardReadonly = executeMode === "状态" ? "" : "readonly";
+          const judgeReadonly = executeMode === "抄表" ? "" : "readonly";
+          const standardPlaceholder = executeMode === "状态" ? "例如 前进,待修,停用" : defaultStandardByMode(executeMode);
+          const judgePlaceholder =
+            executeMode === "抄表" ? "例如 48-80" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><input class="input" type="number" min="1" step="1" data-row-id="${escapeHtml(row.id)}" data-inline-field="no" value="${escapeHtml(row.no ?? "")}" /></td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="part" value="${escapeHtml(row.part || "")}" /></td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="item" value="${escapeHtml(row.item || "")}" /></td>
+            <td>
+              <select class="select" data-row-id="${escapeHtml(row.id)}" data-inline-field="executeMode">
+                ${renderInlineSelectOptions(["普通", "状态", "抄表"], executeMode)}
+              </select>
+            </td>
+            <td>
+              <select class="select" data-row-id="${escapeHtml(row.id)}" data-inline-field="inspectType">
+                ${renderInlineSelectOptions(["日常点检", "重点点检"], row.inspectType || "日常点检")}
+              </select>
+            </td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standard" ${standardReadonly} placeholder="${escapeHtml(standardPlaceholder)}" value="${escapeHtml(row.standard || "")}" /></td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="unit" value="${escapeHtml(row.unit || "")}" /></td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standardText" ${judgeReadonly} placeholder="${escapeHtml(judgePlaceholder)}" value="${escapeHtml(row.standardText || "")}" /></td>
+            <td>
+              <select class="select" data-row-id="${escapeHtml(row.id)}" data-inline-field="enabledStatus">
+                ${renderReportRequiredOptions(row.enabledStatus)}
+              </select>
+            </td>
+            <td>
+              <div class="cell-actions">
+                <button class="text-btn danger" data-action="delete" data-id="${escapeHtml(row.id)}">删除</button>
+              </div>
+            </td>
+          `;
+          refs.modalDetailTableBody.appendChild(tr);
+        });
+      }
+
+      function openDevicePicker(target) {
+        if (target === "active") {
+          const current = getSelectedStandard();
+          if (!current) {
+            showToast("请先选择标准");
+            return;
+          }
+        }
+
+        state.modal.picker.target = target;
+        state.modal.picker.keyword = "";
+        state.modal.picker.selectedIds.clear();
+
+        const existingIds = new Set(
+          target === "draft"
+            ? getDraftDevices().map((item) => item.deviceId)
+            : getCurrentLinkedDevices().map((item) => item.deviceId)
+        );
+
+        state.modal.picker.excludedIds = existingIds;
+        refs.pickerKeywordInput.value = "";
+        const objectType = getPickerObjectType();
+        refs.pickerTitle.textContent = `选择${getObjectTypeLabel(objectType)}`;
+        refs.pickerKeywordInput.placeholder = getObjectSearchPlaceholder(objectType);
+        renderObjectTableHead(refs.pickerTableHead, objectType, { selectable: true });
+        renderPickerTable();
+        refs.devicePickerModal.classList.remove("hidden");
+      }
+
+      function closeDevicePicker() {
+        refs.devicePickerModal.classList.add("hidden");
+      }
+
+      function filterPickerDevices() {
+        const excludedIds = state.modal.picker.excludedIds;
+        const keyword = state.modal.picker.keyword.trim().toLowerCase();
+        const objectType = getPickerObjectType();
+
+        return getObjectPool(objectType).filter((item) => {
+          if (excludedIds.has(item.id)) {
+            return false;
+          }
+          if (!keyword) {
+            return true;
+          }
+          const text = [item.code, item.name, item.deviceType, item.category, item.area, item.department, item.owner, item.riskLevel, item.location]
+            .join(" ")
+            .toLowerCase();
+          return text.includes(keyword);
+        });
+      }
+
+      function renderPickerTable() {
+        const rows = filterPickerDevices();
+        const objectType = getPickerObjectType();
+        renderObjectTableHead(refs.pickerTableHead, objectType, { selectable: true });
+        refs.pickerTableBody.innerHTML = "";
+        cleanupSelection(state.modal.picker.selectedIds, rows.map((item) => item.id));
+
+        if (!rows.length) {
+          refs.pickerTableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#7e8a9b;padding:16px">暂无可关联${escapeHtml(getObjectTypeLabel(objectType))}</td></tr>`;
+          refs.pickerCheckAll.checked = false;
+          refs.pickerCheckAll.indeterminate = false;
+          return;
+        }
+
+        rows.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = renderObjectTableRow(row, index, objectType, {
+            selectable: true,
+            selectedIds: state.modal.picker.selectedIds,
+          });
+          refs.pickerTableBody.appendChild(tr);
+        });
+
+        syncCheckAll(refs.pickerCheckAll, rows, state.modal.picker.selectedIds);
+      }
+
+      async function confirmPickDevices() {
+        const selectedIds = Array.from(state.modal.picker.selectedIds);
+        if (!selectedIds.length) {
+          showToast("请先选择对象");
+          return;
+        }
+
+        const target = state.modal.picker.target;
+
+        if (target === "draft") {
+          const draftDevices = getDraftDevices();
+          const objectType = getPickerObjectType();
+          selectedIds.forEach((id) => {
+            const device = getObjectPool(objectType).find((item) => item.id === id);
+            if (!device) {
+              return;
+            }
+            draftDevices.push(toDeviceRelation(device, objectType));
+          });
+          closeDevicePicker();
+          renderDraftDeviceTable();
+          showToast(`已关联 ${selectedIds.length} 个${getObjectTypeLabel(objectType)}`);
+          return;
+        }
+
+        const current = getSelectedStandard();
+        if (!current || !current.cloudId) {
+          showToast("请先选择标准");
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在关联对象...");
+
+        try {
+          await bindDevicesToStandard(selectedIds, current);
+          closeDevicePicker();
+          renderDeviceTable();
+          showToast(`已关联 ${selectedIds.length} 个${getObjectTypeLabel(current.applicableDeviceType)}`);
+          setStatus("对象关联成功");
+        } catch (error) {
+          showToast(`关联失败：${error.message}`);
+          setStatus(`关联失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function removeDevices(target, ids) {
+        if (!ids.length) {
+          showToast("请先选择要移除的对象");
+          return;
+        }
+
+        const ok = window.confirm(`确认移除 ${ids.length} 个对象关联吗？`);
+        if (!ok) {
+          return;
+        }
+
+        if (target === "draft") {
+          const list = getDraftDevices();
+          const idSet = new Set(ids);
+          for (let i = list.length - 1; i >= 0; i -= 1) {
+            if (idSet.has(list[i].id)) {
+              list.splice(i, 1);
+            }
+          }
+          ids.forEach((id) => state.modal.standard.selectedDeviceIds.delete(id));
+          renderDraftDeviceTable();
+          showToast(`已移除 ${ids.length} 个对象`);
+          return;
+        }
+
+        const standard = getSelectedStandard();
+        if (!standard) {
+          showToast("请先选择标准");
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在移除关联对象...");
+        try {
+          await unbindDevicesFromStandard(ids, standard);
+          ids.forEach((id) => state.selected.deviceIds.delete(id));
+          renderDeviceTable();
+          showToast(`已移除 ${ids.length} 个对象`);
+          setStatus("对象关联已移除");
+        } catch (error) {
+          showToast(`移除失败：${error.message}`);
+          setStatus(`移除失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function getCurrentLinkedDevices() {
+        const current = getSelectedStandard();
+        if (!current) {
+          return [];
+        }
+        return getStandardLinkedDevices(current);
+      }
+
+      function getStandardLinkedDevices(standard) {
+        if (!standard) {
+          return [];
+        }
+
+        const stdId = String(standard.cloudId || "").trim();
+        const stdCode = String(standard.code || "").trim();
+        const objectType = normalizeApplicableDeviceType(standard.applicableDeviceType);
+        const pool = getObjectPool(objectType);
+
+        if (objectType === "危化品") {
+          const linkedChemicals = state.chemicalPool.filter((chemical) => {
+            return stdId && String(chemical.inspectStandardId || "").trim() === stdId;
+          });
+          return sitesFromChemicals(linkedChemicals).map((site) => toDeviceRelation(site, objectType));
+        }
+
+        return pool
+          .filter((device) => {
+            const byId = stdId && String(device.inspectStandardId || "").trim() === stdId;
+            const byCode = objectType === "设备" && stdCode && String(device.inspectStandardCode || "").trim() === stdCode;
+            return byId || byCode;
+          })
+          .map((device) => toDeviceRelation(device, objectType));
+      }
+
+      function toDeviceRelation(device, objectType = "设备") {
+        const normalizedType = normalizeApplicableDeviceType(objectType);
+        return {
+          id: device.id,
+          deviceId: device.id,
+          code: device.code,
+          name: device.name,
+          category: device.category,
+          deviceType: device.deviceType,
+          workshop: device.workshop,
+          area: device.area,
+          department: device.department,
+          owner: device.owner || "",
+          riskLevel: device.riskLevel,
+          location: device.location,
+          status: device.status,
+          objectType: normalizedType,
+          included: device.included || "",
+          maxStorage: device.maxStorage || "",
+          usageAmount: device.usageAmount || "",
+          chemicalCount: device.chemicalCount || 0,
+        };
+      }
+
+      function getDraftDevices() {
+        return state.modal.standard.draft?.devices || [];
+      }
+
+      function addDraftDetailRow() {
+        const rows = getDraftDetails();
+        const no = nextDetailNo(rows);
+        rows.push(
+          normalizeInlineDraftByMode({
+            id: uid("det"),
+            cloudId: "",
+            no,
+            part: "",
+            item: "",
+            executeMode: "普通",
+            inspectType: "日常点检",
+            standard: "",
+            unit: "",
+            standardText: "",
+            remark: "",
+            sortNo: no,
+            enabledStatus: "启用",
+          })
+        );
+        renderDraftDetailTable();
+      }
+
+      function updateDraftDetailRowField(rowId, field, value) {
+        const rows = getDraftDetails();
+        const index = rows.findIndex((item) => String(item.id) === String(rowId));
+        if (index < 0) {
+          return;
+        }
+        const current = rows[index];
+        const draft = { ...current, [field]: value };
+        if (field === "no") {
+          draft.no = toIntOrDefault(value, 1);
+          draft.sortNo = draft.no;
+        }
+        rows[index] = normalizeInlineDraftByMode(draft, { trigger: field });
+      }
+
+      function removeDraftDetailRow(rowId) {
+        const rows = getDraftDetails();
+        const index = rows.findIndex((item) => String(item.id) === String(rowId));
+        if (index < 0) {
+          return;
+        }
+        rows.splice(index, 1);
+        renderDraftDetailTable();
+      }
+
+      function renderDraftDeviceTable() {
+        const rows = getDraftDevices();
+        const objectType = normalizeApplicableDeviceType(state.modal.standard.draft?.applicableDeviceType);
+        refs.modalObjectSectionTitle.textContent = objectType === "危化品" ? "适用危化品库" : "适用范围";
+        refs.modalBindDeviceBtn.textContent = objectType === "危化品" ? "关联危化品库" : "关联对象";
+        renderObjectTableHead(refs.modalDeviceTableHead, objectType, { selectable: true });
+        refs.modalDeviceTableBody.innerHTML = "";
+        cleanupSelection(state.modal.standard.selectedDeviceIds, rows.map((item) => item.id));
+
+        if (!rows.length) {
+          refs.modalDeviceTableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#7e8a9b;padding:16px">暂无适用范围</td></tr>`;
+          refs.modalDeviceCheckAll.checked = false;
+          refs.modalDeviceCheckAll.indeterminate = false;
+          return;
+        }
+
+        rows.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = renderObjectTableRow(row, index, objectType, {
+            selectable: true,
+            selectedIds: state.modal.standard.selectedDeviceIds,
+          });
+          refs.modalDeviceTableBody.appendChild(tr);
+        });
+
+        syncCheckAll(refs.modalDeviceCheckAll, rows, state.modal.standard.selectedDeviceIds);
+      }
+
+      function getDraftDetails() {
+        return state.modal.standard.draft?.details || [];
+      }
+
+      function normalizeApplicableDeviceType(value) {
+        const text = toDisplayText(value);
+        if (text.includes("危") || text.includes("化")) {
+          return "危化品";
+        }
+        return "设备";
+      }
+
+      function getObjectTypeLabel(objectType) {
+        return normalizeApplicableDeviceType(objectType) === "危化品" ? "危化品库" : "设备";
+      }
+
+      function getObjectSearchPlaceholder(objectType) {
+        return normalizeApplicableDeviceType(objectType) === "危化品"
+          ? "场地编码/场地名称/所属区域"
+          : "设备编号/设备名称/设备类型/区域";
+      }
+
+      function getObjectPool(objectType) {
+        return normalizeApplicableDeviceType(objectType) === "危化品" ? state.sitePool : state.devicePool;
+      }
+
+      function sitesFromChemicals(chemicals) {
+        const seen = new Set();
+        const output = [];
+        (Array.isArray(chemicals) ? chemicals : []).forEach((chemical) => {
+          const site = getSiteForChemical(chemical);
+          if (!site) {
+            return;
+          }
+          const key = getStoreKey(site);
+          if (seen.has(key)) {
+            return;
+          }
+          seen.add(key);
+          output.push({
+            ...site,
+            chemicalCount: state.chemicalPool.filter((item) => isChemicalInStore(item, site)).length,
+          });
+        });
+        return output.sort((a, b) => String(a.area || "").localeCompare(String(b.area || ""), "zh-CN") || String(a.name || "").localeCompare(String(b.name || ""), "zh-CN"));
+      }
+
+      function getSiteForChemical(chemical) {
+        const storage = String(chemical?.location || chemical?.area || "").trim();
+        const site = state.sitePool.find((item) => isSameStoreName(item.name, storage) || isSameStoreName(item.code, storage));
+        if (site) {
+          return site;
+        }
+        if (!storage) {
+          return null;
+        }
+        return {
+          id: `store:${getStoreKey({ name: storage })}`,
+          code: "",
+          name: storage,
+          category: "危化品库",
+          deviceType: "危化品库",
+          workshop: chemical?.workshop || "",
+          area: chemical?.workshop || "",
+          owner: "",
+          location: storage,
+          status: "启用",
+          objectType: "危化品库",
+          chemicalCount: 0,
+        };
+      }
+
+      function isChemicalInStore(chemical, site) {
+        if (!chemical || !site) {
+          return false;
+        }
+        return isSameStoreName(chemical.location, site.name) || isSameStoreName(chemical.area, site.name) || isSameStoreName(chemical.location, site.code);
+      }
+
+      function getStoreKey(site) {
+        return normalizeCompareText(site?.code || site?.name || site?.location || site?.id);
+      }
+
+      function isSameStoreName(left, right) {
+        const a = normalizeCompareText(left);
+        const b = normalizeCompareText(right);
+        return Boolean(a && b && a === b);
+      }
+
+      function getPickerObjectType() {
+        if (state.modal.picker.target === "draft") {
+          return normalizeApplicableDeviceType(state.modal.standard.draft?.applicableDeviceType);
+        }
+        return normalizeApplicableDeviceType(getSelectedStandard()?.applicableDeviceType);
+      }
+
+      function renderObjectTableHead(thead, objectType, { selectable = false } = {}) {
+        if (!(thead instanceof HTMLElement)) {
+          return;
+        }
+        const isChemical = normalizeApplicableDeviceType(objectType) === "危化品";
+        const checkboxId = thead.id === "pickerTableHead" ? "pickerCheckAll" : "modalDeviceCheckAll";
+        const first = selectable ? `<th style="width: 42px"><input id="${checkboxId}" type="checkbox" /></th>` : "";
+        const labels = isChemical
+          ? ["场地编码", "场地名称", "对象类型", "所属区域", "负责人", "状态", "危化品数"]
+          : ["设备编号", "设备名称", "设备类型", "所属区域", "责任部门", "设备状态", "风险等级"];
+        thead.innerHTML = `
+          <tr>
+            ${first}
+            <th style="width: 62px">序</th>
+            <th style="width: 130px">${labels[0]}</th>
+            <th>${labels[1]}</th>
+            <th style="width: 120px">${labels[2]}</th>
+            <th style="width: 120px">${labels[3]}</th>
+            <th style="width: 120px">${labels[4]}</th>
+            <th style="width: 90px">${labels[5]}</th>
+            <th style="width: 120px">${labels[6]}</th>
+          </tr>
+        `;
+        if (thead.id === "pickerTableHead") {
+          refs.pickerCheckAll = document.getElementById("pickerCheckAll");
+          if (refs.pickerCheckAll) {
+            refs.pickerCheckAll.onchange = () => {
+              const rows = filterPickerDevices();
+              if (refs.pickerCheckAll.checked) {
+                rows.forEach((row) => state.modal.picker.selectedIds.add(row.id));
+              } else {
+                rows.forEach((row) => state.modal.picker.selectedIds.delete(row.id));
+              }
+              renderPickerTable();
+            };
+          }
+        }
+        if (thead.id === "modalDeviceTableHead") {
+          refs.modalDeviceCheckAll = document.getElementById("modalDeviceCheckAll");
+          if (refs.modalDeviceCheckAll) {
+            refs.modalDeviceCheckAll.onchange = () => {
+              const rows = getDraftDevices();
+              if (refs.modalDeviceCheckAll.checked) {
+                rows.forEach((row) => state.modal.standard.selectedDeviceIds.add(row.id));
+              } else {
+                rows.forEach((row) => state.modal.standard.selectedDeviceIds.delete(row.id));
+              }
+              renderDraftDeviceTable();
+            };
+          }
+        }
+      }
+
+      function renderObjectTableRow(row, index, objectType, { selectable = false, selectedIds = null } = {}) {
+        const isChemical = normalizeApplicableDeviceType(objectType) === "危化品";
+        const checkbox = selectable
+          ? `<td><input type="checkbox" data-id="${escapeHtml(row.id)}" ${selectedIds && selectedIds.has(row.id) ? "checked" : ""} /></td>`
+          : "";
+        const typeText = row.deviceType || row.category || "-";
+        const locationText = isChemical ? row.location || row.area || row.workshop || "-" : row.area || row.workshop || row.location || "-";
+        const ownerText = isChemical ? row.owner || row.department || "-" : row.department || row.owner || "-";
+        const lastText = isChemical ? `${Number(row.chemicalCount || 0)} 种` : row.riskLevel || "-";
+        return `
+          ${checkbox}
+          <td>${index + 1}</td>
+          <td>${escapeHtml(row.code || "-")}</td>
+          <td>${escapeHtml(row.name || "-")}</td>
+          <td>${escapeHtml(typeText)}</td>
+          <td>${escapeHtml(locationText)}</td>
+          <td>${escapeHtml(ownerText)}</td>
+          <td>${renderStatusTag(row.status)}</td>
+          <td>${escapeHtml(lastText)}</td>
+        `;
+      }
+
+      function validateAndNormalizeDraftDetails(rows) {
+        const list = Array.isArray(rows) ? rows : [];
+        const output = [];
+
+        for (let i = 0; i < list.length; i += 1) {
+          const source = list[i] || {};
+          const normalizedNo = toIntOrDefault(source.no, i + 1);
+          const hasUserInput = [source.part, source.item, source.standard, source.standardText, source.unit, source.remark]
+            .map((item) => String(item || "").trim())
+            .some(Boolean);
+
+          if (!hasUserInput) {
+            continue;
+          }
+
+          const normalized = deriveDetailByMode({
+            id: source.id || uid("det"),
+            cloudId: source.cloudId || "",
+            no: normalizedNo,
+            part: source.part || "",
+            item: source.item || "",
+            executeMode: source.executeMode || "普通",
+            inspectType: source.inspectType || "日常点检",
+            standard: source.standard || "",
+            unit: source.unit || "",
+            standardText: source.standardText || "",
+            remark: source.remark || "",
+            sortNo: toIntOrDefault(source.sortNo || normalizedNo, normalizedNo),
+            enabledStatus: source.enabledStatus || "启用",
+          });
+
+          const rowNo = i + 1;
+
+          if (!normalized.item) {
+            return { ok: false, message: `明细第 ${rowNo} 行请填写点检项目名称` };
+          }
+
+          if (normalized.executeMode === "状态") {
+            const options = splitStateOptions(normalized.standard);
+            if (options.length < 2) {
+              return { ok: false, message: `明细第 ${rowNo} 行执行方式为“状态”时，标准内容请至少填写2个状态（用英文逗号分隔）` };
+            }
+          }
+
+          if (normalized.executeMode === "抄表") {
+            if (!normalized.unit || normalized.unit === "-") {
+              return { ok: false, message: `明细第 ${rowNo} 行执行方式为“抄表”时，请填写参数单位` };
+            }
+            if (!parseNumericRange(normalized.standardText)) {
+              return { ok: false, message: `明细第 ${rowNo} 行执行方式为“抄表”时，判断标准请填写数值范围（如 48-80）` };
+            }
+          }
+
+          output.push(normalized);
+        }
+
+        output.forEach((row, index) => {
+          const no = toIntOrDefault(row.no, index + 1);
+          row.no = no;
+          row.sortNo = toIntOrDefault(row.sortNo || no, no);
+        });
+
+        return { ok: true, rows: output };
+      }
+
+      function getSelectedStandard() {
+        return state.standards.find((item) => item.id === state.selectedStandardId) || null;
+      }
+
+      function filterStandards() {
+        const keyword = state.search.standard.trim().toLowerCase();
+        if (!keyword) {
+          return state.standards;
+        }
+        return state.standards.filter((item) => {
+          const text = [item.code, item.name, item.category, item.applicableDeviceType].join(" ").toLowerCase();
+          return text.includes(keyword);
+        });
+      }
+
+      function filterCurrentDetails() {
+        const current = getSelectedStandard();
+        if (!current) {
+          return [];
+        }
+        const keyword = state.search.detail.trim().toLowerCase();
+        const rows = current.details || [];
+        if (!keyword) {
+          return rows;
+        }
+        return rows.filter((item) => {
+          const text = [item.part, item.item, item.executeMode, item.inspectType, item.standard, item.standardText, item.remark]
+            .join(" ")
+            .toLowerCase();
+          return text.includes(keyword);
+        });
+      }
+
+      function filterCurrentDevices() {
+        const rows = getCurrentLinkedDevices();
+        const keyword = state.search.device.trim().toLowerCase();
+        if (!keyword) {
+          return rows;
+        }
+        return rows.filter((item) => {
+          const text = [item.code, item.name, item.deviceType, item.category, item.area, item.department, item.owner, item.riskLevel, item.location]
+            .join(" ")
+            .toLowerCase();
+          return text.includes(keyword);
+        });
+      }
+
+      function renderStatusTag(status) {
+        const text = normalizeStatus(status);
+        const cls = text === "启用" ? "ok" : "stop";
+        return `<span class="tag ${cls}">${escapeHtml(text)}</span>`;
+      }
+
+      function normalizeExecuteMode(value) {
+        const text = toDisplayText(value);
+        if (!text) {
+          return "普通";
+        }
+        if (text.includes("抄") || text.includes("步")) {
+          return "抄表";
+        }
+        if (text.includes("状态")) {
+          return "状态";
+        }
+        return "普通";
+      }
+
+      function defaultStandardByMode(mode) {
+        const normalized = normalizeExecuteMode(mode);
+        if (normalized === "抄表") {
+          return "数值录入";
+        }
+        if (normalized === "状态") {
+          return "";
+        }
+        return "正常,异常";
+      }
+
+      function defaultJudgeByMode(mode) {
+        const normalized = normalizeExecuteMode(mode);
+        if (normalized === "普通") {
+          return "正常,异常";
+        }
+        return "";
+      }
+
+      function splitStateOptions(text) {
+        const source = String(text || "")
+          .replace(/，/g, ",")
+          .trim();
+        if (!source) {
+          return [];
+        }
+        const output = [];
+        const seen = new Set();
+        source
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .forEach((item) => {
+            if (!seen.has(item)) {
+              seen.add(item);
+              output.push(item);
+            }
+          });
+        return output;
+      }
+
+      function parseNumericRange(text) {
+        const source = String(text || "")
+          .replace(/[～~—–]/g, "-")
+          .trim();
+        if (!source) {
+          return null;
+        }
+        const match = source.match(/^(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)$/);
+        if (!match) {
+          return null;
+        }
+        let min = Number(match[1]);
+        let max = Number(match[2]);
+        if (!Number.isFinite(min) || !Number.isFinite(max)) {
+          return null;
+        }
+        if (min > max) {
+          const temp = min;
+          min = max;
+          max = temp;
+        }
+        return {
+          min,
+          max,
+          text: `${formatNumeric(min)}-${formatNumeric(max)}`,
+        };
+      }
+
+      function formatNumeric(value) {
+        if (Number.isInteger(value)) {
+          return String(value);
+        }
+        return String(value).replace(/0+$/, "").replace(/\.$/, "");
+      }
+
+      function deriveDetailByMode(detail) {
+        const mode = normalizeExecuteMode(detail.executeMode || detail.method || "普通");
+        const normalized = {
+          ...detail,
+          executeMode: mode,
+          inspectType: String(detail.inspectType || "日常点检").trim() || "日常点检",
+          part: String(detail.part || "").trim(),
+          item: String(detail.item || "").trim(),
+          unit: String(detail.unit || "").trim(),
+          standard: String(detail.standard || detail.content || "").trim(),
+          standardText: String(detail.standardText || detail.judge || "").trim(),
+          remark: String(detail.remark || "").trim(),
+          no: toIntOrDefault(detail.no, 1),
+          sortNo: toIntOrDefault(detail.sortNo || detail.no, toIntOrDefault(detail.no, 1)),
+          enabledStatus: detail.enabledStatus || "启用",
+        };
+
+        if (mode === "普通") {
+          normalized.standard = "正常,异常";
+          normalized.standardText = "正常,异常";
+          if (!normalized.unit) {
+            normalized.unit = "-";
+          }
+          return normalized;
+        }
+
+        if (mode === "状态") {
+          const options = splitStateOptions(normalized.standard || normalized.standardText);
+          const joined = options.join(",");
+          normalized.standard = joined;
+          normalized.standardText = joined;
+          if (!normalized.unit) {
+            normalized.unit = "-";
+          }
+          return normalized;
+        }
+
+        normalized.standard = "数值录入";
+        const range = parseNumericRange(normalized.standardText);
+        if (range) {
+          normalized.standardText = range.text;
+          normalized.lower = range.min;
+          normalized.upper = range.max;
+        } else {
+          normalized.lower = "";
+          normalized.upper = "";
+        }
+        return normalized;
+      }
+
+      function normalizeInlineDraftByMode(draft, { trigger = "" } = {}) {
+        const mode = normalizeExecuteMode(draft.executeMode || "普通");
+        const next = {
+          ...draft,
+          executeMode: mode,
+          inspectType: draft.inspectType || "日常点检",
+          no: toIntOrDefault(draft.no, 1),
+        };
+        next.sortNo = toIntOrDefault(next.sortNo || next.no, next.no);
+
+        if (trigger === "executeMode") {
+          if (mode === "状态" && ["正常,异常", "数值录入"].includes(String(next.standard || "").trim())) {
+            next.standard = "";
+            next.standardText = "";
+          }
+          if (mode === "抄表") {
+            next.standard = "数值录入";
+            if (String(next.standardText || "").trim() === "正常,异常") {
+              next.standardText = "";
+            }
+            if (String(next.unit || "").trim() === "-") {
+              next.unit = "";
+            }
+          }
+        }
+
+        if (mode === "普通") {
+          next.standard = "正常,异常";
+          next.standardText = "正常,异常";
+          if (!String(next.unit || "").trim()) {
+            next.unit = "-";
+          }
+          return next;
+        }
+
+        if (mode === "状态") {
+          const source = trigger === "standardText" ? next.standardText : next.standard || next.standardText;
+          const options = splitStateOptions(source);
+          if (options.length) {
+            const joined = options.join(",");
+            next.standard = joined;
+            next.standardText = joined;
+          }
+          if (!String(next.unit || "").trim()) {
+            next.unit = "-";
+          }
+          return next;
+        }
+
+        next.standard = "数值录入";
+        const range = parseNumericRange(next.standardText);
+        if (range) {
+          next.standardText = range.text;
+        }
+        return next;
+      }
+
+      function setLoading(flag) {
+        state.loading = flag;
+        renderActionDisabled();
+      }
+
+      function setStatus(message, isError = false) {
+        refs.statusBar.textContent = message;
+        refs.statusBar.classList.toggle("error", Boolean(isError));
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => {
+          refs.toast.classList.remove("show");
+        }, 2200);
+      }
+
+      async function fetchEntryRecords(entryId) {
+        const actionCandidates = ["data", "data_search", "data_list"];
+        const payloadCandidates = [
+          { page: 1, limit: 1000 },
+          { page_no: 1, page_size: 1000 },
+          { limit: 1000 },
+          {},
+        ];
+
+        const errors = [];
+
+        for (const action of actionCandidates) {
+          for (const payload of payloadCandidates) {
+            try {
+              const response = await requestEntry(entryId, action, payload, "POST");
+              const records = extractRecordArray(response);
+              if (Array.isArray(records)) {
+                return records;
+              }
+            } catch (error) {
+              errors.push(`${action}(${JSON.stringify(payload)}): ${error.message}`);
+            }
+          }
+        }
+
+        throw new Error(errors[errors.length - 1] || "未能获取列表数据");
+      }
+
+      async function updateRecord(entryId, dataId, data) {
+        if (!dataId) {
+          throw new Error("缺少 data_id");
+        }
+        await requestEntry(entryId, "data_update", { data_id: dataId, data }, "POST");
+      }
+
+      async function requestApi(path, query = {}, options = {}) {
+        const url = new URL(`${API_CONFIG.baseUrl}${path}`);
+        Object.entries(query || {}).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === "") {
+            return;
+          }
+          url.searchParams.set(key, String(value));
+        });
+
+        let response;
+        const method = String(options.method || "GET").toUpperCase();
+        try {
+          response = await fetch(url.toString(), {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            ...(method === "GET" || method === "HEAD"
+              ? {}
+              : {
+                  body: JSON.stringify(options.body || {}),
+                }),
+          });
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      async function requestEntry(entryId, action, body = {}, method = "POST") {
+        const url = `${API_CONFIG.baseUrl}/app/${API_CONFIG.appId}/entry/${entryId}/${action}`;
+
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        const options = {
+          method,
+          headers,
+        };
+
+        if (method !== "GET") {
+          options.body = JSON.stringify(body || {});
+        }
+
+        let response;
+        try {
+          response = await fetch(url, options);
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      function extractRecordArray(result) {
+        const queue = [result];
+        const visited = new Set();
+
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object") {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            if (!current.length || typeof current[0] === "object") {
+              return current;
+            }
+            continue;
+          }
+
+          const keys = ["data_list", "data", "list", "rows", "items", "result", "records", "entry_data_list"];
+          for (const key of keys) {
+            const value = current[key];
+            if (Array.isArray(value) && (!value.length || typeof value[0] === "object")) {
+              return value;
+            }
+            const fromObjectValues = objectValuesAsObjectArray(value);
+            if (fromObjectValues) {
+              return fromObjectValues;
+            }
+          }
+
+          const topFromValues = objectValuesAsObjectArray(current);
+          if (topFromValues && topFromValues.length) {
+            return topFromValues;
+          }
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        return [];
+      }
+
+      function objectValuesAsObjectArray(value) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          return null;
+        }
+        const values = Object.values(value);
+        if (!values.length) {
+          return [];
+        }
+        return values.every((item) => item && typeof item === "object") ? values : null;
+      }
+
+      function extractRecordId(record) {
+        if (!record || typeof record !== "object") {
+          return "";
+        }
+
+        const candidates = [
+          record.data_id,
+          record.id,
+          record._id,
+          record.entry_data_id,
+          record.record_id,
+          record.row_id,
+          record.data && record.data._id,
+          record.data && record.data.id,
+          record.data && record.data.data_id,
+        ];
+
+        for (const value of candidates) {
+          if (value !== undefined && value !== null && String(value).trim() !== "") {
+            return String(value);
+          }
+        }
+
+        return "";
+      }
+
+      function getAliasRawValue(record, alias) {
+        if (!record || !alias) {
+          return "";
+        }
+
+        const containers = [record, record.data, record.entry_data, record.widget_data, record.form_data];
+        for (const container of containers) {
+          if (container && typeof container === "object" && Object.prototype.hasOwnProperty.call(container, alias)) {
+            return container[alias];
+          }
+        }
+
+        const fromWidgets = findAliasInArray(record.widgets, alias);
+        if (fromWidgets !== undefined) {
+          return fromWidgets;
+        }
+
+        const fromDataArray = findAliasInArray(record.data, alias);
+        if (fromDataArray !== undefined) {
+          return fromDataArray;
+        }
+
+        return "";
+      }
+
+      function findAliasInArray(list, alias) {
+        if (!Array.isArray(list)) {
+          return undefined;
+        }
+        for (const item of list) {
+          if (!item || typeof item !== "object") {
+            continue;
+          }
+          const key = item.alias || item.widget_alias || item.name || item.key || item.widget_key;
+          if (key === alias) {
+            return item.value ?? item.widget_value ?? item.data ?? item;
+          }
+        }
+        return undefined;
+      }
+
+      function toDisplayText(value) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return String(value).trim();
+        }
+
+        if (Array.isArray(value)) {
+          return value
+            .map((item) => toDisplayText(item))
+            .filter(Boolean)
+            .join("、");
+        }
+
+        if (typeof value === "object") {
+          if (typeof value.display_name === "string") {
+            return value.display_name.trim();
+          }
+          if (typeof value.name === "string") {
+            return value.name.trim();
+          }
+          if (typeof value.label === "string") {
+            return value.label.trim();
+          }
+          if (typeof value.title === "string") {
+            return value.title.trim();
+          }
+          if (typeof value.value === "string" || typeof value.value === "number") {
+            return String(value.value).trim();
+          }
+          return Object.values(value)
+            .map((item) => toDisplayText(item))
+            .filter(Boolean)
+            .join("、");
+        }
+
+        return "";
+      }
+
+      function normalizeDateInput(value) {
+        const text = toDisplayText(value);
+        if (!text) {
+          return "";
+        }
+        const match = text.match(/(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?/);
+        if (!match) {
+          return "";
+        }
+        const year = match[1];
+        const month = match[2].padStart(2, "0");
+        const day = match[3].padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function formatDateTimeForApi(dateText) {
+        const normalized = normalizeDateInput(dateText);
+        if (!normalized) {
+          return "";
+        }
+        return `${normalized} 00:00:00`;
+      }
+
+      function normalizeStatus(value) {
+        const text = toDisplayText(value);
+        if (!text) {
+          return "启用";
+        }
+        if (text.includes("停") || text.toLowerCase() === "disabled" || text === "0") {
+          return "停用";
+        }
+        return "启用";
+      }
+
+      function normalizeYesNo(value) {
+        const text = toDisplayText(value);
+        if (!text) {
+          return "否";
+        }
+        if (text === "是" || text === "1" || text.toLowerCase() === "yes" || text.toLowerCase() === "true") {
+          return "是";
+        }
+        return "否";
+      }
+
+      function normalizeCompareText(value) {
+        return toDisplayText(value).replace(/\s+/g, "").toLowerCase();
+      }
+
+      function safeJsonParse(text) {
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      }
+
+      function isApiSuccess(result) {
+        if (!result || typeof result !== "object") {
+          return true;
+        }
+
+        const code = result.code ?? result.status ?? result.errcode ?? result.error_code;
+        if (code !== undefined && code !== null && code !== "") {
+          const numeric = Number(code);
+          if ([0, 1, 200].includes(numeric)) {
+            return true;
+          }
+          const text = String(code).trim().toLowerCase();
+          if (["ok", "success", "true"].includes(text)) {
+            return true;
+          }
+          return false;
+        }
+
+        if (result.success === false || result.ok === false) {
+          return false;
+        }
+
+        return true;
+      }
+
+      function extractApiMessage(result) {
+        if (!result || typeof result !== "object") {
+          return "";
+        }
+        const candidates = [
+          result.msg,
+          result.message,
+          result.error,
+          result.error_msg,
+          result.errmsg,
+          result.detail,
+          result.data && (result.data.msg || result.data.message || result.data.error || result.data.error_msg),
+        ];
+
+        for (const item of candidates) {
+          if (typeof item === "string" && item.trim()) {
+            return item.trim();
+          }
+        }
+
+        return "";
+      }
+
+      function cleanupSelection(selectionSet, validIds) {
+        const valid = new Set(validIds);
+        Array.from(selectionSet).forEach((id) => {
+          if (!valid.has(id)) {
+            selectionSet.delete(id);
+          }
+        });
+      }
+
+      function syncCheckAll(checkAllInput, rows, selectedSet) {
+        if (!rows.length) {
+          checkAllInput.checked = false;
+          checkAllInput.indeterminate = false;
+          return;
+        }
+
+        const selectedCount = rows.filter((row) => selectedSet.has(row.id)).length;
+        checkAllInput.checked = selectedCount === rows.length;
+        checkAllInput.indeterminate = selectedCount > 0 && selectedCount < rows.length;
+      }
+
+      function unique(values) {
+        const output = [];
+        const seen = new Set();
+        values.forEach((value) => {
+          const text = toDisplayText(value);
+          if (!text || seen.has(text)) {
+            return;
+          }
+          seen.add(text);
+          output.push(text);
+        });
+        return output;
+      }
+
+      function deepClone(value) {
+        try {
+          return JSON.parse(JSON.stringify(value));
+        } catch {
+          return value;
+        }
+      }
+
+      function toIntOrDefault(value, fallback) {
+        const num = Number(value);
+        if (Number.isFinite(num)) {
+          return Math.max(0, Math.trunc(num));
+        }
+        return fallback;
+      }
+
+      function formatTime(date) {
+        const d = date instanceof Date ? date : new Date();
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        const ss = String(d.getSeconds()).padStart(2, "0");
+        return `${hh}:${mm}:${ss}`;
+      }
+
+      function uid(prefix) {
+        return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+      }
+
+      function escapeHtml(value) {
+        const text = String(value ?? "");
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1212 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>点检规则配置</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --panel: #ffffff;
+        --line: #d7deea;
+        --line-soft: #e5ebf4;
+        --text: #1f2a3a;
+        --minor: #6f7d93;
+        --primary: #2c79ea;
+        --danger: #d24b4b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      }
+
+      .page {
+        width: 100%;
+        min-height: 100vh;
+        padding: 10px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .rule-panel {
+        min-height: calc(100vh - 20px);
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+      }
+
+      .panel-head {
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .toolbar {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line-soft);
+        display: grid;
+        grid-template-columns: 1.5fr 140px 140px auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .toolbar.actions {
+        grid-template-columns: auto;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        border: 1px solid #cad3e1;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .input,
+      .select {
+        height: 32px;
+        padding: 0 8px;
+      }
+
+      .textarea {
+        min-height: 80px;
+        padding: 8px;
+        resize: vertical;
+      }
+
+      .input:focus,
+      .select:focus,
+      .textarea:focus {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .btn {
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid #b7c4d8;
+        background: #fff;
+        color: #30445f;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .btn.primary {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn.danger {
+        color: var(--danger);
+        border-color: #f0c0c0;
+        background: #fff9f9;
+      }
+
+      .table-wrap {
+        overflow: auto;
+        padding: 0 10px 10px;
+      }
+
+      table {
+        width: 100%;
+        min-width: 1250px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line-soft);
+        padding: 7px 8px;
+        font-size: 12px;
+        text-align: left;
+        background: #fff;
+        vertical-align: middle;
+      }
+
+      th {
+        background: #f2f5fa;
+        color: #3f4d61;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      tr:hover td {
+        background: #f9fbfe;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 20px;
+        border-radius: 999px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      .tag.ok {
+        background: #ebf8f0;
+        color: #1e8750;
+      }
+
+      .tag.stop {
+        background: #fff2f2;
+        color: #bd4141;
+      }
+
+      .cell-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .text-btn {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: var(--primary);
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .text-btn.danger {
+        color: var(--danger);
+      }
+
+      .foot,
+      .status {
+        border-top: 1px solid var(--line-soft);
+        padding: 8px 10px;
+        font-size: 12px;
+        color: var(--minor);
+      }
+
+      .status.error {
+        color: #b24040;
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        background: rgba(12, 22, 36, 0.36);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+      }
+
+      .modal-mask.hidden {
+        display: none;
+      }
+
+      .modal {
+        width: min(920px, 100%);
+        max-height: calc(100vh - 30px);
+        border: 1px solid #cfd8e6;
+        border-radius: 6px;
+        background: #fff;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        overflow: hidden;
+      }
+
+      .modal-head {
+        border-bottom: 1px solid var(--line);
+        padding: 9px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .modal-head h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .modal-body {
+        overflow: auto;
+        padding: 10px 12px;
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--line);
+        padding: 8px 12px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: #47566d;
+      }
+
+      .required {
+        color: #dd4f4f;
+        margin-right: 2px;
+      }
+
+      .readonly {
+        background: #f5f8fc;
+        color: #6d7c93;
+      }
+
+      .input-with-suffix {
+        position: relative;
+      }
+
+      .input-with-suffix .input {
+        padding-right: 46px;
+      }
+
+      .input-suffix {
+        position: absolute;
+        right: 1px;
+        top: 1px;
+        height: 30px;
+        min-width: 34px;
+        padding: 0 10px;
+        border-left: 1px solid #cad3e1;
+        border-radius: 0 3px 3px 0;
+        background: #f5f8fc;
+        color: #5f6f86;
+        font-size: 12px;
+        line-height: 30px;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .input-with-suffix .input:disabled + .input-suffix {
+        background: #f2f5fa;
+        color: #97a4b8;
+      }
+
+      .weekday-box {
+        min-height: 32px;
+        border: 1px solid #cad3e1;
+        border-radius: 4px;
+        padding: 6px 8px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .weekday-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .weekday-item input {
+        margin: 0;
+      }
+
+      .helper {
+        margin: 0;
+        font-size: 12px;
+        color: #73819a;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 80;
+        background: rgba(21, 34, 54, 0.92);
+        color: #fff;
+        border-radius: 5px;
+        font-size: 12px;
+        padding: 8px 11px;
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: all 0.18s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 980px) {
+        .toolbar {
+          grid-template-columns: 1fr;
+        }
+
+        .grid.cols-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="panel rule-panel">
+        <div class="panel-head">
+          <h1>点检规则配置</h1>
+          <div class="btn-group">
+            <button id="addBtn" class="btn primary">新增</button>
+            <button id="editBtn" class="btn">编辑</button>
+            <button id="deleteBtn" class="btn danger">删除</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <input id="keywordInput" class="input" type="text" placeholder="规则编号/名称" />
+          <select id="generationTypeFilter" class="select">
+            <option value="">全部生成类型</option>
+          </select>
+          <select id="statusFilter" class="select">
+            <option value="">全部状态</option>
+          </select>
+          <div class="btn-group">
+            <button id="searchBtn" class="btn">搜索</button>
+            <button id="resetBtn" class="btn">重置</button>
+            <button id="refreshBtn" class="btn">刷新</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 42px"><input id="checkAll" type="checkbox" /></th>
+                <th style="width: 130px">规则编号</th>
+                <th style="width: 170px">规则名称</th>
+                <th style="width: 90px">周期类型</th>
+                <th style="width: 120px">间隔周期</th>
+                <th style="width: 90px">状态</th>
+                <th style="width: 80px">版本</th>
+                <th style="width: 120px">生效日期</th>
+                <th>备注</th>
+                <th style="width: 140px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div id="tableFoot" class="foot"></div>
+        <div id="statusBar" class="status">准备就绪</div>
+      </section>
+    </div>
+
+    <div id="modalMask" class="modal-mask hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="modalTitle">新增规则</h3>
+          <button id="closeModalBtn" type="button" class="btn">关闭</button>
+        </div>
+        <form id="ruleForm">
+          <div class="modal-body">
+            <div class="grid cols-3">
+              <div class="field">
+                <label for="ruleCodeInput">规则编号</label>
+                <input id="ruleCodeInput" class="input readonly" type="text" readonly />
+              </div>
+              <div class="field">
+                <label for="ruleNameInput"><span class="required">*</span>规则名称</label>
+                <input id="ruleNameInput" class="input" type="text" placeholder="例如：日检、周检、月检或定期点检" required />
+                <input id="categoryInput" type="hidden" />
+              </div>
+
+              <div class="field">
+                <label for="generationTypeInput"><span class="required">*</span>周期类型</label>
+                <select id="generationTypeInput" class="select" required></select>
+              </div>
+              <div class="field">
+                <label for="intervalInput">间隔周期</label>
+                <div class="input-with-suffix">
+                  <input id="intervalInput" class="input" type="number" min="1" step="1" value="1" />
+                  <span id="intervalUnitLabel" class="input-suffix">天</span>
+                </div>
+              </div>
+              <div class="field">
+                <label for="statusInput">状态</label>
+                <select id="statusInput" class="select"></select>
+              </div>
+
+              <div class="field">
+                <label for="versionInput">规则版本</label>
+                <input id="versionInput" class="input readonly" type="text" value="V1" readonly />
+              </div>
+              <div class="field">
+                <label for="effectiveDateInput">规则变更生效日期</label>
+                <input id="effectiveDateInput" class="input" type="date" />
+              </div>
+              <div class="field full">
+                <label for="remarkInput">备注</label>
+                <textarea id="remarkInput" class="textarea"></textarea>
+              </div>
+            </div>
+            <p class="helper">
+              规则保存后会自动执行任务同步：
+              删除该规则从第二天开始且未开始的任务，并按最新规则生成新任务（提交当日会立即生成一次）。
+            </p>
+            <p class="helper">
+              规则名称包含“日检/周检/月检”时自动锁定固定周期；其他规则名称可自定义周期与间隔。
+            </p>
+          </div>
+          <div class="modal-foot">
+            <button id="cancelModalBtn" type="button" class="btn">取消</button>
+            <button type="submit" class="btn primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_BASE = resolveApiBaseUrl();
+
+      const state = {
+        loading: false,
+        rules: [],
+        selectedIds: new Set(),
+        search: {
+          keyword: "",
+          generationType: "",
+          status: "",
+        },
+        options: {
+          categories: [],
+          generationTypes: ["按天", "按周", "按月"],
+          statuses: ["启用", "停用"],
+        },
+        modal: {
+          mode: "add",
+          editingId: "",
+        },
+      };
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      const refs = {
+        keywordInput: document.getElementById("keywordInput"),
+        generationTypeFilter: document.getElementById("generationTypeFilter"),
+        statusFilter: document.getElementById("statusFilter"),
+        searchBtn: document.getElementById("searchBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        refreshBtn: document.getElementById("refreshBtn"),
+        addBtn: document.getElementById("addBtn"),
+        editBtn: document.getElementById("editBtn"),
+        deleteBtn: document.getElementById("deleteBtn"),
+        checkAll: document.getElementById("checkAll"),
+        tableBody: document.getElementById("tableBody"),
+        tableFoot: document.getElementById("tableFoot"),
+        statusBar: document.getElementById("statusBar"),
+
+        modalMask: document.getElementById("modalMask"),
+        modalTitle: document.getElementById("modalTitle"),
+        closeModalBtn: document.getElementById("closeModalBtn"),
+        cancelModalBtn: document.getElementById("cancelModalBtn"),
+        ruleForm: document.getElementById("ruleForm"),
+        ruleCodeInput: document.getElementById("ruleCodeInput"),
+        ruleNameInput: document.getElementById("ruleNameInput"),
+        categoryInput: document.getElementById("categoryInput"),
+        generationTypeInput: document.getElementById("generationTypeInput"),
+        intervalInput: document.getElementById("intervalInput"),
+        intervalUnitLabel: document.getElementById("intervalUnitLabel"),
+        statusInput: document.getElementById("statusInput"),
+        versionInput: document.getElementById("versionInput"),
+        effectiveDateInput: document.getElementById("effectiveDateInput"),
+        remarkInput: document.getElementById("remarkInput"),
+        toast: document.getElementById("toast"),
+      };
+
+      init();
+
+      async function init() {
+        bindEvents();
+        await loadBootstrap();
+      }
+
+      function bindEvents() {
+        refs.searchBtn.addEventListener("click", () => {
+          state.search.keyword = refs.keywordInput.value.trim();
+          state.search.generationType = refs.generationTypeFilter.value;
+          state.search.status = refs.statusFilter.value;
+          renderTable();
+        });
+
+        refs.resetBtn.addEventListener("click", () => {
+          state.search.keyword = "";
+          state.search.generationType = "";
+          state.search.status = "";
+          refs.keywordInput.value = "";
+          refs.generationTypeFilter.value = "";
+          refs.statusFilter.value = "";
+          state.selectedIds.clear();
+          renderTable();
+        });
+
+        refs.refreshBtn.addEventListener("click", () => {
+          void loadBootstrap();
+        });
+
+        refs.keywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            refs.searchBtn.click();
+          }
+        });
+
+        refs.addBtn.addEventListener("click", () => {
+          openModal("add");
+        });
+
+        refs.editBtn.addEventListener("click", () => {
+          const ids = Array.from(state.selectedIds);
+          if (ids.length !== 1) {
+            showToast("请选择 1 条规则进行编辑");
+            return;
+          }
+          openModal("edit", ids[0]);
+        });
+
+        refs.deleteBtn.addEventListener("click", () => {
+          void deleteSelectedRules(Array.from(state.selectedIds));
+        });
+
+        refs.checkAll.addEventListener("change", () => {
+          const rows = filterRules();
+          if (refs.checkAll.checked) {
+            rows.forEach((item) => state.selectedIds.add(item.id));
+          } else {
+            rows.forEach((item) => state.selectedIds.delete(item.id));
+          }
+          renderTable();
+        });
+
+        refs.tableBody.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || target.type !== "checkbox") {
+            return;
+          }
+          const id = target.dataset.id;
+          if (!id) {
+            return;
+          }
+          if (target.checked) {
+            state.selectedIds.add(id);
+          } else {
+            state.selectedIds.delete(id);
+          }
+          renderTable();
+        });
+
+        refs.tableBody.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const action = target.dataset.action;
+          const id = target.dataset.id;
+          if (!action || !id) {
+            return;
+          }
+          if (action === "edit") {
+            openModal("edit", id);
+            return;
+          }
+          if (action === "delete") {
+            void deleteSelectedRules([id]);
+            return;
+          }
+          if (action === "toggle") {
+            const enabled = target.dataset.enabled === "1";
+            void toggleRuleStatus(id, enabled);
+          }
+        });
+
+        refs.closeModalBtn.addEventListener("click", closeModal);
+        refs.cancelModalBtn.addEventListener("click", closeModal);
+        refs.modalMask.addEventListener("click", (event) => {
+          if (event.target === refs.modalMask) {
+            closeModal();
+          }
+        });
+
+        refs.ruleNameInput.addEventListener("input", () => {
+          syncCategoryFromRuleName();
+          applyCategoryPolicy();
+        });
+
+        refs.generationTypeInput.addEventListener("change", () => {
+          updateIntervalUnitLabel();
+        });
+
+        refs.ruleForm.addEventListener("submit", (event) => {
+          void submitRuleForm(event);
+        });
+      }
+
+      async function loadBootstrap() {
+        setLoading(true);
+        setStatus("正在加载规则配置...");
+        try {
+          const resp = await requestApi("/rule-config/bootstrap");
+          const data = resp && resp.data ? resp.data : {};
+          state.rules = Array.isArray(data.rules) ? data.rules : [];
+          state.options.categories = Array.isArray(data.categoryOptions) ? data.categoryOptions : [];
+          state.options.generationTypes = Array.isArray(data.generationTypeOptions) && data.generationTypeOptions.length
+            ? data.generationTypeOptions
+            : ["按天", "按周", "按月"];
+          state.options.statuses = Array.isArray(data.statusOptions) && data.statusOptions.length
+            ? data.statusOptions
+            : ["启用", "停用"];
+          state.selectedIds.clear();
+          renderFilterOptions();
+          renderTable();
+          setStatus(`加载完成，共 ${state.rules.length} 条规则`);
+        } catch (error) {
+          setStatus(`加载失败：${error.message}`, true);
+          showToast(`加载失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function renderFilterOptions() {
+        refs.generationTypeFilter.innerHTML =
+          '<option value="">全部生成类型</option>' +
+          state.options.generationTypes.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
+        refs.statusFilter.innerHTML =
+          '<option value="">全部状态</option>' +
+          state.options.statuses.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
+      }
+
+      function filterRules() {
+        const keyword = state.search.keyword.trim().toLowerCase();
+        const generationType = state.search.generationType;
+        const status = state.search.status;
+        return state.rules.filter((item) => {
+          if (generationType && item.generationType !== generationType) {
+            return false;
+          }
+          if (status && normalizeStatus(item.status) !== normalizeStatus(status)) {
+            return false;
+          }
+          if (!keyword) {
+            return true;
+          }
+          const text = [
+            item.code,
+            item.name,
+            item.category,
+            item.generationType,
+            item.interval,
+            item.version,
+            item.remark,
+          ]
+            .join(" ")
+            .toLowerCase();
+          return text.includes(keyword);
+        });
+      }
+
+      function renderTable() {
+        const rows = filterRules();
+        refs.tableBody.innerHTML = "";
+        cleanupSelection(state.selectedIds, rows.map((item) => item.id));
+
+        if (!rows.length) {
+          refs.tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#7e8a9b;padding:22px">暂无规则</td></tr>';
+          refs.tableFoot.textContent = "当前无匹配规则";
+          refs.checkAll.checked = false;
+          refs.checkAll.indeterminate = false;
+          renderActionDisabled();
+          return;
+        }
+
+        rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          const toggleEnabled = normalizeStatus(row.status) !== "启用";
+          tr.innerHTML = `
+            <td><input type="checkbox" data-id="${escapeHtml(row.id)}" ${state.selectedIds.has(row.id) ? "checked" : ""} /></td>
+            <td>${escapeHtml(row.code || "-")}</td>
+            <td>${escapeHtml(row.name || "-")}</td>
+            <td>${escapeHtml(row.generationType || "-")}</td>
+            <td>${escapeHtml(formatIntervalText(row))}</td>
+            <td>${renderStatusTag(row.status)}</td>
+            <td>${escapeHtml(row.version || "-")}</td>
+            <td>${escapeHtml(toDateInput(row.effectiveDate) || "-")}</td>
+            <td>${escapeHtml(row.remark || "-")}</td>
+            <td>
+              <div class="cell-actions">
+                <button class="text-btn" data-action="toggle" data-id="${escapeHtml(row.id)}" data-enabled="${toggleEnabled ? "1" : "0"}">${toggleEnabled ? "启用" : "停用"}</button>
+                <button class="text-btn" data-action="edit" data-id="${escapeHtml(row.id)}">编辑</button>
+                <button class="text-btn danger" data-action="delete" data-id="${escapeHtml(row.id)}">删除</button>
+              </div>
+            </td>
+          `;
+          refs.tableBody.appendChild(tr);
+        });
+
+        const selectedVisible = rows.filter((item) => state.selectedIds.has(item.id)).length;
+        refs.tableFoot.textContent = `规则共 ${state.rules.length} 条，当前 ${rows.length} 条，已选 ${selectedVisible} 条`;
+        syncCheckAll(refs.checkAll, rows, state.selectedIds);
+        renderActionDisabled();
+      }
+
+      function openModal(mode, id = "") {
+        state.modal.mode = mode;
+        state.modal.editingId = id;
+        refs.ruleForm.reset();
+
+        fillFormOptions();
+        refs.ruleCodeInput.value = "自动生成";
+        refs.intervalInput.value = "1";
+        refs.versionInput.value = "V1";
+        refs.effectiveDateInput.value = todayDateText();
+        refs.statusInput.value = "启用";
+
+        if (mode === "edit") {
+          const row = state.rules.find((item) => item.id === id);
+          if (!row) {
+            showToast("未找到要编辑的规则");
+            return;
+          }
+          refs.modalTitle.textContent = "编辑点检规则";
+          refs.ruleCodeInput.value = row.code || "自动生成";
+          refs.ruleNameInput.value = row.name || row.category || "";
+          refs.categoryInput.value = row.name || row.category || "";
+          refs.generationTypeInput.value = row.generationType || state.options.generationTypes[0] || "按天";
+          refs.intervalInput.value = String(row.interval || 1);
+          refs.statusInput.value = normalizeStatus(row.status);
+          refs.versionInput.value = previewNextVersion(row.version || "V1");
+          refs.effectiveDateInput.value = toDateInput(row.effectiveDate) || todayDateText();
+          refs.remarkInput.value = row.remark || "";
+        } else {
+          refs.modalTitle.textContent = "新增点检规则";
+          refs.generationTypeInput.value = state.options.generationTypes[0] || "按天";
+        }
+
+        syncCategoryFromRuleName();
+        applyCategoryPolicy();
+        refs.modalMask.classList.remove("hidden");
+      }
+
+      function closeModal() {
+        refs.modalMask.classList.add("hidden");
+      }
+
+      function fillFormOptions() {
+        refs.generationTypeInput.innerHTML = state.options.generationTypes
+          .map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`)
+          .join("");
+        refs.statusInput.innerHTML = state.options.statuses
+          .map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`)
+          .join("");
+      }
+
+      function applyCategoryPolicy() {
+        const category = detectCategoryKind(refs.categoryInput.value || refs.ruleNameInput.value);
+        if (category === "日检") {
+          refs.generationTypeInput.value = "按天";
+          refs.intervalInput.value = "1";
+          refs.generationTypeInput.disabled = true;
+          refs.intervalInput.disabled = true;
+        } else if (category === "周检") {
+          refs.generationTypeInput.value = "按周";
+          refs.intervalInput.value = "1";
+          refs.generationTypeInput.disabled = true;
+          refs.intervalInput.disabled = true;
+        } else if (category === "月检") {
+          refs.generationTypeInput.value = "按月";
+          refs.intervalInput.value = "1";
+          refs.generationTypeInput.disabled = true;
+          refs.intervalInput.disabled = true;
+        } else {
+          refs.generationTypeInput.disabled = false;
+          refs.intervalInput.disabled = false;
+          if (!refs.generationTypeInput.value) {
+            refs.generationTypeInput.value = "按天";
+          }
+          if (!Number(refs.intervalInput.value)) {
+            refs.intervalInput.value = "1";
+          }
+        }
+        updateIntervalUnitLabel();
+      }
+
+      function updateIntervalUnitLabel() {
+        const mode = detectGenerationMode(refs.generationTypeInput.value);
+        const unit = mode === "weekly" ? "周" : mode === "monthly" ? "月" : "天";
+        refs.intervalUnitLabel.textContent = unit;
+      }
+
+      async function submitRuleForm(event) {
+        event.preventDefault();
+
+        const ruleName = refs.ruleNameInput.value.trim();
+        const category = ruleName;
+        const generationType = refs.generationTypeInput.value.trim();
+        const interval = Math.max(1, Number(refs.intervalInput.value || 1));
+        const status = refs.statusInput.value.trim() || "启用";
+        const effectiveDate = refs.effectiveDateInput.value.trim() || todayDateText();
+        const remark = refs.remarkInput.value.trim();
+
+        if (!ruleName) {
+          showToast("请填写规则名称");
+          return;
+        }
+        refs.categoryInput.value = category;
+        if (!generationType) {
+          showToast("请选择生成类型");
+          return;
+        }
+
+        const mode = detectGenerationMode(generationType);
+        const categoryKind = detectCategoryKind(category);
+        if (categoryKind === "定期点检" && !["daily", "weekly", "monthly"].includes(mode)) {
+          showToast("定期点检仅支持按天/按周/按月");
+          return;
+        }
+
+        const duplicate = state.rules.find(
+          (item) => normalizeCompareText(item.name || item.category) === normalizeCompareText(ruleName) && item.id !== state.modal.editingId
+        );
+        if (duplicate) {
+          showToast(`规则名称“${ruleName}”已存在`);
+          return;
+        }
+
+        const body = {
+          id: state.modal.mode === "edit" ? state.modal.editingId : "",
+          rule: {
+            name: ruleName,
+            category,
+            generationType,
+            interval,
+            status,
+            effectiveDate,
+            remark,
+          },
+        };
+
+        setLoading(true);
+        setStatus("正在保存规则并同步任务...");
+        try {
+          const resp = await requestApi("/rule-config/save", "POST", body);
+          const sync = resp && resp.data ? resp.data.sync : null;
+          closeModal();
+          await loadBootstrap();
+          showToast(`规则保存成功，新增任务 ${sync?.created || 0} 条，删除 ${sync?.deleted || 0} 条`);
+        } catch (error) {
+          showToast(`保存失败：${error.message}`);
+          setStatus(`保存失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function deleteSelectedRules(ids) {
+        if (!ids.length) {
+          showToast("请先选择要删除的规则");
+          return;
+        }
+        const ok = window.confirm(`确认删除 ${ids.length} 条规则吗？删除后将同步清理后续未开始任务。`);
+        if (!ok) {
+          return;
+        }
+
+        setLoading(true);
+        setStatus("正在删除规则...");
+        try {
+          let deletedTasks = 0;
+          for (const id of ids) {
+            const resp = await requestApi("/rule-config/delete", "POST", { id });
+            deletedTasks += Number(resp?.data?.sync?.deleted || 0);
+          }
+          await loadBootstrap();
+          showToast(`规则已删除，同时清理任务 ${deletedTasks} 条`);
+        } catch (error) {
+          showToast(`删除失败：${error.message}`);
+          setStatus(`删除失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function toggleRuleStatus(id, enable) {
+        setLoading(true);
+        setStatus(`正在${enable ? "启用" : "停用"}规则...`);
+        try {
+          const resp = await requestApi("/rule-config/toggle", "POST", {
+            id,
+            enabled: enable,
+          });
+          const sync = resp && resp.data ? resp.data.sync : null;
+          await loadBootstrap();
+          showToast(`${enable ? "启用" : "停用"}成功，新增任务 ${sync?.created || 0} 条，删除 ${sync?.deleted || 0} 条`);
+        } catch (error) {
+          showToast(`操作失败：${error.message}`);
+          setStatus(`操作失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function requestApi(path, method = "GET", body) {
+        const url = `${API_BASE}${path}`;
+        const options = {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        if (method !== "GET" && method !== "HEAD") {
+          options.body = JSON.stringify(body || {});
+        }
+        const resp = await fetch(url, options);
+        const text = await resp.text();
+        const json = safeJsonParse(text);
+        if (!resp.ok) {
+          throw new Error(extractErrorMessage(json) || text || `HTTP ${resp.status}`);
+        }
+        if (json && json.ok === false) {
+          throw new Error(extractErrorMessage(json) || "请求失败");
+        }
+        return json;
+      }
+
+      function renderActionDisabled() {
+        const hasSelection = state.selectedIds.size > 0;
+        refs.addBtn.disabled = state.loading;
+        refs.editBtn.disabled = state.loading || state.selectedIds.size !== 1;
+        refs.deleteBtn.disabled = state.loading || !hasSelection;
+        refs.refreshBtn.disabled = state.loading;
+        refs.searchBtn.disabled = state.loading;
+        refs.resetBtn.disabled = state.loading;
+      }
+
+      function setLoading(flag) {
+        state.loading = flag;
+        renderActionDisabled();
+      }
+
+      function setStatus(message, isError = false) {
+        refs.statusBar.textContent = message;
+        refs.statusBar.classList.toggle("error", Boolean(isError));
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => {
+          refs.toast.classList.remove("show");
+        }, 2400);
+      }
+
+      function cleanupSelection(set, validIds) {
+        const valid = new Set(validIds);
+        Array.from(set).forEach((id) => {
+          if (!valid.has(id)) {
+            set.delete(id);
+          }
+        });
+      }
+
+      function syncCheckAll(checkAllInput, rows, selectedSet) {
+        if (!rows.length) {
+          checkAllInput.checked = false;
+          checkAllInput.indeterminate = false;
+          return;
+        }
+        const selected = rows.filter((item) => selectedSet.has(item.id)).length;
+        checkAllInput.checked = selected === rows.length;
+        checkAllInput.indeterminate = selected > 0 && selected < rows.length;
+      }
+
+      function normalizeStatus(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "启用";
+        }
+        return text.includes("停") ? "停用" : "启用";
+      }
+
+      function renderStatusTag(status) {
+        const text = normalizeStatus(status);
+        const cls = text === "启用" ? "ok" : "stop";
+        return `<span class="tag ${cls}">${escapeHtml(text)}</span>`;
+      }
+
+      function detectGenerationMode(value) {
+        const text = String(value || "");
+        if (text.includes("周")) return "weekly";
+        if (text.includes("月")) return "monthly";
+        return "daily";
+      }
+
+      function syncCategoryFromRuleName() {
+        refs.categoryInput.value = refs.ruleNameInput.value.trim();
+      }
+
+      function detectCategoryKind(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "";
+        }
+        if (text.includes("定期")) {
+          return "定期点检";
+        }
+        if (text.includes("周检")) {
+          return "周检";
+        }
+        if (text.includes("月检")) {
+          return "月检";
+        }
+        if (text.includes("日检")) {
+          return "日检";
+        }
+        return text;
+      }
+
+      function normalizeCompareText(value) {
+        return String(value || "").replace(/\s+/g, "").toLowerCase();
+      }
+
+      function formatIntervalText(rule) {
+        const mode = detectGenerationMode(rule.generationType);
+        const value = Number.isFinite(Number(rule.interval)) ? Number(rule.interval) : 1;
+        const unit = mode === "weekly" ? "周" : mode === "monthly" ? "月" : "天";
+        return `${value}${unit}`;
+      }
+
+      function toDateInput(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "";
+        }
+        const match = text.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+        if (!match) {
+          return "";
+        }
+        const y = match[1];
+        const m = String(match[2]).padStart(2, "0");
+        const d = String(match[3]).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      function todayDateText() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      function extractErrorMessage(payload) {
+        if (!payload || typeof payload !== "object") {
+          return "";
+        }
+        const candidates = [payload.message, payload.msg, payload.error, payload.detail];
+        for (const item of candidates) {
+          if (typeof item === "string" && item.trim()) {
+            return item.trim();
+          }
+        }
+        return "";
+      }
+
+      function previewNextVersion(versionText) {
+        const text = String(versionText || "V1").trim();
+        const matched = text.match(/(\d+)(?!.*\d)/);
+        if (!matched) {
+          return "V1";
+        }
+        const n = Number(matched[1]);
+        if (!Number.isFinite(n)) {
+          return "V1";
+        }
+        return `V${n + 1}`;
+      }
+
+      function safeJsonParse(text) {
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    </script>
+  </body>
+</html>

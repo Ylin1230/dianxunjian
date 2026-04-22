@@ -1,0 +1,3484 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>点检报工</title>
+    <style>
+      :root {
+        --bg: #f2f5fb;
+        --panel: #ffffff;
+        --line: #d9e1ee;
+        --text: #1f2a3a;
+        --minor: #6f7e95;
+        --primary: #2b77e7;
+        --primary-deep: #1f5fc6;
+        --danger: #d24a4a;
+        --warn: #d27a1f;
+        --ok: #1e9158;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #eef2f9 0%, #f7f9fd 100%);
+        color: var(--text);
+        font: 14px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      }
+
+      .app {
+        max-width: 440px;
+        min-height: 100vh;
+        margin: 0 auto;
+        background: #f5f8fd;
+        border-left: 1px solid #dce5f2;
+        border-right: 1px solid #dce5f2;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        height: 52px;
+        padding: 0 12px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .topbar-left,
+      .topbar-right {
+        width: 76px;
+        display: flex;
+        align-items: center;
+      }
+
+      .topbar-right {
+        justify-content: flex-end;
+      }
+
+      .topbar-title {
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .icon-btn,
+      .text-btn {
+        border: 0;
+        background: transparent;
+        color: var(--primary);
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .icon-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 15px;
+        font-size: 20px;
+        line-height: 1;
+        color: #3d4e67;
+      }
+
+      .icon-btn:active {
+        background: #edf2fa;
+      }
+
+      .view {
+        padding: 12px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+
+      .card-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e8eef7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-title {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .minor {
+        color: var(--minor);
+        font-size: 12px;
+      }
+
+      .overview {
+        padding: 12px;
+      }
+
+      .overview-main {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .overview-main .date {
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .overview-grid {
+        display: none;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .metric {
+        border: 1px solid #e2e9f5;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 10px;
+        text-align: center;
+      }
+
+      .metric .n {
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .metric .k {
+        font-size: 12px;
+        color: var(--minor);
+        margin-top: 2px;
+      }
+
+      .metric.urgent .n {
+        color: #de4f4f;
+      }
+
+      .metric.pending .n {
+        color: #2f7de9;
+      }
+
+      .metric.done .n {
+        color: #1f975d;
+      }
+
+      .scan-banner {
+        background: linear-gradient(180deg, #fbfdff 0%, #f2f7ff 100%);
+        border: 1px solid #d7e4f7;
+        color: #2d4364;
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .scan-banner h3 {
+        margin: 0;
+        font-size: 17px;
+        color: #24466f;
+      }
+
+      .scan-banner p {
+        margin: 6px 0 10px;
+        font-size: 12px;
+        color: #637e9f;
+      }
+
+      .scan-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 76px 76px;
+        gap: 8px;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        border: 1px solid #cad6e8;
+        border-radius: 8px;
+        background: #fff;
+        color: #21324b;
+      }
+
+      .input,
+      .select {
+        height: 38px;
+        padding: 0 10px;
+        font-size: 14px;
+      }
+
+      .textarea {
+        min-height: 72px;
+        padding: 8px 10px;
+        font-size: 13px;
+        resize: vertical;
+      }
+
+      .input:focus,
+      .select:focus,
+      .textarea:focus {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .btn {
+        border: 1px solid #b8c6dc;
+        background: #fff;
+        color: #30445f;
+        border-radius: 8px;
+        height: 38px;
+        font-size: 14px;
+        padding: 0 12px;
+        cursor: pointer;
+      }
+
+      .btn.primary {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn.soft {
+        background: #f1f6ff;
+        border-color: #b0c7ec;
+        color: #2564c8;
+      }
+
+      .btn.danger {
+        background: #fff5f5;
+        border-color: #efc5c5;
+        color: #c14646;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .task-group {
+        margin-bottom: 14px;
+      }
+
+      .task-group-head {
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .group-actions {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .member-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 6px 0 8px;
+      }
+
+      .task-group-title {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .task-item {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+      }
+
+      .task-item.clickable {
+        cursor: pointer;
+      }
+
+      .task-item.urgent {
+        border-color: #f2c5c5;
+        background: #fff7f7;
+      }
+
+      .task-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .task-name {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .task-meta {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--minor);
+      }
+
+      .task-tags {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        padding: 0 8px;
+        border-radius: 999px;
+        border: 1px solid #d6e1f2;
+        background: #f5f8ff;
+        color: #476080;
+        font-size: 12px;
+      }
+
+      .tag.urgent {
+        border-color: #f2c4c4;
+        background: #fff1f1;
+        color: #cb4949;
+      }
+
+      .tag.done {
+        border-color: #c3e8d2;
+        background: #effcf4;
+        color: #1b8a53;
+      }
+
+      .task-action {
+        align-self: center;
+        min-width: 84px;
+      }
+
+      .minor-link {
+        border: 0;
+        background: transparent;
+        color: #2564c8;
+        font-size: 13px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .empty {
+        border: 1px dashed #ccd8ea;
+        border-radius: 10px;
+        background: #fbfdff;
+        color: #8190a8;
+        font-size: 12px;
+        text-align: center;
+        padding: 12px;
+      }
+
+      .execute-hero {
+        background: #ffffff;
+        border: 1px solid #d9e4f2;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+        color: #22334b;
+      }
+
+      .execute-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #223a59;
+      }
+
+      .execute-sub {
+        margin-top: 4px;
+        font-size: 13px;
+        color: #677d9b;
+      }
+
+      .execute-chips {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        height: 24px;
+        padding: 0 9px;
+        font-size: 12px;
+        border: 1px solid #d6e4f8;
+        background: #f2f7ff;
+        color: #3b5d8d;
+      }
+
+      .progress-head {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #5b6f8f;
+      }
+
+      .progress {
+        margin-top: 6px;
+        height: 8px;
+        border-radius: 999px;
+        background: #e8eef8;
+        overflow: hidden;
+      }
+
+      .progress > span {
+        display: block;
+        height: 100%;
+        background: #68a6ff;
+        width: 0;
+      }
+
+      .item-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .item-card {
+        background: #fff;
+        border: 1px solid #d7e0ee;
+        border-radius: 12px;
+        padding: 10px;
+      }
+
+      .item-card.abnormal {
+        border-color: #f0c0c0;
+        background: #fff7f7;
+      }
+
+      .item-card.done {
+        border-color: #c6e8d2;
+        background: #f8fffa;
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .item-no {
+        display: inline-flex;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        align-items: center;
+        justify-content: center;
+        background: #eef3fb;
+        color: #3b5578;
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .item-name {
+        margin-top: 2px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .item-desc {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #6f7f95;
+      }
+
+      .item-meta {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .meta-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        border: 1px solid #d8e3f2;
+        background: #f7faff;
+        color: #4a6287;
+      }
+
+      .item-status {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        height: 24px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      .item-status.pending {
+        background: #eef3fb;
+        color: #556a88;
+      }
+
+      .item-status.normal {
+        background: #ebf9f1;
+        color: #1a8b52;
+      }
+
+      .item-status.abnormal {
+        background: #fff0f0;
+        color: #c14545;
+      }
+
+      .result-bar {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .result-btn {
+        border: 1px solid #cdd8ea;
+        border-radius: 8px;
+        background: #fff;
+        color: #355074;
+        height: 34px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .result-btn.active.normal {
+        border-color: #8bc8a4;
+        background: #e8f9ef;
+        color: #1b8c54;
+      }
+
+      .result-btn.active.abnormal {
+        border-color: #edb6b6;
+        background: #fff1f1;
+        color: #c74646;
+      }
+
+      .field {
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: #4a5f7e;
+      }
+
+      .field-hint {
+        font-size: 12px;
+        color: #7a8aa2;
+      }
+
+      .input-action-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .input-action-row .input {
+        flex: 1;
+      }
+
+      .input-action-row .btn {
+        flex: 0 0 auto;
+        min-width: 96px;
+      }
+
+      .judge-hint {
+        margin-top: 8px;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+        line-height: 1.5;
+        border: 1px solid #dce7f6;
+        background: #f8fbff;
+        color: #567092;
+      }
+
+      .judge-hint strong {
+        font-size: 13px;
+        margin-left: 4px;
+      }
+
+      .judge-hint em {
+        display: block;
+        margin-top: 2px;
+        font-style: normal;
+        color: #73849c;
+      }
+
+      .judge-hint.normal {
+        border-color: #c6e8d2;
+        background: #f5fff9;
+        color: #1c7d4f;
+      }
+
+      .judge-hint.abnormal {
+        border-color: #efc8c8;
+        background: #fff7f7;
+        color: #c14545;
+      }
+
+      .judge-hint.pending {
+        border-style: dashed;
+      }
+
+      .required {
+        color: #dc4f4f;
+        margin-right: 2px;
+      }
+
+      .abnormal-box {
+        margin-top: 8px;
+        border: 1px solid #efc8c8;
+        border-radius: 10px;
+        background: #fff8f8;
+        padding: 8px;
+      }
+
+      .photos {
+        margin-top: 4px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .photo-chip {
+        border: 1px solid #e1d3d3;
+        background: #fff;
+        border-radius: 999px;
+        font-size: 12px;
+        color: #6a4f4f;
+        padding: 2px 8px;
+      }
+
+      .exec-foot {
+        position: sticky;
+        bottom: 0;
+        z-index: 40;
+        background: rgba(245, 248, 253, 0.95);
+        backdrop-filter: blur(6px);
+        border-top: 1px solid #dce5f2;
+        margin: 12px -12px 0;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      }
+
+      .exec-foot-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .exec-foot-row .btn {
+        flex: 1;
+      }
+
+      .summary-hero {
+        border-radius: 12px;
+        padding: 16px;
+        color: #fff;
+        background: linear-gradient(135deg, #10b56a 0%, #0b9458 100%);
+      }
+
+      .summary-hero h2 {
+        margin: 6px 0 0;
+        font-size: 30px;
+      }
+
+      .summary-hero p {
+        margin: 8px 0 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      .summary-grid {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .summary-grid .metric {
+        margin: 0;
+      }
+
+      .abnormal-list {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .abnormal-item {
+        border: 1px solid #edc5c5;
+        background: #fff7f7;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .abnormal-item h4 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .abnormal-item p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: #7b5a5a;
+      }
+
+      .summary-actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+      }
+
+      .summary-actions .btn {
+        flex: 1;
+      }
+
+      .statusbar {
+        margin-top: 8px;
+        border: 1px dashed #ccd8ea;
+        border-radius: 10px;
+        background: #fbfdff;
+        color: #73849d;
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+
+      .statusbar.error {
+        color: #b44343;
+        border-color: #efc3c3;
+        background: #fff8f8;
+      }
+
+      .toast {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 120;
+        background: rgba(28, 41, 62, 0.93);
+        color: #fff;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 12px;
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition: all 0.2s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 110;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(16, 23, 34, 0.45);
+      }
+
+      .modal-body {
+        width: min(440px, 100%);
+        max-height: min(82vh, calc(100vh - 24px));
+        background: #fff;
+        border-radius: 14px 14px 0 0;
+        border: 1px solid #d7e0ee;
+        border-bottom: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        overscroll-behavior: contain;
+      }
+
+      .modal-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e7edf7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-list {
+        padding: 10px;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .detail-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e7edf7;
+        background: #fbfdff;
+      }
+
+      .detail-head h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #223a59;
+      }
+
+      .detail-head p {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: #6b7f99;
+      }
+
+      .detail-list {
+        padding: 10px;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .detail-row {
+        border: 1px solid #dbe5f3;
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .detail-row.abnormal {
+        border-color: #efc8c8;
+        background: #fff7f7;
+      }
+
+      .detail-row-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .detail-row-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #253a58;
+      }
+
+      .detail-row-meta {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #6d8098;
+      }
+
+      .detail-row-body {
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 13px;
+        color: #334963;
+      }
+
+      .bind-panel {
+        padding: 10px;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .bind-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .bind-actions .input {
+        flex: 1;
+      }
+
+      .bind-current {
+        border: 1px dashed #d5e2f3;
+        background: #fbfdff;
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 13px;
+        color: #5f748f;
+      }
+
+      @media (min-width: 920px) {
+        body {
+          padding: 10px 0;
+        }
+
+        .app {
+          min-height: calc(100vh - 20px);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 16px 42px rgba(38, 60, 98, 0.16);
+        }
+      }
+
+      @media (max-width: 420px) {
+        .scan-row {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .scan-row .input {
+          grid-column: 1 / -1;
+        }
+
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="navBackBtn" class="icon-btn hidden" title="返回">‹</button>
+        </div>
+        <div id="headerTitle" class="topbar-title">今日点检任务</div>
+        <div class="topbar-right">
+          <button id="headerActionBtn" class="text-btn">刷新</button>
+        </div>
+      </header>
+
+      <section id="dashboardView" class="view">
+        <div class="card overview">
+          <div class="overview-main">
+            <div id="dashboardDate" class="date">--</div>
+            <div id="dashboardHint" class="minor">正在加载任务汇总...</div>
+          </div>
+          <div class="overview-grid">
+            <div class="metric pending">
+              <div id="pendingCount" class="n">0</div>
+              <div class="k">待执行</div>
+            </div>
+            <div class="metric done">
+              <div id="doneCount" class="n">0</div>
+              <div class="k">已完成</div>
+            </div>
+            <div class="metric">
+              <div id="memberReportCount" class="n">0</div>
+              <div class="k">我的报工</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 12px">
+          <div class="scan-banner">
+            <h3>扫码快速开始</h3>
+            <p>优先使用钉钉/微信扫一扫设备或危化品库二维码，可直接进入报工；若当前容器不支持原生扫码，将自动切换为页面内拍照识别。</p>
+            <div class="scan-row">
+              <input id="scanInput" class="input" type="search" placeholder="扫码码值/设备编号/库房编码" />
+              <button id="scanBtn" class="btn soft">查询</button>
+              <button id="cameraScanBtn" class="btn primary">扫一扫</button>
+            </div>
+            <input id="scanImageInput" type="file" accept="image/*" capture="environment" hidden />
+          </div>
+        </div>
+
+        <div class="task-group">
+          <div class="task-group-head">
+            <div class="task-group-title">🧑 我的最近报工</div>
+            <div class="group-actions">
+              <button id="memberBindBtn" class="minor-link" type="button">绑定执行人</button>
+              <div id="memberRecentTotalText" class="minor">0 条</div>
+            </div>
+          </div>
+          <div class="member-bar">
+            <div id="memberNameHint" class="minor">当前成员：识别中...</div>
+          </div>
+          <div id="memberRecentList" class="task-list"></div>
+        </div>
+
+        <div id="dashboardStatus" class="statusbar">准备就绪</div>
+      </section>
+
+      <section id="executeView" class="view hidden">
+        <div class="execute-hero">
+          <div id="executeTitle" class="execute-title">设备名称</div>
+          <div id="executeChips" class="execute-chips"></div>
+          <div class="progress-head">
+            <span>检查进度</span>
+            <span id="progressText">0 / 0 项</span>
+          </div>
+          <div class="progress"><span id="progressBar"></span></div>
+        </div>
+
+        <div id="executeEmpty" class="empty">正在加载点检明细...</div>
+        <div id="executeItemList" class="item-list"></div>
+
+        <div id="executeFoot" class="exec-foot hidden">
+          <div class="field" style="margin-bottom:8px">
+            <label for="reportRemarkInput">备注（选填）</label>
+            <input id="reportRemarkInput" class="input" type="text" placeholder="可填写本次点检补充说明" />
+          </div>
+          <div class="field" style="margin-bottom:8px">
+            <label for="reporterInput"><span class="required">*</span>报工人</label>
+            <div class="input-action-row">
+              <input id="reporterInput" class="input" type="text" placeholder="请输入或选择执行人" />
+              <button id="chooseReporterBtn" class="btn soft" type="button">选择执行人</button>
+            </div>
+            <div id="reporterHint" class="field-hint">未识别执行人时，可手动输入，也可从通讯录选择</div>
+          </div>
+          <div class="exec-foot-row">
+            <button id="nextPendingBtn" class="btn">下一项</button>
+            <button id="submitTaskBtn" class="btn primary">提交汇总</button>
+          </div>
+        </div>
+
+        <div id="executeStatus" class="statusbar">准备执行</div>
+      </section>
+
+      <section id="summaryView" class="view hidden">
+        <div class="summary-hero">
+          <div style="font-size:54px;line-height:1">✔</div>
+          <h2>点检完成</h2>
+          <p id="summaryMainText">任务已提交</p>
+        </div>
+
+        <div class="card" style="padding:12px">
+          <div class="card-title" style="margin-bottom:8px">本次结果汇总</div>
+          <div class="summary-grid">
+            <div class="metric done">
+              <div id="summaryNormalCount" class="n">0</div>
+              <div class="k">正常</div>
+            </div>
+            <div class="metric urgent">
+              <div id="summaryAbnormalCount" class="n">0</div>
+              <div class="k">异常</div>
+            </div>
+            <div class="metric pending">
+              <div id="summaryTotalCount" class="n">0</div>
+              <div class="k">总项</div>
+            </div>
+          </div>
+
+          <div id="summaryAbnormalWrap" class="abnormal-list"></div>
+
+          <div class="summary-actions">
+            <button id="summaryBackBtn" class="btn">返回任务首页</button>
+            <button id="summaryNextBtn" class="btn primary">执行下一任务</button>
+          </div>
+        </div>
+
+        <div id="summaryStatus" class="statusbar">提交完成</div>
+      </section>
+    </div>
+
+    <div id="taskPickerModal" class="modal hidden">
+      <div class="modal-body">
+        <div class="modal-head">
+          <div class="card-title">选择要执行的任务</div>
+          <button id="closeTaskPickerBtn" class="text-btn">关闭</button>
+        </div>
+        <div id="taskPickerList" class="modal-list"></div>
+      </div>
+    </div>
+
+    <div id="reportDetailModal" class="modal hidden">
+      <div class="modal-body">
+        <div class="modal-head">
+          <div class="card-title">报工详情</div>
+          <button id="closeReportDetailBtn" class="text-btn">关闭</button>
+        </div>
+        <div id="reportDetailHead" class="detail-head hidden"></div>
+        <div id="reportDetailList" class="detail-list"></div>
+      </div>
+    </div>
+
+    <div id="memberBindModal" class="modal hidden">
+      <div class="modal-body">
+        <div class="modal-head">
+          <div class="card-title">绑定执行人</div>
+          <button id="closeMemberBindBtn" class="text-btn">关闭</button>
+        </div>
+        <div class="bind-panel">
+          <div id="memberBindCurrent" class="bind-current">当前未绑定执行人</div>
+          <div class="bind-actions">
+            <input id="memberBindSearchInput" class="input" type="search" placeholder="输入姓名/账号/手机号搜索" />
+            <button id="memberBindSearchBtn" class="btn soft" type="button">搜索</button>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <button id="clearMemberBindBtn" class="minor-link" type="button">清除绑定</button>
+          </div>
+          <div id="memberBindList" class="modal-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_BASE = resolveApiBaseUrl();
+      const DINGTALK_JSAPI_URL = "https://g.alicdn.com/dingding/dingtalk-jsapi/3.0.25/dingtalk.open.js";
+      const TASK_DRAFT_PREFIX = "inspection_report_task_draft_v2:";
+      const MEMBER_BIND_KEY = "inspection_bound_member_v1";
+      let dingTalkJsapiPromise = null;
+
+      const state = {
+        loading: false,
+        today: "",
+        currentMember: null,
+        dashboardSummary: {
+          date: "",
+          totalCount: 0,
+          pendingCount: 0,
+          doneCount: 0,
+        },
+        dashboardTasks: [],
+        memberName: "",
+        boundMember: null,
+        currentMemberSource: "",
+        memberRecentReports: [],
+        selectedTask: null,
+        selectedItems: [],
+        reportStartAt: "",
+        scanValue: "",
+        scanDevice: null,
+        scanTaskCandidates: [],
+        lastSummary: null,
+        selectedRecentReport: null,
+      };
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      const refs = {
+        navBackBtn: document.getElementById("navBackBtn"),
+        headerTitle: document.getElementById("headerTitle"),
+        headerActionBtn: document.getElementById("headerActionBtn"),
+        dashboardView: document.getElementById("dashboardView"),
+        executeView: document.getElementById("executeView"),
+        summaryView: document.getElementById("summaryView"),
+        dashboardDate: document.getElementById("dashboardDate"),
+        dashboardHint: document.getElementById("dashboardHint"),
+        pendingCount: document.getElementById("pendingCount"),
+        doneCount: document.getElementById("doneCount"),
+        memberReportCount: document.getElementById("memberReportCount"),
+        memberRecentTotalText: document.getElementById("memberRecentTotalText"),
+        memberBindBtn: document.getElementById("memberBindBtn"),
+        memberNameHint: document.getElementById("memberNameHint"),
+        memberRecentList: document.getElementById("memberRecentList"),
+        dashboardStatus: document.getElementById("dashboardStatus"),
+        scanInput: document.getElementById("scanInput"),
+        scanBtn: document.getElementById("scanBtn"),
+        cameraScanBtn: document.getElementById("cameraScanBtn"),
+        scanImageInput: document.getElementById("scanImageInput"),
+        executeTitle: document.getElementById("executeTitle"),
+        executeChips: document.getElementById("executeChips"),
+        progressText: document.getElementById("progressText"),
+        progressBar: document.getElementById("progressBar"),
+        executeEmpty: document.getElementById("executeEmpty"),
+        executeItemList: document.getElementById("executeItemList"),
+        executeFoot: document.getElementById("executeFoot"),
+        reportRemarkInput: document.getElementById("reportRemarkInput"),
+        reporterInput: document.getElementById("reporterInput"),
+        chooseReporterBtn: document.getElementById("chooseReporterBtn"),
+        reporterHint: document.getElementById("reporterHint"),
+        nextPendingBtn: document.getElementById("nextPendingBtn"),
+        submitTaskBtn: document.getElementById("submitTaskBtn"),
+        executeStatus: document.getElementById("executeStatus"),
+        summaryMainText: document.getElementById("summaryMainText"),
+        summaryNormalCount: document.getElementById("summaryNormalCount"),
+        summaryAbnormalCount: document.getElementById("summaryAbnormalCount"),
+        summaryTotalCount: document.getElementById("summaryTotalCount"),
+        summaryAbnormalWrap: document.getElementById("summaryAbnormalWrap"),
+        summaryBackBtn: document.getElementById("summaryBackBtn"),
+        summaryNextBtn: document.getElementById("summaryNextBtn"),
+        summaryStatus: document.getElementById("summaryStatus"),
+        taskPickerModal: document.getElementById("taskPickerModal"),
+        closeTaskPickerBtn: document.getElementById("closeTaskPickerBtn"),
+        taskPickerList: document.getElementById("taskPickerList"),
+        reportDetailModal: document.getElementById("reportDetailModal"),
+        closeReportDetailBtn: document.getElementById("closeReportDetailBtn"),
+        reportDetailHead: document.getElementById("reportDetailHead"),
+        reportDetailList: document.getElementById("reportDetailList"),
+        memberBindModal: document.getElementById("memberBindModal"),
+        closeMemberBindBtn: document.getElementById("closeMemberBindBtn"),
+        memberBindCurrent: document.getElementById("memberBindCurrent"),
+        memberBindSearchInput: document.getElementById("memberBindSearchInput"),
+        memberBindSearchBtn: document.getElementById("memberBindSearchBtn"),
+        clearMemberBindBtn: document.getElementById("clearMemberBindBtn"),
+        memberBindList: document.getElementById("memberBindList"),
+        toast: document.getElementById("toast"),
+      };
+
+      init();
+
+      async function init() {
+        bindEvents();
+        restoreBoundMemberFromStorage();
+        state.memberName = String(localStorage.getItem("inspection_member_name") || localStorage.getItem("inspection_report_reporter") || "").trim();
+        switchView("dashboard");
+        await loadBootstrap();
+        await loadCurrentMember();
+        await loadDashboard();
+        applyScanFromUrl();
+      }
+
+      function bindEvents() {
+        refs.navBackBtn.addEventListener("click", () => {
+          handleBack();
+        });
+
+        refs.headerActionBtn.addEventListener("click", () => {
+          if (state.loading) {
+            return;
+          }
+          if (isCurrentView("dashboard")) {
+            void loadDashboard();
+          }
+        });
+
+        refs.scanBtn.addEventListener("click", () => {
+          void quickScanAndStart();
+        });
+
+        refs.cameraScanBtn.addEventListener("click", () => {
+          void triggerCameraScan();
+        });
+
+        refs.scanImageInput.addEventListener("change", () => {
+          void handleScanImage();
+        });
+
+        refs.reportRemarkInput.addEventListener("input", () => {
+          saveCurrentTaskDraft();
+        });
+
+        refs.reporterInput.addEventListener("input", () => {
+          saveCurrentTaskDraft();
+        });
+
+        refs.chooseReporterBtn.addEventListener("click", () => {
+          void openMemberBindModal();
+        });
+
+        refs.scanInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            void quickScanAndStart();
+          }
+        });
+
+        refs.taskPickerList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const btn = target.closest("[data-action='pick-task']");
+          if (!btn) {
+            return;
+          }
+          const taskId = btn.getAttribute("data-task-id") || "";
+          if (!taskId) {
+            return;
+          }
+          closeTaskPicker();
+          void startTaskById(taskId);
+        });
+
+        refs.closeTaskPickerBtn.addEventListener("click", () => {
+          closeTaskPicker();
+        });
+
+        refs.taskPickerModal.addEventListener("click", (event) => {
+          if (event.target === refs.taskPickerModal) {
+            closeTaskPicker();
+          }
+        });
+
+        refs.memberBindBtn.addEventListener("click", () => {
+          void openMemberBindModal();
+        });
+
+        refs.closeReportDetailBtn.addEventListener("click", () => {
+          closeReportDetail();
+        });
+
+        refs.reportDetailModal.addEventListener("click", (event) => {
+          if (event.target === refs.reportDetailModal) {
+            closeReportDetail();
+          }
+        });
+
+        refs.memberRecentList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const trigger = target.closest("[data-action='view-report-detail']");
+          if (!trigger) {
+            return;
+          }
+          const reportId = String(trigger.getAttribute("data-report-id") || "").trim();
+          if (!reportId) {
+            return;
+          }
+          void openReportDetail(reportId);
+        });
+
+        refs.closeMemberBindBtn.addEventListener("click", () => {
+          closeMemberBindModal();
+        });
+
+        refs.memberBindModal.addEventListener("click", (event) => {
+          if (event.target === refs.memberBindModal) {
+            closeMemberBindModal();
+          }
+        });
+
+        refs.memberBindSearchBtn.addEventListener("click", () => {
+          void searchMemberBindingCandidates();
+        });
+
+        refs.memberBindSearchInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            void searchMemberBindingCandidates();
+          }
+        });
+
+        refs.clearMemberBindBtn.addEventListener("click", () => {
+          clearBoundMember();
+          renderDashboard();
+          closeMemberBindModal();
+          showToast("已清除绑定执行人");
+        });
+
+        refs.memberBindList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const trigger = target.closest("[data-action='bind-member']");
+          if (!trigger) {
+            return;
+          }
+          const payload = trigger.getAttribute("data-member") || "";
+          if (!payload) {
+            return;
+          }
+          try {
+            const member = JSON.parse(payload);
+            applyBoundMember(member, "manual");
+            closeMemberBindModal();
+            renderDashboard();
+            showToast("已绑定为默认执行人");
+          } catch (error) {
+            showToast("绑定失败，请重试");
+          }
+        });
+
+        refs.executeItemList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+
+          const actionBtn = target.closest("[data-action='set-result']");
+          if (actionBtn) {
+            const index = Number(actionBtn.getAttribute("data-index"));
+            const result = actionBtn.getAttribute("data-result") || "";
+            if (Number.isFinite(index)) {
+              setItemResult(index, result);
+            }
+            return;
+          }
+        });
+
+        const itemValueUpdate = (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const index = Number(target.getAttribute("data-index"));
+          if (!Number.isFinite(index) || !state.selectedItems[index]) {
+            return;
+          }
+          const field = target.getAttribute("data-field") || "";
+          if (!field) {
+            return;
+          }
+          if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) {
+            const previousStatus = state.selectedItems[index].resultState;
+            if (field === "photoInput" && target instanceof HTMLInputElement && target.files) {
+              state.selectedItems[index].photos = Array.from(target.files).map((file) => file.name);
+            } else {
+              state.selectedItems[index][field] = target.value;
+            }
+            normalizeItemStateByValue(index, field);
+            saveCurrentTaskDraft();
+
+            if (shouldRerenderOnFieldChange(field, event.type, previousStatus, state.selectedItems[index].resultState)) {
+              renderExecute();
+              return;
+            }
+
+            updateSingleItemCard(index);
+            updateProgress();
+          }
+        };
+
+        refs.executeItemList.addEventListener("input", itemValueUpdate);
+        refs.executeItemList.addEventListener("change", itemValueUpdate);
+
+        refs.nextPendingBtn.addEventListener("click", () => {
+          scrollToNextPendingItem();
+        });
+
+        refs.submitTaskBtn.addEventListener("click", () => {
+          void submitCurrentTask();
+        });
+
+        refs.summaryBackBtn.addEventListener("click", () => {
+          switchView("dashboard");
+          void loadDashboard();
+        });
+
+        refs.summaryNextBtn.addEventListener("click", () => {
+          const nextTask = findNextPendingTask();
+          if (!nextTask) {
+            switchView("dashboard");
+            void loadDashboard();
+            return;
+          }
+          void startTaskById(nextTask.id);
+        });
+
+        window.addEventListener("pagehide", () => {
+          saveCurrentTaskDraft();
+        });
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) {
+            saveCurrentTaskDraft();
+          }
+        });
+      }
+
+      function isCurrentView(name) {
+        return !refs[`${name}View`].classList.contains("hidden");
+      }
+
+      function switchView(name) {
+        refs.dashboardView.classList.toggle("hidden", name !== "dashboard");
+        refs.executeView.classList.toggle("hidden", name !== "execute");
+        refs.summaryView.classList.toggle("hidden", name !== "summary");
+
+        if (name === "dashboard") {
+          refs.navBackBtn.classList.add("hidden");
+          refs.headerTitle.textContent = "今日点检任务";
+          refs.headerActionBtn.textContent = "刷新";
+          refs.headerActionBtn.classList.remove("hidden");
+        } else if (name === "execute") {
+          refs.navBackBtn.classList.remove("hidden");
+          refs.headerTitle.textContent = state.selectedTask ? `${state.selectedTask.standardName || "任务执行"}` : "任务执行";
+          refs.headerActionBtn.textContent = "";
+          refs.headerActionBtn.classList.add("hidden");
+        } else {
+          refs.navBackBtn.classList.remove("hidden");
+          refs.headerTitle.textContent = "检查完成 · 汇总";
+          refs.headerActionBtn.textContent = "";
+          refs.headerActionBtn.classList.add("hidden");
+        }
+      }
+
+      function handleBack() {
+        if (isCurrentView("summary")) {
+          switchView("execute");
+          return;
+        }
+        if (isCurrentView("execute")) {
+          switchView("dashboard");
+          return;
+        }
+      }
+
+      async function loadBootstrap() {
+        setStatus("dashboard", "初始化中...");
+        try {
+          const resp = await requestApi("/inspection-report/bootstrap");
+          state.today = (resp?.data?.today || "").trim();
+          setStatus("dashboard", "初始化完成");
+        } catch (error) {
+          setStatus("dashboard", `初始化失败：${error.message}`, true);
+          showToast(`初始化失败：${error.message}`);
+        }
+      }
+
+      async function loadCurrentMember() {
+        const urlParams = new URLSearchParams(window.location.search || "");
+        const passParams = new URLSearchParams();
+        ["user_id", "userId", "user_name", "userName", "uniqueid", "uniqueId", "mobile", "email", "name", "account", "webpage_user_id", "webpage_user_name", "webpage_phone", "webpage_email", "webpage_account", "webpage_corp_user_id"].forEach((key) => {
+          const value = String(urlParams.get(key) || "").trim();
+          if (value) {
+            passParams.set(key, value);
+          }
+        });
+        const query = passParams.toString();
+        if (!query) {
+          if (!restoreBoundMemberAsCurrent()) {
+            if (state.memberName) {
+              state.currentMember = {
+                userName: state.memberName,
+              };
+              state.currentMemberSource = "cached";
+            }
+          }
+          return;
+        }
+
+        const path = `/inspection-report/current-member?${query}`;
+        const result = await requestApiSafe(path);
+        if (result.ok) {
+          const member = result.payload?.data?.member || null;
+          if (member && (member.userName || member.userId || member.uniqueId)) {
+            applyBoundMember(member, "auto");
+            return;
+          }
+        } else {
+          setStatus("dashboard", `当前成员识别失败：${result.error || "请求失败"}`, true);
+        }
+
+        if (!restoreBoundMemberAsCurrent() && state.memberName) {
+          state.currentMember = {
+            userName: state.memberName,
+          };
+          state.currentMemberSource = "cached";
+        }
+      }
+
+      async function loadDashboard() {
+        setLoading(true);
+        setStatus("dashboard", "正在加载今日任务...");
+        try {
+          const query = new URLSearchParams();
+          if (state.today) {
+            query.set("date", state.today);
+          }
+          query.set("limit", "200");
+          const resp = await requestApi(`/inspection-report/dashboard?${query.toString()}`);
+          const data = resp?.data || {};
+          state.dashboardSummary = data.summary || state.dashboardSummary;
+          state.dashboardTasks = Array.isArray(data.list) ? data.list : [];
+          await loadMemberRecentReports({ silent: true });
+          renderDashboard();
+          setStatus("dashboard", `任务加载完成，共 ${state.dashboardTasks.length} 项`);
+        } catch (error) {
+          setStatus("dashboard", `加载失败：${error.message}`, true);
+          showToast(`加载失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function renderDashboard() {
+        const summary = state.dashboardSummary || {};
+        const dateText = summary.date || state.today || formatDate(new Date());
+        refs.dashboardDate.textContent = formatDisplayDate(dateText);
+        refs.dashboardHint.textContent = `今日共 ${summary.totalCount || 0} 项任务，待执行 ${summary.pendingCount || 0} 项`;
+
+        refs.pendingCount.textContent = String(summary.pendingCount || 0);
+        refs.doneCount.textContent = String(summary.doneCount || 0);
+        refs.memberReportCount.textContent = String(state.memberRecentReports.length || 0);
+        refs.memberRecentTotalText.textContent = `${state.memberRecentReports.length || 0} 条`;
+        refs.memberBindBtn.textContent = state.memberName ? "切换执行人" : "绑定执行人";
+        refs.memberNameHint.textContent = `当前成员：${formatMemberIdentityLabel()}`;
+        renderMemberRecentList();
+      }
+
+      function formatMemberIdentityLabel() {
+        if (!state.memberName) {
+          return "未识别";
+        }
+        if (state.currentMemberSource === "auto") {
+          return `${state.memberName}（自动识别）`;
+        }
+        if (state.currentMemberSource === "bound") {
+          return `${state.memberName}（已绑定）`;
+        }
+        return state.memberName;
+      }
+
+      function restoreBoundMemberFromStorage() {
+        try {
+          const raw = localStorage.getItem(MEMBER_BIND_KEY);
+          if (!raw) {
+            state.boundMember = null;
+            return null;
+          }
+          const member = safeJsonParse(raw);
+          if (!member || typeof member !== "object") {
+            state.boundMember = null;
+            return null;
+          }
+          state.boundMember = member;
+          return member;
+        } catch (error) {
+          state.boundMember = null;
+          return null;
+        }
+      }
+
+      function restoreBoundMemberAsCurrent() {
+        const member = state.boundMember || restoreBoundMemberFromStorage();
+        if (!member) {
+          return false;
+        }
+        state.currentMember = member;
+        state.memberName = String(member.userName || member.user || member.account || "").trim();
+        state.currentMemberSource = "bound";
+        if (state.memberName) {
+          localStorage.setItem("inspection_member_name", state.memberName);
+        }
+        return Boolean(state.memberName);
+      }
+
+      function applyBoundMember(member, source = "manual") {
+        const nextMember = member && typeof member === "object" ? {
+          id: member.id || "",
+          user: member.user || member.account || "",
+          userId: member.userId || "",
+          userName: member.userName || member.name || member.user || "",
+          uniqueId: member.uniqueId || "",
+          mobile: member.mobile || "",
+          email: member.email || "",
+        } : null;
+        if (!nextMember) {
+          return;
+        }
+        state.boundMember = nextMember;
+        state.currentMember = nextMember;
+        state.memberName = String(nextMember.userName || nextMember.user || "").trim();
+        state.currentMemberSource = source === "auto" ? "auto" : "bound";
+        localStorage.setItem(MEMBER_BIND_KEY, JSON.stringify(nextMember));
+        if (state.memberName) {
+          localStorage.setItem("inspection_member_name", state.memberName);
+          if (isCurrentView("execute")) {
+            syncReporterField();
+            saveCurrentTaskDraft();
+          }
+        }
+        void loadMemberRecentReports({ silent: true }).then(() => {
+          if (isCurrentView("dashboard")) {
+            renderDashboard();
+          }
+        });
+      }
+
+      function clearBoundMember() {
+        const currentReporter = refs.reporterInput ? String(refs.reporterInput.value || "").trim() : "";
+        state.boundMember = null;
+        localStorage.removeItem(MEMBER_BIND_KEY);
+        localStorage.removeItem("inspection_member_name");
+        localStorage.removeItem("inspection_report_reporter");
+        if (state.currentMemberSource === "bound") {
+          state.currentMember = null;
+          state.currentMemberSource = "";
+          state.memberName = "";
+        } else if (state.currentMemberSource !== "auto") {
+          state.memberName = "";
+        }
+        if (isCurrentView("execute")) {
+          refs.reporterInput.readOnly = false;
+          refs.reporterInput.value = currentReporter;
+          syncReporterField();
+          saveCurrentTaskDraft();
+        }
+        state.memberRecentReports = [];
+      }
+
+      async function loadMemberRecentReports(options = {}) {
+        const silent = Boolean(options.silent);
+        if (!state.memberName) {
+          state.memberRecentReports = [];
+          if (!silent) {
+            setStatus("dashboard", "未识别当前成员，无法加载“我的最近报工”");
+          }
+          return;
+        }
+        try {
+          const query = new URLSearchParams();
+          query.set("limit", "30");
+          query.set("reporter", state.memberName);
+          const resp = await requestApi(`/inspection-report/recent?${query.toString()}`);
+          const list = Array.isArray(resp?.data?.list) ? resp.data.list : [];
+          state.memberRecentReports = list;
+        } catch (error) {
+          state.memberRecentReports = [];
+          if (!silent) {
+            setStatus("dashboard", `最近报工加载失败：${error.message}`, true);
+            showToast(`最近报工加载失败：${error.message}`);
+          }
+        }
+      }
+
+      function renderMemberRecentList() {
+        refs.memberRecentList.innerHTML = "";
+        if (!state.memberName) {
+          refs.memberRecentList.innerHTML = '<div class="empty">当前未识别成员，可先点击“绑定执行人”，后续扫码会自动带出</div>';
+          return;
+        }
+        if (!state.memberRecentReports.length) {
+          refs.memberRecentList.innerHTML = '<div class="empty">该成员暂无最近报工记录</div>';
+          return;
+        }
+        state.memberRecentReports.forEach((row) => {
+          const div = document.createElement("div");
+          div.className = "task-item clickable";
+          const result = String(row.result || row.currentStatus || "-");
+          const resultTagClass = result.includes("异常") ? "urgent" : "done";
+          div.innerHTML = `
+            <div class="task-top">
+              <div style="min-width:0">
+                <div class="task-name">${escapeHtml(row.deviceName || row.deviceCode || "设备")} — ${escapeHtml(row.standardName || "-")}</div>
+                <div class="task-meta">${escapeHtml(row.reportDateText || "-")} · 报工人 ${escapeHtml(row.reporter || "-")}</div>
+                <div class="task-tags">
+                  <span class="tag">${escapeHtml(row.reportNo || "报工记录")}</span>
+                  <span class="tag ${resultTagClass}">${escapeHtml(result)}</span>
+                </div>
+              </div>
+              <div class="task-action">
+                <button class="minor-link" type="button" data-action="view-report-detail" data-report-id="${escapeHtml(row.id || "")}">查看详情</button>
+              </div>
+            </div>
+          `;
+          refs.memberRecentList.appendChild(div);
+        });
+      }
+
+      async function openMemberBindModal() {
+        refs.memberBindModal.classList.remove("hidden");
+        renderMemberBindCurrent();
+        refs.memberBindList.innerHTML = '<div class="empty">正在加载通讯录成员...</div>';
+        refs.memberBindSearchInput.value = resolveBindSearchKeyword();
+        await searchMemberBindingCandidates();
+      }
+
+      function closeMemberBindModal() {
+        refs.memberBindModal.classList.add("hidden");
+      }
+
+      function renderMemberBindCurrent() {
+        if (!state.boundMember && !state.memberName) {
+          refs.memberBindCurrent.textContent = "当前未绑定执行人";
+          return;
+        }
+        const label = formatMemberIdentityLabel();
+        refs.memberBindCurrent.textContent = `当前默认执行人：${label}`;
+      }
+
+      function resolveBindSearchKeyword() {
+        const executeReporter = isCurrentView("execute") ? String(refs.reporterInput.value || "").trim() : "";
+        return executeReporter || state.memberName || String(refs.memberBindSearchInput.value || "").trim() || "";
+      }
+
+      async function searchMemberBindingCandidates() {
+        try {
+          const query = new URLSearchParams();
+          query.set("limit", "50");
+          const keyword = String(refs.memberBindSearchInput.value || "").trim();
+          if (keyword) {
+            query.set("q", keyword);
+          }
+          const resp = await requestApi(`/inspection-report/member-search?${query.toString()}`);
+          const list = Array.isArray(resp?.data?.list) ? resp.data.list : [];
+          renderMemberBindList(list);
+        } catch (error) {
+          refs.memberBindList.innerHTML = `<div class="empty">通讯录加载失败：${escapeHtml(error.message || "请求失败")}</div>`;
+        }
+      }
+
+      function renderMemberBindList(list) {
+        refs.memberBindList.innerHTML = "";
+        if (!Array.isArray(list) || !list.length) {
+          refs.memberBindList.innerHTML = '<div class="empty">未搜索到匹配成员，请换个姓名/账号/手机号试试</div>';
+          return;
+        }
+
+        list.forEach((member) => {
+          const div = document.createElement("div");
+          div.className = "task-item";
+          const info = [
+            member.user || member.account || "",
+            member.mobile || "",
+            member.userId || "",
+          ].filter(Boolean).join(" · ");
+          div.innerHTML = `
+            <div class="task-top">
+              <div style="min-width:0">
+                <div class="task-name">${escapeHtml(member.userName || member.user || "成员")}</div>
+                <div class="task-meta">${escapeHtml(info || "百数云通讯录成员")}</div>
+              </div>
+              <div class="task-action">
+                <button class="btn primary" type="button" data-action="bind-member" data-member='${escapeHtml(JSON.stringify(member))}'>绑定</button>
+              </div>
+            </div>
+          `;
+          refs.memberBindList.appendChild(div);
+        });
+      }
+
+      function syncReporterField() {
+        const locked = state.currentMemberSource === "auto" || state.currentMemberSource === "bound";
+        const currentValue = String(refs.reporterInput.value || "").trim();
+        const defaultValue = resolveReporterDefaultName("");
+        if (locked) {
+          refs.reporterInput.value = defaultValue;
+        } else if (!currentValue && defaultValue) {
+          refs.reporterInput.value = defaultValue;
+        }
+        refs.reporterInput.readOnly = locked;
+        refs.reporterInput.placeholder = locked ? "已自动带出执行人" : "请输入或选择执行人";
+        refs.chooseReporterBtn.textContent = locked || state.boundMember ? "切换执行人" : "选择执行人";
+        if (locked) {
+          refs.reporterHint.textContent = `当前已带出：${formatMemberIdentityLabel()}，如需更换可点右侧切换`;
+          return;
+        }
+        if (refs.reporterInput.value.trim()) {
+          refs.reporterHint.textContent = "当前可继续手动修改，也可从通讯录重新选择";
+          return;
+        }
+        refs.reporterHint.textContent = "未识别执行人时，可手动输入，也可从通讯录选择";
+      }
+
+      function applyScanFromUrl() {
+        try {
+          const params = new URLSearchParams(window.location.search || "");
+          const scan = (params.get("scan") || "").trim();
+          if (!scan) {
+            return;
+          }
+          refs.scanInput.value = normalizeScanValue(scan);
+          void quickScanAndStart();
+        } catch (error) {
+          console.warn("apply scan from url failed:", error);
+        }
+      }
+
+      async function triggerCameraScan() {
+        if (state.loading) {
+          return;
+        }
+
+        if (isDingTalkEnv()) {
+          try {
+            const decoded = await scanWithDingTalkNative();
+            refs.scanInput.value = decoded;
+            await quickScanAndStart();
+            return;
+          } catch (error) {
+            console.warn("dingtalk native scan failed:", error);
+            if (isUserCancelError(error)) {
+              setStatus("dashboard", "已取消扫码");
+              return;
+            }
+          }
+        }
+
+        refs.scanImageInput.value = "";
+        refs.scanImageInput.click();
+      }
+
+      async function handleScanImage() {
+        const file = refs.scanImageInput.files && refs.scanImageInput.files[0];
+        refs.scanImageInput.value = "";
+        if (!file) {
+          return;
+        }
+        try {
+          const decoded = normalizeScanValue(await decodeQrFromFile(file));
+          refs.scanInput.value = decoded;
+          await quickScanAndStart();
+        } catch (error) {
+          showToast(error.message || "未识别到二维码");
+        }
+      }
+
+      async function decodeQrFromFile(file) {
+        const errors = [];
+
+        try {
+          return await decodeQrWithBarcodeDetector(file);
+        } catch (error) {
+          if (error && error.message) {
+            errors.push(error.message);
+          }
+          console.warn("barcode detector decode failed:", error);
+        }
+
+        try {
+          return await decodeQrViaServer(file);
+        } catch (error) {
+          if (error && error.message) {
+            errors.push(error.message);
+          }
+          console.warn("server qr decode failed:", error);
+        }
+
+        throw new Error(errors.pop() || "未识别到二维码，请重试或手动输入");
+      }
+
+      async function decodeQrWithBarcodeDetector(file) {
+        if (!("BarcodeDetector" in window)) {
+          throw new Error("当前环境不支持本地识别");
+        }
+        const detector = new BarcodeDetector({ formats: ["qr_code"] });
+        let bitmap = null;
+        try {
+          bitmap = await createImageBitmap(file);
+          const results = await detector.detect(bitmap);
+          const first = Array.isArray(results) ? results.find((item) => item && item.rawValue) : null;
+          if (!first || !String(first.rawValue || "").trim()) {
+            throw new Error("未识别到二维码，请重新拍照");
+          }
+          return String(first.rawValue || "").trim();
+        } finally {
+          if (bitmap && typeof bitmap.close === "function") {
+            bitmap.close();
+          }
+        }
+      }
+
+      async function decodeQrViaServer(file) {
+        const imageBase64 = await buildQrDecodePayload(file);
+        const resp = await requestApi("/qr/decode", "POST", { imageBase64 });
+        const value = normalizeScanValue(resp?.data?.scanValue || resp?.data?.rawValue || "");
+        if (!value) {
+          throw new Error("未识别到二维码，请重新拍照");
+        }
+        return value;
+      }
+
+      async function buildQrDecodePayload(file) {
+        const dataUrl = await readFileAsDataUrl(file);
+        if (!/^data:image\//i.test(dataUrl)) {
+          throw new Error("请选择二维码图片后再重试");
+        }
+        try {
+          return await compressImageDataUrl(dataUrl);
+        } catch (error) {
+          console.warn("compress image failed:", error);
+          if (/^data:image\/(png|jpeg|jpg)/i.test(dataUrl)) {
+            return dataUrl;
+          }
+          throw new Error("图片处理失败，请重新拍摄二维码");
+        }
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(new Error("图片读取失败，请重试"));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function compressImageDataUrl(dataUrl) {
+        const image = await loadImageFromDataUrl(dataUrl);
+        const width = Number(image.naturalWidth || image.width || 0);
+        const height = Number(image.naturalHeight || image.height || 0);
+        if (!width || !height) {
+          return dataUrl;
+        }
+
+        const maxSide = 1600;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+
+        const ctx = canvas.getContext("2d", { alpha: false });
+        if (!ctx) {
+          return dataUrl;
+        }
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.88);
+      }
+
+      function loadImageFromDataUrl(dataUrl) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error("图片加载失败"));
+          image.src = dataUrl;
+        });
+      }
+
+      function isUserCancelError(error) {
+        const text = String(error && error.message ? error.message : error || "").toLowerCase();
+        return text.includes("cancel") || text.includes("canceled") || text.includes("取消");
+      }
+
+      function isDingTalkEnv() {
+        return /DingTalk/i.test(String(navigator.userAgent || ""));
+      }
+
+      function isWeChatEnv() {
+        return /MicroMessenger/i.test(String(navigator.userAgent || ""));
+      }
+
+      function normalizeScanValue(raw) {
+        const text = String(raw || "").trim();
+        if (!text) {
+          return "";
+        }
+        try {
+          const url = new URL(text, window.location.href);
+          const scan =
+            String(
+              url.searchParams.get("scan") ||
+                url.searchParams.get("scanValue") ||
+                url.searchParams.get("deviceCode") ||
+                url.searchParams.get("code") ||
+                ""
+            ).trim();
+          if (scan) {
+            return scan;
+          }
+        } catch (error) {
+          console.warn("normalize scan url failed:", error);
+        }
+        return text;
+      }
+
+      function extractDingTalkScanText(payload) {
+        const queue = [payload];
+        const visited = new Set();
+        const candidateKeys = ["text", "rawValue", "value", "code", "result", "data", "content"];
+
+        while (queue.length) {
+          const current = queue.shift();
+          if (current == null) {
+            continue;
+          }
+          if (typeof current === "string" || typeof current === "number") {
+            const normalized = normalizeScanValue(current);
+            if (normalized) {
+              return normalized;
+            }
+            continue;
+          }
+          if (typeof current !== "object") {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          candidateKeys.forEach((key) => {
+            if (Object.prototype.hasOwnProperty.call(current, key)) {
+              queue.push(current[key]);
+            }
+          });
+        }
+
+        return "";
+      }
+
+      function extractDingTalkErrorMessage(payload) {
+        if (!payload) {
+          return "钉钉扫码失败";
+        }
+        if (typeof payload === "string") {
+          return payload;
+        }
+        const fields = [payload.errorMessage, payload.message, payload.msg, payload.error, payload.errorMsg];
+        for (const item of fields) {
+          if (typeof item === "string" && item.trim()) {
+            return item.trim();
+          }
+        }
+        return "钉钉扫码失败";
+      }
+
+      async function ensureDingTalkJsapi() {
+        if (window.dd && window.dd.biz && window.dd.biz.util) {
+          return window.dd;
+        }
+        if (!isDingTalkEnv()) {
+          throw new Error("当前不是钉钉环境");
+        }
+        if (dingTalkJsapiPromise) {
+          return dingTalkJsapiPromise;
+        }
+
+        dingTalkJsapiPromise = new Promise((resolve, reject) => {
+          const existing = document.querySelector("script[data-sdk='dingtalk-jsapi']");
+          if (existing) {
+            existing.addEventListener("load", () => {
+              if (window.dd) {
+                resolve(window.dd);
+                return;
+              }
+              reject(new Error("钉钉 JSAPI 加载失败"));
+            });
+            existing.addEventListener("error", () => reject(new Error("钉钉 JSAPI 加载失败")));
+            return;
+          }
+
+          const script = document.createElement("script");
+          script.src = DINGTALK_JSAPI_URL;
+          script.async = true;
+          script.dataset.sdk = "dingtalk-jsapi";
+          script.onload = () => {
+            if (window.dd) {
+              resolve(window.dd);
+              return;
+            }
+            reject(new Error("钉钉 JSAPI 初始化失败"));
+          };
+          script.onerror = () => reject(new Error("钉钉 JSAPI 加载失败"));
+          document.head.appendChild(script);
+        });
+
+        return dingTalkJsapiPromise;
+      }
+
+      async function scanWithDingTalkNative() {
+        const dd = await ensureDingTalkJsapi();
+        if (!dd || !dd.biz || !dd.biz.util || typeof dd.biz.util.scan !== "function") {
+          throw new Error("当前钉钉环境未提供原生扫码能力");
+        }
+
+        return new Promise((resolve, reject) => {
+          let settled = false;
+          const timeoutId = window.setTimeout(() => {
+            finishReject(new Error("钉钉扫码初始化超时，请稍后重试"));
+          }, 4000);
+
+          const finishResolve = (value) => {
+            if (settled) {
+              return;
+            }
+            settled = true;
+            window.clearTimeout(timeoutId);
+            resolve(value);
+          };
+
+          const finishReject = (error) => {
+            if (settled) {
+              return;
+            }
+            settled = true;
+            window.clearTimeout(timeoutId);
+            reject(error instanceof Error ? error : new Error(String(error || "钉钉扫码失败")));
+          };
+
+          const invokeScan = () => {
+            try {
+              dd.biz.util.scan({
+                type: "all",
+                onSuccess(result) {
+                  const text = extractDingTalkScanText(result);
+                  if (!text) {
+                    finishReject(new Error("未识别到有效二维码"));
+                    return;
+                  }
+                  finishResolve(text);
+                },
+                onFail(error) {
+                  finishReject(new Error(extractDingTalkErrorMessage(error)));
+                },
+              });
+            } catch (error) {
+              finishReject(error);
+            }
+          };
+
+          if (typeof dd.ready === "function") {
+            try {
+              dd.ready(invokeScan);
+              if (typeof dd.error === "function") {
+                dd.error((error) => {
+                  finishReject(new Error(extractDingTalkErrorMessage(error)));
+                });
+              }
+            } catch (error) {
+              finishReject(error);
+            }
+            return;
+          }
+
+          invokeScan();
+        });
+      }
+
+      async function quickScanAndStart() {
+        const scanValue = normalizeScanValue(refs.scanInput.value);
+        if (!scanValue) {
+          showToast("请输入扫码码值、设备编号或库房编码");
+          return;
+        }
+        refs.scanInput.value = scanValue;
+
+        setLoading(true);
+        setStatus("dashboard", "正在扫码匹配任务...");
+        try {
+          const resp = await requestApi("/inspection-report/scan", "POST", { scanValue });
+          const data = resp?.data || {};
+          const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+          state.scanValue = scanValue;
+          state.scanDevice = data.device || null;
+          state.scanTaskCandidates = tasks.map((task) => mergeTaskWithDevice(task, state.scanDevice));
+
+          if (!state.scanTaskCandidates.length) {
+            showToast("该检查对象暂无可执行任务");
+            setStatus("dashboard", "检查对象已识别，但暂无可执行任务", true);
+            return;
+          }
+
+          if (state.scanTaskCandidates.length === 1) {
+            await startTask(state.scanTaskCandidates[0]);
+            const matchedDeviceText = `${state.scanDevice?.code || "-"} ${state.scanDevice?.name || "-"}`.trim();
+            setStatus("dashboard", `已匹配检查对象：${matchedDeviceText}`);
+            return;
+          }
+
+          openTaskPicker(state.scanTaskCandidates);
+          setStatus("dashboard", `已识别 ${state.scanTaskCandidates.length} 项任务，请选择一项`);
+        } catch (error) {
+          setStatus("dashboard", `扫码失败：${error.message}`, true);
+          showToast(`扫码失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function mergeTaskWithDevice(task, device) {
+        const existing = state.dashboardTasks.find((row) => String(row.id || "") === String(task.id || ""));
+        if (existing) {
+          return existing;
+        }
+
+        const merged = {
+          ...task,
+          category: inferCategory(task.ruleName, task.standardName, task.standardCode),
+          statusText: task.taskStatus || "待执行",
+          urgent: false,
+          pending: !isDoneStatus(task.taskStatus || ""),
+          done: isDoneStatus(task.taskStatus || ""),
+          workshop: device ? device.workshop || "" : "",
+          department: device ? device.department || "" : "",
+          deviceType: device ? device.type || "" : "",
+          deviceStatus: device ? device.status || "" : "",
+          deviceName: task.deviceName || (device ? device.name || "" : ""),
+          deviceCode: task.deviceCode || (device ? device.code || "" : ""),
+        };
+        return merged;
+      }
+
+      function openTaskPicker(tasks) {
+        refs.taskPickerList.innerHTML = "";
+        tasks.forEach((task) => {
+          const div = document.createElement("div");
+          div.className = "task-item";
+          div.innerHTML = `
+            <div class="task-top">
+              <div style="min-width:0">
+                <div class="task-name">${escapeHtml(task.deviceName || task.deviceCode || "设备")} — ${escapeHtml(task.standardName || task.standardCode || "点检")}</div>
+                <div class="task-meta">${escapeHtml(task.taskDateText || "-")} · ${escapeHtml(task.category || "点检")}</div>
+              </div>
+              <div class="task-action">
+                <button class="btn primary" data-action="pick-task" data-task-id="${escapeHtml(task.id || "")}">执行</button>
+              </div>
+            </div>
+          `;
+          refs.taskPickerList.appendChild(div);
+        });
+        refs.taskPickerModal.classList.remove("hidden");
+      }
+
+      function closeTaskPicker() {
+        refs.taskPickerModal.classList.add("hidden");
+      }
+
+      async function openReportDetail(reportId) {
+        if (!reportId) {
+          return;
+        }
+        state.selectedRecentReport = null;
+        refs.reportDetailHead.classList.add("hidden");
+        refs.reportDetailHead.innerHTML = "";
+        refs.reportDetailList.innerHTML = '<div class="empty">正在加载报工详情...</div>';
+        refs.reportDetailModal.classList.remove("hidden");
+        try {
+          const query = new URLSearchParams();
+          query.set("reportId", reportId);
+          query.set("limit", "100");
+          const resp = await requestApi(`/inspection-report/recent-details?${query.toString()}`);
+          const report = resp?.data?.report || null;
+          const list = Array.isArray(resp?.data?.list) ? resp.data.list : [];
+          state.selectedRecentReport = report;
+          renderReportDetail(report, list);
+        } catch (error) {
+          refs.reportDetailHead.classList.add("hidden");
+          refs.reportDetailHead.innerHTML = "";
+          refs.reportDetailList.innerHTML = `<div class="empty">详情加载失败：${escapeHtml(error.message || "请求失败")}</div>`;
+        }
+      }
+
+      function closeReportDetail() {
+        refs.reportDetailModal.classList.add("hidden");
+      }
+
+      function renderReportDetail(report, list) {
+        if (report) {
+          const result = String(report.result || report.currentStatus || "-");
+          refs.reportDetailHead.classList.remove("hidden");
+          refs.reportDetailHead.innerHTML = `
+            <h3>${escapeHtml(report.deviceName || report.deviceCode || "设备")} — ${escapeHtml(report.standardName || "点检")}</h3>
+            <p>${escapeHtml(report.reportDateText || "-")} · 报工人 ${escapeHtml(report.reporter || "-")} · 结果 ${escapeHtml(result)}</p>
+          `;
+        } else {
+          refs.reportDetailHead.classList.add("hidden");
+          refs.reportDetailHead.innerHTML = "";
+        }
+
+        refs.reportDetailList.innerHTML = "";
+        if (!Array.isArray(list) || !list.length) {
+          refs.reportDetailList.innerHTML = '<div class="empty">当前报工暂无明细记录</div>';
+          return;
+        }
+
+        list.forEach((row, index) => {
+          const abnormal = String(row.abnormal || "").trim() === "是";
+          const div = document.createElement("div");
+          div.className = `detail-row ${abnormal ? "abnormal" : ""}`;
+          div.innerHTML = `
+            <div class="detail-row-top">
+              <div style="min-width:0">
+                <div class="detail-row-title">${escapeHtml(row.pointPart || "-")} · ${escapeHtml(row.pointItem || `明细${index + 1}`)}</div>
+                <div class="detail-row-meta">序号 ${escapeHtml(row.seq || index + 1)} ${row.submitTime ? `· ${escapeHtml(row.submitTime)}` : ""}</div>
+              </div>
+              <span class="tag ${abnormal ? "urgent" : "done"}">${abnormal ? "异常" : "正常"}</span>
+            </div>
+            <div class="detail-row-body">
+              <div>录入结果：${escapeHtml(row.resultValue || "-")}</div>
+              ${abnormal ? `<div>异常说明：${escapeHtml(row.abnormalDesc || "未填写")}</div>` : ""}
+            </div>
+          `;
+          refs.reportDetailList.appendChild(div);
+        });
+      }
+
+      async function startTaskById(taskId) {
+        if (!taskId) {
+          return;
+        }
+        const task =
+          state.dashboardTasks.find((item) => String(item.id || "") === String(taskId)) ||
+          state.scanTaskCandidates.find((item) => String(item.id || "") === String(taskId));
+        if (!task) {
+          showToast("未找到任务，请刷新后重试");
+          return;
+        }
+        await startTask(task);
+      }
+
+      async function startTask(task) {
+        if (!task || !task.id) {
+          return;
+        }
+
+        state.selectedTask = task;
+        state.selectedItems = [];
+        state.reportStartAt = nowDateTimeText();
+        refs.reportRemarkInput.value = "";
+        const cachedReporter = localStorage.getItem("inspection_report_reporter") || "";
+        const defaultReporter = resolveReporterDefaultName(cachedReporter);
+        refs.reporterInput.value = defaultReporter;
+        syncReporterField();
+        refs.executeItemList.innerHTML = "";
+        refs.executeEmpty.textContent = "正在加载点检明细...";
+        refs.executeEmpty.classList.remove("hidden");
+        refs.executeFoot.classList.add("hidden");
+        switchView("execute");
+        renderExecuteHeader();
+
+        setLoading(true);
+        setStatus("execute", "正在加载点检明细...");
+        try {
+          const resp = await requestApi("/inspection-report/task-items", "POST", { taskId: task.id });
+          const items = Array.isArray(resp?.data?.items) ? resp.data.items : [];
+          const stats = resp?.data?.stats || {};
+          state.selectedItems = items.map((item) => buildTaskItemState(item));
+          const restoredDraft = restoreTaskDraft(task);
+          renderExecute();
+
+          if (!state.selectedItems.length) {
+            const sampleText = Array.isArray(stats.sampleDetailRefs) && stats.sampleDetailRefs.length
+              ? `；样例：${stats.sampleDetailRefs.slice(0, 3).map((row) => `[${row.standardId || "-"}|${row.standardName || "-"}]`).join(" ")}`
+              : "";
+            setStatus(
+              "execute",
+              `当前任务未匹配到明细。任务标准[ID:${stats.taskStandardId || "-"}/编号:${stats.taskStandardCode || "-"}/名称:${stats.taskStandardName || "-"}]，明细总数${stats.totalDetailCount || 0}，启用${stats.enabledDetailCount || 0}，匹配${stats.matchedDetailCount || 0}${sampleText}`,
+              true
+            );
+          } else {
+            setStatus("execute", restoredDraft ? `已恢复暂存内容，共 ${state.selectedItems.length} 项` : `明细加载完成，共 ${state.selectedItems.length} 项`);
+            if (restoredDraft) {
+              showToast("已恢复上次未提交内容");
+            } else if (!String(refs.reporterInput.value || "").trim()) {
+              showToast("可点“选择执行人”从通讯录选择报工人");
+            }
+          }
+        } catch (error) {
+          state.selectedItems = [];
+          renderExecute();
+          setStatus("execute", `明细加载失败：${error.message}`, true);
+          showToast(`明细加载失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function renderExecuteHeader() {
+        const task = state.selectedTask;
+        if (!task) {
+          return;
+        }
+
+        refs.executeTitle.textContent = task.deviceName || task.deviceCode || "设备";
+        const chips = [
+          task.category || inferCategory(task.ruleName, task.standardName, task.standardCode),
+          task.taskDateText || "",
+        ].filter(Boolean);
+        refs.executeChips.innerHTML = chips.map((chip) => `<span class="chip">${escapeHtml(chip)}</span>`).join("");
+      }
+
+      function renderExecute() {
+        renderExecuteHeader();
+        refs.executeItemList.innerHTML = "";
+
+        if (!state.selectedItems.length) {
+          refs.executeEmpty.classList.remove("hidden");
+          refs.executeEmpty.textContent = "当前任务暂无可录入明细。";
+          refs.executeFoot.classList.add("hidden");
+          updateProgress();
+          return;
+        }
+
+        refs.executeEmpty.classList.add("hidden");
+        refs.executeFoot.classList.remove("hidden");
+
+        state.selectedItems.forEach((item, index) => {
+          const filled = isItemFilled(item);
+          const status = resolveItemResultState(item, filled);
+          const itemClass = status === "abnormal" ? "abnormal" : filled ? "done" : "";
+          const executeMode = getItemExecuteMode(item);
+
+          const div = document.createElement("div");
+          div.className = `item-card ${itemClass}`;
+          div.setAttribute("data-item-index", String(index));
+          div.innerHTML = `
+            <div class="item-head">
+              <div style="display:flex;gap:8px;min-width:0">
+                <span class="item-no">${escapeHtml(item.seq || index + 1)}</span>
+                <div style="min-width:0">
+                  <div class="item-name">${escapeHtml(item.pointPart || "-")} · ${escapeHtml(item.pointItem || "-")}</div>
+                  <div class="item-desc">标准：${escapeHtml(item.judgeStandard || "-")} ${item.unit ? ` | 单位：${escapeHtml(item.unit)}` : ""}</div>
+                  <div class="item-meta">
+                    <span class="meta-chip">${escapeHtml(getExecuteModeLabel(executeMode))}</span>
+                    ${item.checkMethod ? `<span class="meta-chip">执行方式：${escapeHtml(item.checkMethod)}</span>` : ""}
+                  </div>
+                </div>
+              </div>
+              <span class="item-status ${escapeHtml(status)}">${escapeHtml(itemStatusText(status))}</span>
+            </div>
+
+            ${renderResultBar(index, item)}
+            ${renderItemInput(index, item)}
+            ${renderAbnormalBox(index, item)}
+          `;
+          refs.executeItemList.appendChild(div);
+        });
+
+        updateProgress();
+      }
+
+      function renderItemInput(index, item) {
+        const executeMode = getItemExecuteMode(item);
+
+        if (executeMode === "meter") {
+          const judge = evaluateMeterValue(item);
+          return `
+            <div class="field">
+              <label><span class="required">*</span>抄表数值</label>
+              <input class="input" type="number" inputmode="decimal" data-index="${index}" data-field="numericValue" value="${escapeHtml(item.numericValue || "")}" placeholder="请输入数值" />
+            </div>
+            ${renderJudgeHint(judge)}
+          `;
+        }
+
+        if (executeMode === "status") {
+          const options = Array.isArray(item.options) ? item.options : [];
+          const optionHtml = ['<option value="">请选择</option>']
+            .concat(options.map((opt) => `<option value="${escapeHtml(opt)}" ${item.optionValue === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`))
+            .join("");
+          return `
+            <div class="field">
+              <label><span class="required">*</span>状态选择</label>
+              <select class="select" data-index="${index}" data-field="optionValue">${optionHtml}</select>
+            </div>
+          `;
+        }
+
+        if (executeMode === "normal_abnormal") {
+          return "";
+        }
+
+        return `
+          <div class="field">
+            <label><span class="required">*</span>录入结果</label>
+            <input class="input" type="text" data-index="${index}" data-field="inputValue" value="${escapeHtml(item.inputValue || "")}" placeholder="请输入结果" />
+          </div>
+        `;
+      }
+
+      function renderResultBar(index, item) {
+        if (getItemExecuteMode(item) !== "normal_abnormal") {
+          return "";
+        }
+
+        return `
+          <div class="result-bar">
+            <button class="result-btn ${item.resultState === "normal" ? "active normal" : ""}" data-action="set-result" data-index="${index}" data-result="normal">正常</button>
+            <button class="result-btn ${item.resultState === "abnormal" ? "active abnormal" : ""}" data-action="set-result" data-index="${index}" data-result="abnormal">异常</button>
+          </div>
+        `;
+      }
+
+      function renderJudgeHint(judge) {
+        if (!judge) {
+          return "";
+        }
+        return `
+          <div class="judge-hint ${escapeHtml(judge.status || "pending")}" data-role="meter-judge">
+            <span>自动判定</span><strong>${escapeHtml(judge.label || "待填")}</strong>
+            ${judge.detail ? `<em>${escapeHtml(judge.detail)}</em>` : ""}
+          </div>
+        `;
+      }
+
+      function renderAbnormalBox(index, item) {
+        if (item.resultState !== "abnormal") {
+          return "";
+        }
+
+        const photos = Array.isArray(item.photos) ? item.photos : [];
+        const photoHtml = photos.length
+          ? `<div class="photos">${photos.map((name) => `<span class="photo-chip">${escapeHtml(name)}</span>`).join("")}</div>`
+          : "";
+
+        return `
+          <div class="abnormal-box">
+            <div class="field">
+              <label>${item.requireDescOnAbnormal ? '<span class="required">*</span>' : ""}异常描述</label>
+              <textarea class="textarea" data-index="${index}" data-field="abnormalDesc" placeholder="请填写异常现象">${escapeHtml(item.abnormalDesc || "")}</textarea>
+            </div>
+            <div class="field">
+              <label>处理措施</label>
+              <textarea class="textarea" data-index="${index}" data-field="handling" placeholder="可填写处理措施">${escapeHtml(item.handling || "")}</textarea>
+            </div>
+            <div class="field">
+              <label>${item.requirePhotoOnAbnormal ? '<span class="required">*</span>' : ""}异常照片</label>
+              <input class="input" type="file" accept="image/*" capture="environment" multiple data-index="${index}" data-field="photoInput" />
+              ${photoHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      function setItemResult(index, result) {
+        const item = state.selectedItems[index];
+        if (!item || getItemExecuteMode(item) !== "normal_abnormal") {
+          return;
+        }
+
+        if (result === "normal") {
+          item.resultState = "normal";
+        } else if (result === "abnormal") {
+          item.resultState = "abnormal";
+        } else {
+          return;
+        }
+
+        saveCurrentTaskDraft();
+        renderExecute();
+      }
+
+      function normalizeItemStateByValue(index, field) {
+        const item = state.selectedItems[index];
+        if (!item) {
+          return;
+        }
+
+        const executeMode = getItemExecuteMode(item);
+
+        if (field === "optionValue") {
+          const value = String(item.optionValue || "").trim();
+          if (executeMode === "status") {
+            item.resultState = inferStatusResultState(item, value);
+            return;
+          }
+          item.resultState = value ? "normal" : "pending";
+          return;
+        }
+
+        if (field === "numericValue") {
+          const judge = evaluateMeterValue(item);
+          item.resultState = judge.status;
+          return;
+        }
+
+        if (field === "inputValue") {
+          const value = String(item.inputValue || "").trim();
+          item.resultState = value ? "normal" : "pending";
+        }
+      }
+
+      function updateProgress() {
+        const total = state.selectedItems.length;
+        const filled = state.selectedItems.filter((item) => isItemFilled(item)).length;
+        refs.progressText.textContent = `${filled} / ${total} 项`;
+        const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
+        refs.progressBar.style.width = `${pct}%`;
+      }
+
+      function scrollToNextPendingItem() {
+        if (!state.selectedItems.length) {
+          return;
+        }
+        const index = state.selectedItems.findIndex((item) => !isItemFilled(item));
+        if (index < 0) {
+          showToast("全部项目已填写，可直接提交");
+          return;
+        }
+        const element = refs.executeItemList.querySelector(`[data-item-index='${index}']`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+
+      async function submitCurrentTask() {
+        if (!state.selectedTask) {
+          showToast("未选择任务");
+          return;
+        }
+        if (!state.selectedItems.length) {
+          showToast("当前任务没有可提交明细");
+          return;
+        }
+
+        const reporter = refs.reporterInput.value.trim();
+        if (!reporter) {
+          showToast("请填写报工人");
+          return;
+        }
+        localStorage.setItem("inspection_report_reporter", reporter);
+        state.memberName = reporter;
+        localStorage.setItem("inspection_member_name", reporter);
+
+        const validationError = validateBeforeSubmit(state.selectedItems);
+        if (validationError) {
+          showToast(validationError);
+          return;
+        }
+
+        const payload = {
+          taskId: state.selectedTask.id,
+          scanValue: state.scanValue || refs.scanInput.value.trim(),
+          reporter,
+          remark: refs.reportRemarkInput.value.trim(),
+          startedAt: state.reportStartAt || nowDateTimeText(),
+          endedAt: nowDateTimeText(),
+          items: state.selectedItems.map((item) => {
+            const isAbnormal = item.resultState === "abnormal";
+            const inputValue = item.inputValue || "";
+            const optionValue = item.optionValue || "";
+            const numericValue = item.numericValue;
+            return {
+              standardDetailId: item.standardDetailId,
+              seq: item.seq,
+              pointPart: item.pointPart,
+              pointItem: item.pointItem,
+              checkMethod: item.checkMethod || "",
+              executeMode: getItemExecuteMode(item),
+              judgeStandard: item.judgeStandard,
+              unit: item.unit,
+              inputValue,
+              optionValue,
+              numericValue: numericValue === "" || numericValue === null || numericValue === undefined ? "" : Number(numericValue),
+              isAbnormal,
+              abnormalDesc: item.abnormalDesc || "",
+              handling: item.handling || "",
+              photos: Array.isArray(item.photos) ? item.photos : [],
+            };
+          }),
+        };
+
+        setLoading(true);
+        setStatus("execute", "正在提交报工...");
+        try {
+          const resp = await requestApi("/inspection-report/submit", "POST", payload);
+          const data = resp?.data || {};
+          setStatus("execute", `提交成功，报工ID：${data.reportId || "-"}`);
+          clearTaskDraft(state.selectedTask && state.selectedTask.id);
+          buildSummary(data);
+          renderSummary();
+          switchView("summary");
+          await loadDashboard();
+        } catch (error) {
+          setStatus("execute", `提交失败：${error.message}`, true);
+          showToast(`提交失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function validateBeforeSubmit(items) {
+        for (let i = 0; i < items.length; i += 1) {
+          const item = items[i];
+          if (!isItemFilled(item)) {
+            return `第 ${item.seq || i + 1} 项尚未填写`;
+          }
+          if (item.resultState === "abnormal" && item.requireDescOnAbnormal && !String(item.abnormalDesc || "").trim()) {
+            return `第 ${item.seq || i + 1} 项异常描述必填`;
+          }
+          if (item.resultState === "abnormal" && item.requirePhotoOnAbnormal && !(item.photos && item.photos.length)) {
+            return `第 ${item.seq || i + 1} 项异常照片必填`;
+          }
+        }
+        return "";
+      }
+
+      function isItemFilled(item) {
+        if (!item) {
+          return false;
+        }
+        const executeMode = getItemExecuteMode(item);
+        if (executeMode === "normal_abnormal") {
+          return item.resultState === "normal" || item.resultState === "abnormal";
+        }
+        if (executeMode === "meter") {
+          return item.numericValue !== "" && item.numericValue !== null && item.numericValue !== undefined && !Number.isNaN(Number(item.numericValue));
+        }
+        if (executeMode === "status") {
+          return Boolean(String(item.optionValue || "").trim());
+        }
+        return Boolean(String(item.inputValue || "").trim());
+      }
+
+      function buildSummary(submitData) {
+        const abnormalItems = state.selectedItems
+          .filter((item) => item.resultState === "abnormal")
+          .map((item, index) => ({
+            index: item.seq || index + 1,
+            title: `${item.pointPart || "-"} · ${item.pointItem || "-"}`,
+            desc: item.abnormalDesc || "未填写异常描述",
+          }));
+
+        const normalCount = state.selectedItems.filter((item) => item.resultState === "normal").length;
+        const abnormalCount = state.selectedItems.filter((item) => item.resultState === "abnormal").length;
+
+        state.lastSummary = {
+          reportId: submitData.reportId || "",
+          task: state.selectedTask,
+          total: state.selectedItems.length,
+          normalCount,
+          abnormalCount,
+          abnormalItems,
+          reporter: refs.reporterInput.value.trim(),
+          durationMinutes: estimateMinutes(state.reportStartAt, nowDateTimeText()),
+          submitTime: nowDateTimeText(),
+        };
+      }
+
+      function renderSummary() {
+        const summary = state.lastSummary;
+        if (!summary || !summary.task) {
+          refs.summaryMainText.textContent = "任务已提交";
+          refs.summaryNormalCount.textContent = "0";
+          refs.summaryAbnormalCount.textContent = "0";
+          refs.summaryTotalCount.textContent = "0";
+          refs.summaryAbnormalWrap.innerHTML = "";
+          setStatus("summary", "提交完成");
+          return;
+        }
+
+        refs.summaryMainText.textContent = `${summary.task.deviceName || summary.task.deviceCode || "设备"} · ${summary.task.standardName || "点检"} · 用时 ${summary.durationMinutes} 分钟`;
+        refs.summaryNormalCount.textContent = String(summary.normalCount);
+        refs.summaryAbnormalCount.textContent = String(summary.abnormalCount);
+        refs.summaryTotalCount.textContent = String(summary.total);
+
+        refs.summaryAbnormalWrap.innerHTML = "";
+        if (!summary.abnormalItems.length) {
+          refs.summaryAbnormalWrap.innerHTML = '<div class="empty">本次未发现异常</div>';
+        } else {
+          summary.abnormalItems.forEach((item) => {
+            const div = document.createElement("div");
+            div.className = "abnormal-item";
+            div.innerHTML = `
+              <h4>项 ${escapeHtml(item.index)} · ${escapeHtml(item.title)}</h4>
+              <p>${escapeHtml(item.desc)}</p>
+            `;
+            refs.summaryAbnormalWrap.appendChild(div);
+          });
+        }
+
+        const nextTask = findNextPendingTask();
+        refs.summaryNextBtn.disabled = !nextTask;
+        refs.summaryNextBtn.textContent = nextTask ? "执行下一任务" : "无下一任务";
+
+        setStatus("summary", `报工已提交：${summary.reportId || "-"}`);
+      }
+
+      function findNextPendingTask() {
+        if (!state.selectedTask) {
+          return null;
+        }
+        return (
+          state.dashboardTasks.find(
+            (task) =>
+              String(task.deviceCode || "") === String(state.selectedTask.deviceCode || "") &&
+              String(task.id || "") !== String(state.selectedTask.id || "") &&
+              !isDoneStatus(task.taskStatus || task.statusText || "")
+          ) || null
+        );
+      }
+
+      function resolveReporterDefaultName(fallbackValue = "") {
+        return String(
+          state.memberName ||
+            (state.currentMember && (state.currentMember.userName || state.currentMember.user || state.currentMember.account)) ||
+            fallbackValue ||
+            ""
+        ).trim();
+      }
+
+      function buildTaskItemState(item) {
+        const executeMode = getItemExecuteMode(item);
+        const carryNumericValue =
+          executeMode === "meter" && item && item.inputValue !== undefined && item.inputValue !== null && String(item.inputValue).trim()
+            ? String(item.inputValue).trim()
+            : "";
+        return {
+          ...item,
+          executeMode,
+          resultState: "pending",
+          inputValue: "",
+          optionValue: "",
+          numericValue: carryNumericValue,
+          abnormalDesc: "",
+          handling: "",
+          photos: [],
+        };
+      }
+
+      function getTaskDraftKey(taskId) {
+        return `${TASK_DRAFT_PREFIX}${String(taskId || "").trim()}`;
+      }
+
+      function getDraftItemKey(item) {
+        const detailId = String(item && item.standardDetailId ? item.standardDetailId : "").trim();
+        if (detailId) {
+          return `id:${detailId}`;
+        }
+        return `seq:${String(item && item.seq ? item.seq : "").trim()}|${String(item && item.pointPart ? item.pointPart : "").trim()}|${String(item && item.pointItem ? item.pointItem : "").trim()}`;
+      }
+
+      function saveCurrentTaskDraft() {
+        if (!state.selectedTask || !state.selectedTask.id || !state.selectedItems.length) {
+          return;
+        }
+
+        try {
+          const payload = {
+            version: 2,
+            taskId: state.selectedTask.id,
+            updatedAt: nowDateTimeText(),
+            reportStartAt: state.reportStartAt || nowDateTimeText(),
+            reporter: refs.reporterInput.value.trim(),
+            remark: refs.reportRemarkInput.value.trim(),
+            items: state.selectedItems.map((item) => ({
+              standardDetailId: item.standardDetailId || "",
+              seq: item.seq || "",
+              pointPart: item.pointPart || "",
+              pointItem: item.pointItem || "",
+              resultState: item.resultState || "pending",
+              inputValue: item.inputValue || "",
+              optionValue: item.optionValue || "",
+              numericValue: item.numericValue === undefined || item.numericValue === null ? "" : item.numericValue,
+              abnormalDesc: item.abnormalDesc || "",
+              handling: item.handling || "",
+              photos: Array.isArray(item.photos) ? item.photos : [],
+            })),
+          };
+          localStorage.setItem(getTaskDraftKey(state.selectedTask.id), JSON.stringify(payload));
+        } catch (error) {
+          console.warn("save draft failed:", error);
+        }
+      }
+
+      function restoreTaskDraft(task) {
+        if (!task || !task.id || !state.selectedItems.length) {
+          return false;
+        }
+
+        try {
+          const raw = localStorage.getItem(getTaskDraftKey(task.id));
+          if (!raw) {
+            return false;
+          }
+          const draft = safeJsonParse(raw);
+          if (!draft || !Array.isArray(draft.items) || !draft.items.length) {
+            return false;
+          }
+
+          const draftMap = new Map();
+          draft.items.forEach((item) => {
+            draftMap.set(getDraftItemKey(item), item);
+          });
+
+          state.selectedItems = state.selectedItems.map((item) => {
+            const matched = draftMap.get(getDraftItemKey(item));
+            if (!matched) {
+              return item;
+            }
+            const merged = {
+              ...item,
+              resultState: normalizeResultState(matched.resultState),
+              inputValue: String(matched.inputValue || ""),
+              optionValue: String(matched.optionValue || ""),
+              numericValue: matched.numericValue === undefined || matched.numericValue === null ? "" : String(matched.numericValue),
+              abnormalDesc: String(matched.abnormalDesc || ""),
+              handling: String(matched.handling || ""),
+              photos: Array.isArray(matched.photos) ? matched.photos : [],
+            };
+            if (getItemExecuteMode(merged) === "meter" && !String(merged.numericValue || "").trim() && String(merged.inputValue || "").trim()) {
+              merged.numericValue = String(merged.inputValue || "").trim();
+              merged.inputValue = "";
+            }
+            normalizeDraftItemState(merged);
+            return merged;
+          });
+
+          if (!state.memberName) {
+            refs.reporterInput.value = String(draft.reporter || refs.reporterInput.value || "").trim();
+          }
+          syncReporterField();
+          refs.reportRemarkInput.value = String(draft.remark || "").trim();
+          state.reportStartAt = String(draft.reportStartAt || state.reportStartAt || nowDateTimeText()).trim();
+          return true;
+        } catch (error) {
+          console.warn("restore draft failed:", error);
+          return false;
+        }
+      }
+
+      function clearTaskDraft(taskId) {
+        const key = getTaskDraftKey(taskId);
+        if (!taskId) {
+          return;
+        }
+        try {
+          localStorage.removeItem(key);
+        } catch (error) {
+          console.warn("clear draft failed:", error);
+        }
+      }
+
+      function normalizeDraftItemState(item) {
+        const mode = getItemExecuteMode(item);
+        if (mode === "status") {
+          item.resultState = inferStatusResultState(item, item.optionValue);
+          return;
+        }
+        if (mode === "meter") {
+          item.resultState = evaluateMeterValue(item).status;
+          return;
+        }
+        if (mode === "text") {
+          item.resultState = String(item.inputValue || "").trim() ? "normal" : "pending";
+          return;
+        }
+        item.resultState = normalizeResultState(item.resultState);
+      }
+
+      function shouldRerenderOnFieldChange(field, eventType, previousStatus, nextStatus) {
+        if (field === "photoInput" || field === "optionValue") {
+          return true;
+        }
+        if (field === "numericValue") {
+          return eventType === "change";
+        }
+        if (field === "inputValue" && (previousStatus !== nextStatus || eventType === "change")) {
+          return false;
+        }
+        return false;
+      }
+
+      function updateSingleItemCard(index) {
+        const item = state.selectedItems[index];
+        if (!item) {
+          return;
+        }
+
+        const card = refs.executeItemList.querySelector(`[data-item-index='${index}']`);
+        if (!(card instanceof HTMLElement)) {
+          return;
+        }
+
+        const filled = isItemFilled(item);
+        const status = resolveItemResultState(item, filled);
+        card.classList.toggle("abnormal", status === "abnormal");
+        card.classList.toggle("done", status !== "abnormal" && filled);
+
+        const statusEl = card.querySelector(".item-status");
+        if (statusEl instanceof HTMLElement) {
+          statusEl.className = `item-status ${status}`;
+          statusEl.textContent = itemStatusText(status);
+        }
+
+        const judgeEl = card.querySelector("[data-role='meter-judge']");
+        if (judgeEl instanceof HTMLElement) {
+          const judge = evaluateMeterValue(item);
+          judgeEl.className = `judge-hint ${judge.status || "pending"}`;
+          judgeEl.innerHTML = `<span>自动判定</span><strong>${escapeHtml(judge.label || "待填")}</strong>${judge.detail ? `<em>${escapeHtml(judge.detail)}</em>` : ""}`;
+        }
+      }
+
+      function setLoading(flag) {
+        state.loading = flag;
+        refs.scanBtn.disabled = flag;
+        refs.cameraScanBtn.disabled = flag;
+        refs.submitTaskBtn.disabled = flag;
+        refs.nextPendingBtn.disabled = flag;
+        refs.headerActionBtn.disabled = flag;
+      }
+
+      function setStatus(scope, message, error = false) {
+        const target = scope === "execute" ? refs.executeStatus : scope === "summary" ? refs.summaryStatus : refs.dashboardStatus;
+        target.textContent = message;
+        target.classList.toggle("error", Boolean(error));
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => {
+          refs.toast.classList.remove("show");
+        }, 2200);
+      }
+
+      function inferCategory(ruleName, standardName, standardCode) {
+        const text = `${String(ruleName || "")} ${String(standardName || "")} ${String(standardCode || "")}`;
+        if (text.includes("周")) return "周检";
+        if (text.includes("月")) return "月检";
+        if (text.includes("定期")) return "定期点检";
+        return "日检";
+      }
+
+      function isDoneStatus(text) {
+        const value = String(text || "").trim();
+        return ["已完成", "完成", "异常", "已报工", "已关闭", "作废", "失效"].includes(value);
+      }
+
+      function isBinaryNormalAbnormalSelect(item) {
+        if (!item || item.inputType !== "select") {
+          return false;
+        }
+        const options = Array.isArray(item.options) ? item.options.map((opt) => String(opt || "").trim()).filter(Boolean) : [];
+        if (!options.length || options.length > 2) {
+          return false;
+        }
+        return options.every((opt) => opt === "正常" || opt === "异常");
+      }
+
+      function getItemExecuteMode(item) {
+        if (!item) {
+          return "normal_abnormal";
+        }
+        const existing = String(item.executeMode || "").trim();
+        const hasNumericJudgeRange = Boolean(parseJudgeRange(item.judgeStandard));
+        if (existing) {
+          if (hasNumericJudgeRange && existing !== "status" && existing !== "meter") {
+            return "meter";
+          }
+          return existing;
+        }
+
+        const method = String(item.checkMethod || "").trim();
+        if (method.includes("抄表") || item.inputType === "number" || hasNumericJudgeRange) {
+          return "meter";
+        }
+        if (method.includes("状态")) {
+          return "status";
+        }
+        if (method.includes("普通")) {
+          return "normal_abnormal";
+        }
+        if (isBinaryNormalAbnormalSelect(item)) {
+          return "normal_abnormal";
+        }
+        if (item.inputType === "select") {
+          return "status";
+        }
+        if (item.inputType === "text") {
+          return "text";
+        }
+        return "normal_abnormal";
+      }
+
+      function getExecuteModeLabel(mode) {
+        if (mode === "meter") return "抄表录入";
+        if (mode === "status") return "状态选择";
+        if (mode === "text") return "文本录入";
+        return "普通判定";
+      }
+
+      function normalizeResultState(value) {
+        return value === "abnormal" || value === "normal" ? value : "pending";
+      }
+
+      function resolveItemResultState(item, fallbackFilled = isItemFilled(item)) {
+        const status = normalizeResultState(item && item.resultState);
+        if (status !== "pending") {
+          return status;
+        }
+        return fallbackFilled ? "normal" : "pending";
+      }
+
+      function inferStatusResultState(item, value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "pending";
+        }
+        if (isBinaryNormalAbnormalSelect(item)) {
+          return text === "异常" ? "abnormal" : "normal";
+        }
+        if (/(异常|故障|报警|停机|停用|维修|损坏|泄漏)/.test(text)) {
+          return "abnormal";
+        }
+        return "normal";
+      }
+
+      function evaluateMeterValue(item) {
+        const rawValue = String(item && item.numericValue !== undefined && item.numericValue !== null ? item.numericValue : "").trim();
+        if (!rawValue) {
+          return {
+            status: "pending",
+            label: "待填",
+            detail: "请输入抄表数值",
+          };
+        }
+
+        const numericValue = Number(rawValue);
+        if (!Number.isFinite(numericValue)) {
+          return {
+            status: "pending",
+            label: "待填",
+            detail: "请输入有效数值",
+          };
+        }
+
+        const rangeRule = parseJudgeRange(item && item.judgeStandard);
+        if (!rangeRule) {
+          return {
+            status: "normal",
+            label: "已录入",
+            detail: "未识别标准范围，默认按已填写处理",
+          };
+        }
+
+        const matched = isNumberInRange(numericValue, rangeRule);
+        return {
+          status: matched ? "normal" : "abnormal",
+          label: matched ? "正常" : "异常",
+          detail: `标准范围：${rangeRule.label}`,
+        };
+      }
+
+      function parseJudgeRange(source) {
+        const text = String(source || "").trim();
+        if (!text) {
+          return null;
+        }
+
+        const normalized = text.replace(/，/g, ",").replace(/\s+/g, "");
+        const betweenMatch = normalized.match(/(-?\d+(?:\.\d+)?)\s*(?:~|～|—|–|-|至|到)\s*(-?\d+(?:\.\d+)?)/);
+        if (betweenMatch) {
+          const min = Number(betweenMatch[1]);
+          const max = Number(betweenMatch[2]);
+          if (Number.isFinite(min) && Number.isFinite(max)) {
+            return {
+              min: Math.min(min, max),
+              max: Math.max(min, max),
+              includeMin: true,
+              includeMax: true,
+              label: `${Math.min(min, max)}-${Math.max(min, max)}`,
+            };
+          }
+        }
+
+        let min = null;
+        let max = null;
+        let includeMin = true;
+        let includeMax = true;
+        const comparatorPattern = /(>=|<=|>|<|≥|≤)\s*(-?\d+(?:\.\d+)?)/g;
+        for (const match of normalized.matchAll(comparatorPattern)) {
+          const operator = match[1];
+          const value = Number(match[2]);
+          if (!Number.isFinite(value)) {
+            continue;
+          }
+          if (operator === ">" || operator === ">=" || operator === "≥") {
+            min = value;
+            includeMin = operator !== ">";
+          } else if (operator === "<" || operator === "<=" || operator === "≤") {
+            max = value;
+            includeMax = operator !== "<";
+          }
+        }
+
+        if (min !== null || max !== null) {
+          return {
+            min,
+            max,
+            includeMin,
+            includeMax,
+            label: buildRangeLabel(min, max, includeMin, includeMax),
+          };
+        }
+
+        if (/^-?\d+(?:\.\d+)?$/.test(normalized)) {
+          const exact = Number(normalized);
+          return {
+            min: exact,
+            max: exact,
+            includeMin: true,
+            includeMax: true,
+            label: String(exact),
+          };
+        }
+
+        return null;
+      }
+
+      function buildRangeLabel(min, max, includeMin, includeMax) {
+        const parts = [];
+        if (min !== null) {
+          parts.push(`${includeMin ? ">=" : ">"}${min}`);
+        }
+        if (max !== null) {
+          parts.push(`${includeMax ? "<=" : "<"}${max}`);
+        }
+        return parts.join(" 且 ");
+      }
+
+      function isNumberInRange(value, rangeRule) {
+        if (!rangeRule || !Number.isFinite(value)) {
+          return false;
+        }
+        if (rangeRule.min !== null) {
+          if (rangeRule.includeMin ? value < rangeRule.min : value <= rangeRule.min) {
+            return false;
+          }
+        }
+        if (rangeRule.max !== null) {
+          if (rangeRule.includeMax ? value > rangeRule.max : value >= rangeRule.max) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      function itemStatusText(status) {
+        if (status === "normal") return "正常";
+        if (status === "abnormal") return "异常";
+        return "待填";
+      }
+
+      function formatDisplayDate(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "今日";
+        }
+        const date = new Date(text.replace(/-/g, "/"));
+        if (!Number.isFinite(date.getTime())) {
+          return text;
+        }
+        const weekNames = ["日", "一", "二", "三", "四", "五", "六"];
+        const m = date.getMonth() + 1;
+        const d = date.getDate();
+        const week = weekNames[date.getDay()];
+        return `${date.getFullYear()}年${m}月${d}日 · 周${week}`;
+      }
+
+      function estimateMinutes(startText, endText) {
+        const start = parseDateTime(startText);
+        const end = parseDateTime(endText);
+        if (!start || !end) {
+          return 0;
+        }
+        const diff = Math.max(0, end.getTime() - start.getTime());
+        return Math.max(1, Math.round(diff / 60000));
+      }
+
+      function parseDateTime(text) {
+        const value = String(text || "").trim();
+        if (!value) {
+          return null;
+        }
+        const date = new Date(value.replace(/-/g, "/"));
+        if (!Number.isFinite(date.getTime())) {
+          return null;
+        }
+        return date;
+      }
+
+      async function requestApi(path, method = "GET", body) {
+        const url = `${API_BASE}${path}`;
+        const options = {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        if (method !== "GET" && method !== "HEAD") {
+          options.body = JSON.stringify(body || {});
+        }
+        const resp = await fetch(url, options);
+        const text = await resp.text();
+        const json = safeJsonParse(text);
+        if (!resp.ok) {
+          throw new Error(extractErrorMessage(json) || text || `HTTP ${resp.status}`);
+        }
+        if (json && json.ok === false) {
+          throw new Error(extractErrorMessage(json) || "请求失败");
+        }
+        return json;
+      }
+
+      async function requestApiSafe(path, method = "GET", body) {
+        try {
+          const payload = await requestApi(path, method, body);
+          return {
+            ok: true,
+            payload,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error && error.message ? error.message : "request failed",
+          };
+        }
+      }
+
+      function extractErrorMessage(payload) {
+        if (!payload || typeof payload !== "object") {
+          return "";
+        }
+        const fields = [payload.message, payload.msg, payload.error, payload.detail];
+        for (const value of fields) {
+          if (typeof value === "string" && value.trim()) {
+            return value.trim();
+          }
+        }
+        return "";
+      }
+
+      function safeJsonParse(text) {
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      }
+
+      function nowDateTimeText() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        const ss = String(d.getSeconds()).padStart(2, "0");
+        return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
+      }
+
+      function formatDate(date) {
+        const d = date instanceof Date ? date : new Date(date);
+        if (!Number.isFinite(d.getTime())) {
+          return "";
+        }
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    </script>
+  </body>
+</html>

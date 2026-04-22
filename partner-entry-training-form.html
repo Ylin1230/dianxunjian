@@ -1,0 +1,2493 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>相关方入场培训填报</title>
+    <style>
+      :root {
+        --bg: #eef3fb;
+        --panel: #ffffff;
+        --line: #d5deec;
+        --text: #1f2a3a;
+        --minor: #6f7d93;
+        --primary: #2c79ea;
+        --danger: #d24b4b;
+        --ok: #1d7f4f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #f6f9ff 0%, var(--bg) 100%);
+        color: var(--text);
+        font: 14px/1.5 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      }
+
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 14px;
+      }
+
+      .hero {
+        border: 1px solid #ccdcf3;
+        background: #fff;
+        border-radius: 10px;
+        padding: 14px;
+        box-shadow: 0 6px 16px rgba(26, 56, 105, 0.06);
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .hero p {
+        margin: 6px 0 0;
+        color: var(--minor);
+        font-size: 13px;
+      }
+
+      .warn {
+        margin-top: 10px;
+        border: 1px solid #f5d1d1;
+        background: #fff7f7;
+        color: #a53636;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .panel {
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .panel-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e4ecf7;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .panel-body {
+        padding: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .field {
+        display: grid;
+        gap: 4px;
+      }
+
+      .field.full {
+        grid-column: span 2;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: #576a84;
+      }
+
+      .required {
+        color: var(--danger);
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        border: 1px solid #cad3e1;
+        border-radius: 6px;
+        background: #fff;
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .input,
+      .select {
+        height: 36px;
+        padding: 0 10px;
+      }
+
+      .textarea {
+        min-height: 96px;
+        padding: 8px 10px;
+        resize: vertical;
+      }
+
+      .input:focus,
+      .select:focus,
+      .textarea:focus {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .date-field {
+        position: relative;
+      }
+
+      .date-display-input {
+        padding-right: 36px;
+        cursor: pointer;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .date-field-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6f7d93;
+        pointer-events: none;
+      }
+
+      .date-field:focus-within .date-field-icon,
+      .date-field:hover .date-field-icon {
+        color: #2c79ea;
+      }
+
+      .date-field-icon svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .date-native-input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .tip {
+        margin-top: 4px;
+        color: #74829a;
+        font-size: 12px;
+      }
+
+      .participant-panel {
+        border: 1px solid #d8e3f5;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fbfdff;
+      }
+
+      .participant-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e4ecf7;
+        background: #f7faff;
+      }
+
+      .participant-toolbar strong {
+        font-size: 13px;
+        color: #30445f;
+      }
+
+      .participant-list {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .participant-row {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr) 120px 156px 68px;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 12px;
+        border-top: 1px solid #e9eff8;
+      }
+
+      .participant-row:first-child {
+        border-top: 0;
+      }
+
+      .participant-seq {
+        color: #61738f;
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .participant-sign-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .sign-state {
+        font-size: 12px;
+        color: #7c8ba1;
+      }
+
+      .sign-state.done {
+        color: var(--ok);
+      }
+
+      .sign-preview-link {
+        border: 0;
+        background: transparent;
+        color: var(--primary);
+        font-size: 12px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .participant-empty {
+        padding: 16px 12px;
+        color: #7d8ca4;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: rgba(17, 27, 43, 0.42);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .modal-mask.hidden {
+        display: none;
+      }
+
+      .sign-modal {
+        width: min(680px, 100%);
+        max-height: min(88vh, 760px);
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid #d6e1f2;
+        background: #fff;
+        box-shadow: 0 18px 36px rgba(23, 42, 74, 0.18);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sign-modal-head {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e6edf8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .sign-modal-head h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .sign-modal-body {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .sign-canvas-wrap {
+        border: 1px dashed #bfd0ea;
+        border-radius: 12px;
+        background:
+          linear-gradient(180deg, rgba(248, 251, 255, 0.96), rgba(243, 248, 255, 0.96)),
+          repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(196, 210, 231, 0.38) 35px, rgba(196, 210, 231, 0.38) 36px);
+        padding: 10px;
+      }
+
+      .sign-canvas {
+        width: 100%;
+        height: 220px;
+        display: block;
+        border-radius: 10px;
+        background: transparent;
+        touch-action: none;
+        cursor: crosshair;
+      }
+
+      .sign-modal-foot {
+        padding: 12px 14px 14px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .actions {
+        position: sticky;
+        bottom: 0;
+        margin-top: 12px;
+        border: 1px solid #d8e3f5;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(4px);
+        padding: 10px;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .btn {
+        height: 38px;
+        border: 1px solid #b7c4d8;
+        border-radius: 7px;
+        background: #fff;
+        color: #30445f;
+        padding: 0 14px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .btn.primary {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn:disabled {
+        opacity: 0.56;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-top: 10px;
+        min-height: 18px;
+        font-size: 12px;
+        color: #5e6f87;
+      }
+
+      .status.error {
+        color: var(--danger);
+      }
+
+      .success {
+        margin-top: 12px;
+        border: 1px solid #b8e2c8;
+        background: #f3fff7;
+        border-radius: 10px;
+        padding: 10px;
+        color: var(--ok);
+        display: none;
+      }
+
+      .success.show {
+        display: block;
+      }
+
+      .success h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .success p {
+        margin: 4px 0 0;
+        color: #3b6f4f;
+        font-size: 13px;
+      }
+
+      .notice-modal {
+        width: min(860px, 100%);
+        max-height: min(88vh, 820px);
+        overflow: hidden;
+        border-radius: 14px;
+        border: 1px solid #d6e1f2;
+        background: #fff;
+        box-shadow: 0 18px 36px rgba(23, 42, 74, 0.18);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .notice-head {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid #e6edf8;
+      }
+
+      .notice-head h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .notice-head p {
+        margin: 6px 0 0;
+        color: #6f7d93;
+        font-size: 13px;
+      }
+
+      .notice-body {
+        padding: 12px 16px;
+        overflow: auto;
+      }
+
+      .notice-content {
+        border: 1px solid #d8e3f5;
+        border-radius: 12px;
+        background: #fbfdff;
+        padding: 12px 14px;
+        max-height: min(56vh, 520px);
+        overflow: auto;
+      }
+
+      .notice-list {
+        margin: 0;
+        padding-left: 22px;
+        color: #2c3b50;
+        display: grid;
+        gap: 12px;
+      }
+
+      .notice-foot {
+        padding: 12px 16px 16px;
+        border-top: 1px solid #e6edf8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .notice-countdown {
+        color: #6f7d93;
+        font-size: 13px;
+      }
+
+      .submitted-panel .panel-body {
+        padding: 18px 16px;
+      }
+
+      .submitted-card {
+        border: 1px solid #b8e2c8;
+        background: linear-gradient(180deg, #f6fff9 0%, #effcf4 100%);
+        border-radius: 14px;
+        padding: 18px 16px;
+        color: #1d7f4f;
+      }
+
+      .submitted-card h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .submitted-card p {
+        margin: 8px 0 0;
+        color: #3b6f4f;
+      }
+
+      .submitted-meta {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        font-size: 13px;
+        color: #456654;
+      }
+
+      .submitted-meta strong {
+        font-size: 15px;
+        color: #1a5937;
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          padding: 10px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .field.full {
+          grid-column: span 1;
+        }
+
+        .actions {
+          justify-content: stretch;
+        }
+
+        .btn {
+          flex: 1;
+        }
+
+        .participant-row {
+          grid-template-columns: 46px minmax(0, 1fr);
+        }
+
+        .participant-sign-cell,
+        .participant-row .participant-time,
+        .participant-row .participant-delete {
+          grid-column: 2;
+        }
+
+        .participant-row .participant-delete {
+          justify-self: start;
+        }
+
+        .notice-foot {
+          flex-direction: column;
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero">
+        <h1>相关方入场培训填报</h1>
+        <p>请按实际情况填写，提交后将同步写入“相关方安全教育培训记录”底表。</p>
+        <div id="accessWarn" class="warn" style="display:none;"></div>
+      </section>
+
+      <section id="formSection" class="panel">
+        <div class="panel-head">培训信息</div>
+        <div class="panel-body">
+          <form id="trainingForm">
+            <div class="grid">
+              <div class="field">
+                <label for="titleInput"><span class="required">*</span> 标题</label>
+                <input id="titleInput" class="input" type="text" placeholder="例如：外委施工入场安全培训" required />
+              </div>
+
+              <div class="field">
+                <label for="trainingDateDisplayInput"><span class="required">*</span> 培训日期</label>
+                <div id="trainingDateField" class="date-field">
+                  <input
+                    id="trainingDateDisplayInput"
+                    class="input date-display-input"
+                    type="text"
+                    placeholder="YYYY-MM-DD"
+                    readonly
+                  />
+                  <input id="trainingDateInput" class="date-native-input" type="date" tabindex="-1" aria-hidden="true" required />
+                  <span class="date-field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                      <path d="M8 2v4M16 2v4M3 10h18"></path>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="companySelect"><span class="required">*</span> 施工单位</label>
+                <input id="companyKeywordInput" class="input" type="text" placeholder="输入单位名称或编号搜索" autocomplete="off" />
+                <select id="companySelect" class="select" required></select>
+                <div class="tip">可先输入单位名称或编号搜索，再从下拉中选择；数据来源：百数云“相关方单位”底表。</div>
+              </div>
+
+              <div class="field">
+                <label for="attendeeCountInput"><span class="required">*</span> 培训人数</label>
+                <input id="attendeeCountInput" class="input" type="number" min="1" step="1" required readonly />
+              </div>
+
+              <div class="field full">
+                <label for="projectInput"><span class="required">*</span> 施工项目</label>
+                <input id="projectInput" class="input" type="text" placeholder="例如：氧枪平台检修" required />
+              </div>
+
+              <div class="field">
+                <label for="lecturerSelect">授课人（可选）</label>
+                <select id="lecturerSelect" class="select"></select>
+              </div>
+
+              <div class="field">
+                <label for="sampledSelect">是否抽取</label>
+                <select id="sampledSelect" class="select">
+                  <option value="否">否</option>
+                  <option value="是">是</option>
+                </select>
+              </div>
+
+              <div class="field full">
+                <label>参加培训人员签字</label>
+                <div class="participant-panel">
+                  <div class="participant-toolbar">
+                    <strong>逐行录入参训人员，签字可后续补录</strong>
+                    <button id="addParticipantBtn" type="button" class="btn">新增人员</button>
+                  </div>
+                  <div id="participantList" class="participant-list"></div>
+                </div>
+                <div class="tip">每位参训人员单独录入姓名即可提交；如已完成签字，会自动写入子表的“签字 / 签字时间”。</div>
+              </div>
+
+              <div class="field full">
+                <label for="contentInput">培训内容</label>
+                <textarea id="contentInput" class="textarea"></textarea>
+              </div>
+
+              <div class="field full">
+                <label for="effectInput">培训效果验证</label>
+                <textarea id="effectInput" class="textarea"></textarea>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="resetBtn" type="button" class="btn">重置</button>
+              <button id="submitBtn" type="submit" class="btn primary">提交培训记录</button>
+            </div>
+          </form>
+
+          <div id="statusBar" class="status">准备就绪</div>
+          <div id="successBox" class="success">
+            <h3>提交成功</h3>
+            <p id="successText">培训记录已写入底表。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="submittedPanel" class="panel submitted-panel" hidden>
+        <div class="panel-head">提交完成</div>
+        <div class="panel-body">
+          <div class="submitted-card">
+            <h2>提交成功</h2>
+            <p>培训记录已同步写入底表，请勿重复提交。如需再次填写，请重新扫描入口二维码进入。</p>
+            <div class="submitted-meta">
+              <span>记录ID</span>
+              <strong id="submittedRecordId">-</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="noticeModal" class="modal-mask hidden">
+      <div class="notice-modal">
+        <div class="notice-head">
+          <h2>相关方入厂安全告知书</h2>
+          <p>请完整阅读以下内容，倒计时结束后方可进入入厂安全培训页面。</p>
+        </div>
+        <div class="notice-body">
+          <div class="notice-content">
+            <ol class="notice-list">
+              <li>进入厂区前请主动出示有效证件并办理入厂登记手续，做好人员与物资登记。</li>
+              <li>活动范围仅限合同或许可指定区域，必须遵守公司安全、环保及现场管理要求。</li>
+              <li>多人同时进入公司作业或活动时，应明确现场负责人并接受接待单位统一管理。</li>
+              <li>两个及以上相关方在同一区域交叉作业时，必须落实协调管理和安全交底要求。</li>
+              <li>所有相关方在入场前必须完成安全教育、告知培训，并按要求完成记录与签字确认。</li>
+              <li>进入生产现场必须规范穿戴劳动防护用品，严禁赤膊、赤脚、拖鞋、高跟鞋等行为。</li>
+              <li>未经许可不得进入重点部位和危险场所，禁止擅自拍照、录像或传播现场信息。</li>
+              <li>未经允许不得触碰机械设备、电气设施及管线阀门，确需操作时须联系接待单位。</li>
+              <li>高空、动火、临时用电等危险作业必须先办理手续并落实措施，特种作业人员须持证上岗。</li>
+              <li>自带设备、工器具和防护用品须符合国家及公司要求，进入厂区前应接受安全检查。</li>
+              <li>严格遵守禁烟、禁酒及劳动纪律要求，严禁酒后上岗、嬉戏打闹和违章操作。</li>
+              <li>车辆进入厂区必须按规定路线和限速行驶，不得乱停乱放，并在指定区域停放。</li>
+              <li>作业区域应做到文明施工、定置堆放、日清日洁，及时消除不安全和环境隐患。</li>
+              <li>爱护公司绿化、树木及公共设施，确需临时占用时应先审批并在作业结束后恢复。</li>
+              <li>每日作业结束后应做好收尾巡查，落实断水、断电、断气、断源等防范措施。</li>
+              <li>服务或施工活动完成后，应做到工完料净场地清，经接收确认后方可离场。</li>
+              <li>发现异常、隐患或事故苗头时应立即停止相关活动并报告现场管理人员，不得隐瞒。</li>
+            </ol>
+          </div>
+        </div>
+        <div class="notice-foot">
+          <div id="noticeCountdown" class="notice-countdown">请先阅读 10 秒</div>
+          <button id="noticeEnterBtn" type="button" class="btn primary" disabled>请先阅读 10 秒</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="signatureModal" class="modal-mask hidden">
+      <div class="sign-modal">
+        <div class="sign-modal-head">
+          <h3 id="signatureModalTitle">手写签字</h3>
+          <button id="closeSignatureBtn" type="button" class="btn">关闭</button>
+        </div>
+        <div class="sign-modal-body">
+          <div class="tip">请直接在下方签字板上书写，保存后会自动上传并回填到当前人员行。</div>
+          <div class="sign-canvas-wrap">
+            <canvas id="signatureCanvas" class="sign-canvas"></canvas>
+          </div>
+          <div id="signatureStatus" class="status">请开始签字</div>
+        </div>
+        <div class="sign-modal-foot">
+          <button id="clearSignatureBtn" type="button" class="btn">清空重签</button>
+          <button id="saveSignatureBtn" type="button" class="btn primary">保存签字</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_CONFIG = {
+        baseUrl: resolveApiBaseUrl(),
+        appId: "5a94c4d1642bd8a84c772356",
+        partnerEntryId: "e909400e8837d7f8cc75482b",
+        trainingEntryId: "c40d44a99118a61bd17f9325",
+      };
+
+      const PARTNER_FIELD = {
+        code: "_widget_1776687063504",
+        name: "_widget_1776687063598",
+      };
+
+      const PARTNER_FIELD_TITLE_MATCHER = {
+        code: ["相关方编号", "单位编号", "编号", "编码", "代码"],
+        name: ["外来单位名称", "相关方名称", "单位名称", "施工单位", "单位", "名称"],
+      };
+
+      const TRAINING_FIELD = {
+        title: "_widget_1775706019440",
+        trainingDate: "_widget_1775706019459",
+        company: "_widget_1775706019483",
+        attendeeCount: "_widget_1775706019502",
+        project: "_widget_1775706019523",
+        lecturer: "_widget_1775706019542",
+        content: "_widget_1775706019574",
+        effect: "_widget_1775706019591",
+        sampled: "_widget_1775706019878",
+        participantSubform: "_widget_1776499479462",
+      };
+
+      const PARTICIPANT_FIELD = {
+        name: "_widget_1776499479512",
+        sign: "_widget_1776499479592",
+        signTime: "_widget_1776499479597",
+      };
+
+      const state = {
+        loading: false,
+        units: [],
+        users: [],
+        unitAliasMap: {
+          codeAliases: [PARTNER_FIELD.code],
+          nameAliases: [PARTNER_FIELD.name],
+        },
+        scanContext: parseScanContext(),
+        noticeSeconds: 10,
+        noticeTimer: null,
+        participants: [],
+        activeSignatureIndex: -1,
+        signaturePad: {
+          drawing: false,
+          dirty: false,
+          pointerId: null,
+          lastX: 0,
+          lastY: 0,
+        },
+      };
+
+      const refs = {
+        accessWarn: document.getElementById("accessWarn"),
+        formSection: document.getElementById("formSection"),
+        submittedPanel: document.getElementById("submittedPanel"),
+        submittedRecordId: document.getElementById("submittedRecordId"),
+        noticeModal: document.getElementById("noticeModal"),
+        noticeCountdown: document.getElementById("noticeCountdown"),
+        noticeEnterBtn: document.getElementById("noticeEnterBtn"),
+
+        trainingForm: document.getElementById("trainingForm"),
+        resetBtn: document.getElementById("resetBtn"),
+        submitBtn: document.getElementById("submitBtn"),
+
+        titleInput: document.getElementById("titleInput"),
+
+        trainingDateField: document.getElementById("trainingDateField"),
+        trainingDateDisplayInput: document.getElementById("trainingDateDisplayInput"),
+        trainingDateInput: document.getElementById("trainingDateInput"),
+
+        companyKeywordInput: document.getElementById("companyKeywordInput"),
+        companySelect: document.getElementById("companySelect"),
+        attendeeCountInput: document.getElementById("attendeeCountInput"),
+        projectInput: document.getElementById("projectInput"),
+        lecturerSelect: document.getElementById("lecturerSelect"),
+        sampledSelect: document.getElementById("sampledSelect"),
+        addParticipantBtn: document.getElementById("addParticipantBtn"),
+        participantList: document.getElementById("participantList"),
+        contentInput: document.getElementById("contentInput"),
+        effectInput: document.getElementById("effectInput"),
+
+        statusBar: document.getElementById("statusBar"),
+        successBox: document.getElementById("successBox"),
+        successText: document.getElementById("successText"),
+        signatureModal: document.getElementById("signatureModal"),
+        signatureModalTitle: document.getElementById("signatureModalTitle"),
+        closeSignatureBtn: document.getElementById("closeSignatureBtn"),
+        signatureCanvas: document.getElementById("signatureCanvas"),
+        signatureStatus: document.getElementById("signatureStatus"),
+        clearSignatureBtn: document.getElementById("clearSignatureBtn"),
+        saveSignatureBtn: document.getElementById("saveSignatureBtn"),
+      };
+
+      init();
+
+      async function init() {
+        bindDateField(refs.trainingDateField, refs.trainingDateDisplayInput, refs.trainingDateInput);
+        bindEvents();
+        applyAccessWarning();
+        if (state.scanContext.submitted) {
+          showSubmittedState(state.scanContext.recordId);
+          return;
+        }
+        resetFormValues();
+        await loadRemoteOptions();
+        openNoticeModal();
+      }
+
+      function bindEvents() {
+        refs.trainingForm.addEventListener("submit", (event) => {
+          void submitForm(event);
+        });
+
+        refs.resetBtn.addEventListener("click", () => {
+          resetFormValues();
+          renderCompanyOptions({ selectedId: "" });
+          renderLecturerOptions();
+          refs.successBox.classList.remove("show");
+          setStatus("已重置");
+        });
+
+        refs.companyKeywordInput.addEventListener("input", () => {
+          const rows = filterPartnerUnits(refs.companyKeywordInput.value);
+          const selectedId = rows.some((item) => item.id === refs.companySelect.value) ? String(refs.companySelect.value || "").trim() : "";
+          renderCompanyOptions({ selectedId });
+        });
+
+        refs.companyKeywordInput.addEventListener("change", () => {
+          applyCompanyKeywordSelection();
+        });
+
+        refs.companyKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") {
+            return;
+          }
+          event.preventDefault();
+          applyCompanyKeywordSelection({ preferFirst: true });
+        });
+
+        refs.companySelect.addEventListener("change", () => {
+          syncCompanyKeywordFromSelection();
+        });
+
+        refs.noticeEnterBtn.addEventListener("click", () => {
+          if (state.noticeSeconds > 0) {
+            return;
+          }
+          closeNoticeModal();
+        });
+
+        refs.addParticipantBtn.addEventListener("click", () => {
+          addParticipantRow();
+        });
+
+        refs.participantList.addEventListener("input", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const row = target && target.closest("[data-participant-index]");
+          if (!row) {
+            return;
+          }
+          const index = Number(row.dataset.participantIndex);
+          if (!Number.isInteger(index) || index < 0 || index >= state.participants.length) {
+            return;
+          }
+
+          if (target.matches("[data-role='participant-name']")) {
+            state.participants[index].name = normalizeParticipantName(target.value);
+            syncParticipantCount();
+          }
+        });
+
+        refs.participantList.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement)) {
+            return;
+          }
+          const actionButton = event.target.closest("[data-action]");
+          if (!actionButton) {
+            return;
+          }
+          const row = actionButton.closest("[data-participant-index]");
+          if (!row) {
+            return;
+          }
+
+          const index = Number(row.dataset.participantIndex);
+          if (!Number.isInteger(index) || index < 0 || index >= state.participants.length) {
+            return;
+          }
+
+          const action = String(actionButton.dataset.action || "").trim();
+          if (action === "sign") {
+            openSignatureModal(index);
+            return;
+          }
+          if (action === "preview") {
+            previewSignature(index);
+            return;
+          }
+          if (action === "delete-sign") {
+            clearParticipantSignature(index);
+            return;
+          }
+          if (action === "delete-row") {
+            removeParticipantRow(index);
+          }
+        });
+
+        refs.closeSignatureBtn.addEventListener("click", closeSignatureModal);
+        refs.clearSignatureBtn.addEventListener("click", clearSignatureCanvas);
+        refs.saveSignatureBtn.addEventListener("click", () => {
+          void saveSignatureToParticipant();
+        });
+
+        refs.signatureModal.addEventListener("click", (event) => {
+          if (event.target === refs.signatureModal) {
+            closeSignatureModal();
+          }
+        });
+
+        bindSignatureCanvas();
+      }
+
+      function applyAccessWarning() {
+        const host = window.location.host || "";
+        const isLocal = isLocalOrPrivateWebHost(host);
+        if (!isLocal) {
+          refs.accessWarn.style.display = "none";
+          refs.accessWarn.textContent = "";
+          return;
+        }
+        refs.accessWarn.style.display = "block";
+        refs.accessWarn.textContent = "当前地址属于本地或内网地址，微信外部扫码访问和手写签字上传都可能失败。请将页面部署到公网 HTTPS 域名，并在后端配置 PUBLIC_BASE_URL。";
+      }
+
+      function resetFormValues() {
+        refs.titleInput.value = "";
+        refs.trainingDateInput.value = toDateInputValue(new Date());
+        syncDateFieldDisplay(refs.trainingDateField, refs.trainingDateDisplayInput, refs.trainingDateInput);
+        refs.attendeeCountInput.value = "";
+        refs.companyKeywordInput.value = "";
+        refs.companySelect.value = "";
+        refs.projectInput.value = "";
+        refs.lecturerSelect.value = "";
+        refs.sampledSelect.value = "否";
+        refs.contentInput.value = "";
+        refs.effectInput.value = "";
+        setParticipants([createEmptyParticipant()]);
+        closeSignatureModal();
+      }
+
+      async function loadRemoteOptions() {
+        setLoading(true);
+        setStatus("正在加载施工单位和成员数据...");
+
+        try {
+          const [units, users] = await Promise.all([fetchPartnerUnits(), fetchContactsUsers()]);
+          state.units = units;
+          state.users = users;
+
+          renderCompanyOptions();
+          renderLecturerOptions();
+          applyScanPrefill();
+
+          setStatus(`加载完成：施工单位 ${state.units.length} 条，成员 ${state.users.length} 条`);
+        } catch (error) {
+          setStatus(`加载失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function renderCompanyOptions({ selectedId = String(refs.companySelect.value || "").trim() } = {}) {
+        const rows = filterPartnerUnits(refs.companyKeywordInput.value);
+        const options = ['<option value="">请选择施工单位</option>'];
+        rows.forEach((item) => {
+          options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`);
+        });
+        if (!rows.length) {
+          options.push('<option value="" disabled>未找到匹配施工单位</option>');
+        }
+        refs.companySelect.innerHTML = options.join("");
+        refs.companySelect.value = rows.some((item) => item.id === selectedId) ? selectedId : "";
+      }
+
+      function renderLecturerOptions() {
+        const options = ['<option value="">请选择授课人（可选）</option>'];
+        state.users.forEach((item) => {
+          options.push(`<option value="${escapeHtml(item.userId)}">${escapeHtml(item.name)}</option>`);
+        });
+        refs.lecturerSelect.innerHTML = options.join("");
+      }
+
+      function applyScanPrefill() {
+        const unitId = String(state.scanContext.unitId || "").trim();
+        if (unitId && state.units.some((item) => item.id === unitId)) {
+          const unit = state.units.find((item) => item.id === unitId);
+          setCompanySelection(unitId, unit?.name || "");
+        }
+
+        const unitName = String(state.scanContext.unitName || "").trim();
+        if (!refs.companySelect.value && unitName) {
+          setCompanySelection("", unitName);
+        }
+
+        if (!refs.titleInput.value && state.scanContext.fromQr) {
+          refs.titleInput.value = "相关方入场安全培训";
+        }
+      }
+
+      function openNoticeModal() {
+        state.noticeSeconds = 10;
+        refs.noticeModal.classList.remove("hidden");
+        updateNoticeCountdown();
+        window.clearInterval(state.noticeTimer);
+        state.noticeTimer = window.setInterval(() => {
+          state.noticeSeconds -= 1;
+          if (state.noticeSeconds <= 0) {
+            state.noticeSeconds = 0;
+            window.clearInterval(state.noticeTimer);
+            state.noticeTimer = null;
+          }
+          updateNoticeCountdown();
+        }, 1000);
+      }
+
+      function closeNoticeModal() {
+        refs.noticeModal.classList.add("hidden");
+        window.clearInterval(state.noticeTimer);
+        state.noticeTimer = null;
+      }
+
+      function updateNoticeCountdown() {
+        const text = state.noticeSeconds > 0 ? `请先阅读 ${state.noticeSeconds} 秒` : "确定并进入培训页面";
+        refs.noticeCountdown.textContent = state.noticeSeconds > 0 ? `倒计时 ${state.noticeSeconds} 秒` : "已完成阅读，可进入培训页面";
+        refs.noticeEnterBtn.textContent = text;
+        refs.noticeEnterBtn.disabled = state.noticeSeconds > 0;
+      }
+
+      function showSubmittedState(recordId) {
+        const id = String(recordId || "").trim();
+        refs.formSection.hidden = true;
+        refs.submittedPanel.hidden = false;
+        refs.submittedRecordId.textContent = id || "-";
+        refs.successBox.classList.remove("show");
+        closeNoticeModal();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function updateSubmittedUrl(recordId) {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set("submitted", "1");
+          if (recordId) {
+            url.searchParams.set("record_id", String(recordId));
+          } else {
+            url.searchParams.delete("record_id");
+          }
+          history.replaceState({}, "", url.toString());
+        } catch {
+          // ignore history errors
+        }
+      }
+
+      async function submitForm(event) {
+        event.preventDefault();
+        refs.successBox.classList.remove("show");
+
+        const title = refs.titleInput.value.trim();
+        const trainingDate = refs.trainingDateInput.value.trim();
+        const companyId = String(refs.companySelect.value || "").trim();
+        const companyName = resolveUnitNameById(companyId);
+        const project = refs.projectInput.value.trim();
+        const lecturerId = String(refs.lecturerSelect.value || "").trim();
+        const sampled = refs.sampledSelect.value === "是" ? "是" : "否";
+        let participants = [];
+        const content = refs.contentInput.value.trim();
+        const effect = refs.effectInput.value.trim();
+
+        if (!title) {
+          setStatus("请填写标题", true);
+          return;
+        }
+        if (!trainingDate) {
+          setStatus("请填写培训日期", true);
+          return;
+        }
+        if (!companyName) {
+          setStatus("请选择施工单位", true);
+          return;
+        }
+        try {
+          participants = collectValidParticipants();
+        } catch (error) {
+          setStatus(error.message, true);
+          return;
+        }
+
+        const finalCount = participants.length;
+
+        if (!finalCount) {
+          setStatus("请至少录入 1 位参训人员", true);
+          return;
+        }
+        if (!project) {
+          setStatus("请填写施工项目", true);
+          return;
+        }
+
+        const payload = {
+          [TRAINING_FIELD.title]: title,
+          [TRAINING_FIELD.trainingDate]: formatDateTimeForApi(trainingDate),
+          [TRAINING_FIELD.company]: companyName,
+          [TRAINING_FIELD.attendeeCount]: finalCount,
+          [TRAINING_FIELD.project]: project,
+          [TRAINING_FIELD.content]: content,
+          [TRAINING_FIELD.effect]: effect,
+          [TRAINING_FIELD.sampled]: sampled,
+          [TRAINING_FIELD.lecturer]: lecturerId || null,
+          [TRAINING_FIELD.participantSubform]: buildParticipantSubformRows(participants),
+        };
+
+        setLoading(true);
+        setStatus("正在提交培训记录...");
+
+        try {
+          const result = await requestEntry(API_CONFIG.trainingEntryId, "data_create", { data: payload }, "POST");
+          const newId = extractRecordId(result?.data || result);
+          refs.successText.textContent = newId ? `培训记录已提交，记录ID：${newId}` : "培训记录已提交";
+          setStatus("提交成功");
+          updateSubmittedUrl(newId);
+          showSubmittedState(newId);
+        } catch (error) {
+          setStatus(`提交失败：${error.message}`, true);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      function buildParticipantSubformRows(participants) {
+        return (Array.isArray(participants) ? participants : []).map((item) => ({
+          [PARTICIPANT_FIELD.name]: item.name,
+          [PARTICIPANT_FIELD.sign]: Array.isArray(item.signFiles) && item.signFiles.length ? item.signFiles : null,
+          [PARTICIPANT_FIELD.signTime]: item.signTime ? formatDateTimeForApi(item.signTime) : "",
+        }));
+      }
+
+      function resolveUnitNameById(unitId) {
+        const id = String(unitId || "").trim();
+        if (!id) {
+          return "";
+        }
+        const row = state.units.find((item) => item.id === id);
+        return row?.name || "";
+      }
+
+      function filterPartnerUnits(keyword) {
+        const text = normalizeCompareText(keyword);
+        if (!text) {
+          return state.units.slice();
+        }
+        return state.units.filter((item) => {
+          const haystack = [item.name, item.code].map((part) => normalizeCompareText(part)).join("|");
+          return haystack.includes(text);
+        });
+      }
+
+      function applyCompanyKeywordSelection({ preferFirst = false } = {}) {
+        const keyword = refs.companyKeywordInput.value.trim();
+        if (!keyword) {
+          refs.companySelect.value = "";
+          renderCompanyOptions({ selectedId: "" });
+          return;
+        }
+
+        const filtered = filterPartnerUnits(keyword);
+        const compareKeyword = normalizeCompareText(keyword);
+        const exactMatch = filtered.find((item) => {
+          return normalizeCompareText(item.name) === compareKeyword || normalizeCompareText(item.code) === compareKeyword;
+        });
+        const target = exactMatch || (preferFirst && filtered.length === 1 ? filtered[0] : null);
+        renderCompanyOptions({ selectedId: target?.id || String(refs.companySelect.value || "").trim() });
+
+        if (!target) {
+          if (!filtered.some((item) => item.id === refs.companySelect.value)) {
+            refs.companySelect.value = "";
+          }
+          return;
+        }
+
+        refs.companyKeywordInput.value = target.name;
+        renderCompanyOptions({ selectedId: target.id });
+      }
+
+      function syncCompanyKeywordFromSelection() {
+        const id = String(refs.companySelect.value || "").trim();
+        const unit = state.units.find((item) => item.id === id);
+        if (!unit) {
+          return;
+        }
+        refs.companyKeywordInput.value = unit.name;
+        renderCompanyOptions({ selectedId: unit.id });
+      }
+
+      function setCompanySelection(unitId, unitName) {
+        const id = String(unitId || "").trim();
+        const name = String(unitName || "").trim();
+        const matched =
+          state.units.find((item) => item.id === id) ||
+          state.units.find((item) => normalizeCompareText(item.name) === normalizeCompareText(name)) ||
+          null;
+
+        refs.companyKeywordInput.value = matched ? matched.name : name;
+        renderCompanyOptions({ selectedId: matched?.id || "" });
+      }
+
+      async function fetchPartnerUnits() {
+        state.unitAliasMap = await resolvePartnerFieldAliasMap();
+        const records = await fetchEntryRecords(API_CONFIG.partnerEntryId);
+        const mapped = records
+          .map((row) => mapPartnerUnitRecord(row, state.unitAliasMap))
+          .filter((item) => Boolean(item.id) && Boolean(item.name));
+
+        const unique = [];
+        const seen = new Set();
+        mapped.forEach((item) => {
+          const key = `${normalizeCompareText(item.name)}|${item.id}`;
+          if (!key || seen.has(key)) {
+            return;
+          }
+          seen.add(key);
+          unique.push(item);
+        });
+
+        unique.sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-Hans-CN"));
+        return unique;
+      }
+
+      async function resolvePartnerFieldAliasMap() {
+        const map = {
+          codeAliases: [PARTNER_FIELD.code],
+          nameAliases: [PARTNER_FIELD.name],
+        };
+
+        try {
+          const widgetsResult = await fetchEntryWidgets(API_CONFIG.partnerEntryId);
+          const widgets = extractWidgetList(widgetsResult);
+          if (!widgets.length) {
+            return map;
+          }
+
+          const codeAliases = new Set(map.codeAliases);
+          const nameAliases = new Set(map.nameAliases);
+
+          widgets.forEach((widget) => {
+            const alias = String(widget.alias || "").trim();
+            const titleText = String(widget.title || "").trim();
+            if (!alias || !titleText) {
+              return;
+            }
+
+            if (matchesWidgetTitle(titleText, PARTNER_FIELD_TITLE_MATCHER.code)) {
+              codeAliases.add(alias);
+            }
+            if (matchesWidgetTitle(titleText, PARTNER_FIELD_TITLE_MATCHER.name)) {
+              nameAliases.add(alias);
+            }
+          });
+
+          map.codeAliases = Array.from(codeAliases);
+          map.nameAliases = Array.from(nameAliases);
+          return map;
+        } catch {
+          return map;
+        }
+      }
+
+      function mapPartnerUnitRecord(record, aliasMap) {
+        const code = toDisplayText(getAliasByCandidates(record, aliasMap?.codeAliases || [PARTNER_FIELD.code]));
+        const name = toDisplayText(getAliasByCandidates(record, aliasMap?.nameAliases || [PARTNER_FIELD.name]));
+        return {
+          id: extractRecordId(record),
+          code,
+          name,
+        };
+      }
+
+      function getAliasByCandidates(record, aliases) {
+        const list = Array.isArray(aliases) ? aliases : [];
+        for (const alias of list) {
+          const key = String(alias || "").trim();
+          if (!key) {
+            continue;
+          }
+          const raw = getAliasRawValue(record, key);
+          if (raw !== undefined && raw !== null && String(toDisplayText(raw)).trim()) {
+            return raw;
+          }
+        }
+        return "";
+      }
+
+      function matchesWidgetTitle(title, keywords) {
+        const text = normalizeCompareText(title);
+        return (keywords || []).some((keyword) => text.includes(normalizeCompareText(keyword)));
+      }
+
+      async function fetchEntryWidgets(entryId) {
+        try {
+          return await requestEntry(entryId, "widgets", {}, "POST");
+        } catch {
+          return requestEntry(entryId, "widgets", {}, "GET");
+        }
+      }
+
+      function extractWidgetList(result) {
+        const roots = [];
+        const visited = new Set();
+        const queue = [result];
+
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object") {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            current.forEach((item) => {
+              if (item && typeof item === "object") {
+                queue.push(item);
+              }
+            });
+            continue;
+          }
+
+          const candidates = [current.widgets, current.data, current.list, current.rows, current.items];
+          candidates.forEach((candidate) => {
+            if (Array.isArray(candidate)) {
+              candidate.forEach((item) => {
+                if (item && typeof item === "object") {
+                  roots.push(item);
+                }
+              });
+            }
+          });
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        const output = [];
+        roots.forEach((item) => {
+          collectWidgetList(item, output);
+        });
+        return output;
+      }
+
+      function collectWidgetList(widget, output) {
+        if (!widget || typeof widget !== "object") {
+          return;
+        }
+
+        const alias = String(widget.alias || widget.name || widget.widget_alias || widget.widget_name || "").trim();
+        const title = String(widget.title || widget.label || widget.widget_title || "").trim();
+        if (alias) {
+          output.push({
+            alias,
+            title,
+            type: String(widget.type || widget.widget_type || "").trim(),
+          });
+        }
+
+        const children = []
+          .concat(Array.isArray(widget.widgets) ? widget.widgets : [])
+          .concat(Array.isArray(widget.sub_widgets) ? widget.sub_widgets : [])
+          .concat(Array.isArray(widget.children) ? widget.children : []);
+        children.forEach((item) => collectWidgetList(item, output));
+      }
+
+      async function fetchContactsUsers() {
+        const result = await requestApi("/contacts/users");
+        const rows = result?.data?.users || [];
+        return normalizeContactUsers(rows);
+      }
+
+      function normalizeContactUsers(list) {
+        const output = [];
+        const seen = new Set();
+
+        (Array.isArray(list) ? list : []).forEach((item) => {
+          if (!item || typeof item !== "object") {
+            return;
+          }
+          const userId = readFirstObjectText(item, ["userId", "user_id", "id", "_id", "uniqueid", "uniqueId"]);
+          const name = readFirstObjectText(item, ["name", "userName", "user_name", "nickname", "label", "title"]);
+          if (!userId || !name || seen.has(userId)) {
+            return;
+          }
+          seen.add(userId);
+          output.push({ userId, name });
+        });
+
+        output.sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-Hans-CN"));
+        return output;
+      }
+
+      function readFirstObjectText(source, keys) {
+        for (const key of keys) {
+          if (!Object.prototype.hasOwnProperty.call(source, key)) {
+            continue;
+          }
+          const text = String(source[key] || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+        return "";
+      }
+
+      async function fetchEntryRecords(entryId) {
+        const actionCandidates = ["data", "data_search", "data_list", "data_query", "data_find"];
+        const payloadCandidates = [{ page: 1, limit: 1000 }, { page_no: 1, page_size: 1000 }, { limit: 1000 }, {}];
+
+        const errors = [];
+        for (const action of actionCandidates) {
+          for (const payload of payloadCandidates) {
+            try {
+              const response = await requestEntry(entryId, action, payload, "POST");
+              const records = extractRecordArray(response);
+              if (Array.isArray(records)) {
+                return records;
+              }
+            } catch (error) {
+              errors.push(`${action}(${JSON.stringify(payload)}): ${error.message}`);
+            }
+          }
+        }
+
+        throw new Error(errors[errors.length - 1] || "未能获取列表数据");
+      }
+
+      async function requestApi(path, query = {}) {
+        const url = new URL(`${API_CONFIG.baseUrl}${path}`);
+        Object.entries(query || {}).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === "") {
+            return;
+          }
+          url.searchParams.set(key, String(value));
+        });
+
+        let response;
+        try {
+          response = await fetch(url.toString(), {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      async function requestBackend(path, method = "GET", body = null) {
+        const url = `${API_CONFIG.baseUrl}${path}`;
+        const options = {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        if (method !== "GET" && body !== null) {
+          options.body = JSON.stringify(body);
+        }
+
+        let response;
+        try {
+          response = await fetch(url, options);
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      async function requestEntry(entryId, action, body = {}, method = "POST") {
+        const url = `${API_CONFIG.baseUrl}/app/${API_CONFIG.appId}/entry/${entryId}/${action}`;
+
+        const options = {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+
+        if (method !== "GET") {
+          options.body = JSON.stringify(body || {});
+        }
+
+        let response;
+        try {
+          response = await fetch(url, options);
+        } catch (error) {
+          throw new Error(`网络请求失败：${error.message}`);
+        }
+
+        const text = await response.text();
+        const result = safeJsonParse(text);
+
+        if (!response.ok) {
+          const detail = extractApiMessage(result) || text || `HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        if (!isApiSuccess(result)) {
+          const detail = extractApiMessage(result) || "接口返回失败";
+          throw new Error(detail);
+        }
+
+        return result;
+      }
+
+      function bindDateField(fieldWrapper, displayInput, nativeInput) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(nativeInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+
+        fieldWrapper.addEventListener("click", () => {
+          openNativeDatePicker(nativeInput);
+          displayInput.focus();
+        });
+
+        displayInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+            event.preventDefault();
+            openNativeDatePicker(nativeInput);
+          }
+        });
+
+        nativeInput.addEventListener("input", () => {
+          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+        });
+
+        nativeInput.addEventListener("change", () => {
+          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+        });
+
+        syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+      }
+
+      function syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(nativeInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+        const normalized = normalizeDateInput(nativeInput.value);
+        displayInput.value = normalized || "";
+      }
+
+      function openNativeDatePicker(input) {
+        if (!(input instanceof HTMLInputElement)) {
+          return;
+        }
+        if (typeof input.showPicker === "function") {
+          try {
+            input.showPicker();
+            return;
+          } catch {
+            // Some browsers require direct user gestures. Fallback below.
+          }
+        }
+        input.focus();
+      }
+
+      function parseScanContext() {
+        try {
+        const params = new URLSearchParams(window.location.search || "");
+        return {
+          fromQr: params.get("from") === "qr",
+          unitId: String(params.get("unit_id") || "").trim(),
+          unitName: decodeURIComponentSafe(params.get("unit_name") || ""),
+          submitted: params.get("submitted") === "1",
+          recordId: String(params.get("record_id") || "").trim(),
+        };
+      } catch {
+        return {
+          fromQr: false,
+          unitId: "",
+          unitName: "",
+          submitted: false,
+          recordId: "",
+        };
+      }
+    }
+
+      function decodeURIComponentSafe(value) {
+        const text = String(value || "");
+        try {
+          return decodeURIComponent(text);
+        } catch {
+          return text;
+        }
+      }
+
+      function extractRecordArray(result) {
+        const queue = [result];
+        const visited = new Set();
+
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object") {
+            continue;
+          }
+          if (visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            if (!current.length || typeof current[0] === "object") {
+              return current;
+            }
+            continue;
+          }
+
+          const keys = ["data_list", "data", "list", "rows", "items", "result", "records", "entry_data_list"];
+          for (const key of keys) {
+            const value = current[key];
+            if (Array.isArray(value) && (!value.length || typeof value[0] === "object")) {
+              return value;
+            }
+            const fromObjectValues = objectValuesAsObjectArray(value);
+            if (fromObjectValues) {
+              return fromObjectValues;
+            }
+          }
+
+          const topFromValues = objectValuesAsObjectArray(current);
+          if (topFromValues && topFromValues.length) {
+            return topFromValues;
+          }
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        return [];
+      }
+
+      function objectValuesAsObjectArray(source) {
+        if (!source || typeof source !== "object" || Array.isArray(source)) {
+          return null;
+        }
+        const values = Object.values(source);
+        if (!values.length) {
+          return null;
+        }
+        if (values.every((item) => item && typeof item === "object" && !Array.isArray(item))) {
+          return values;
+        }
+        return null;
+      }
+
+      function extractRecordId(record) {
+        if (!record || typeof record !== "object") {
+          return "";
+        }
+
+        const candidates = [record._id, record.id, record.data_id, record.entry_data_id, record.record_id, record._rowid];
+        for (const candidate of candidates) {
+          const text = String(candidate || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+
+        const nestedCandidates = [record.data, record.entry_data, record.widget_data, record.form_data];
+        for (const nested of nestedCandidates) {
+          if (nested && typeof nested === "object") {
+            const nestedId = extractRecordId(nested);
+            if (nestedId) {
+              return nestedId;
+            }
+          }
+        }
+
+        return "";
+      }
+
+      function getAliasRawValue(record, alias) {
+        if (!record || !alias) {
+          return "";
+        }
+
+        const containers = [record, record.data, record.entry_data, record.widget_data, record.form_data];
+        for (const container of containers) {
+          if (container && typeof container === "object" && Object.prototype.hasOwnProperty.call(container, alias)) {
+            return container[alias];
+          }
+        }
+
+        const fromWidgets = findAliasInArray(record.widgets, alias);
+        if (fromWidgets !== undefined) {
+          return fromWidgets;
+        }
+
+        const fromDataArray = findAliasInArray(record.data, alias);
+        if (fromDataArray !== undefined) {
+          return fromDataArray;
+        }
+
+        return "";
+      }
+
+      function findAliasInArray(list, alias) {
+        if (!Array.isArray(list)) {
+          return undefined;
+        }
+        for (const item of list) {
+          if (!item || typeof item !== "object") {
+            continue;
+          }
+          const key = item.alias || item.widget_alias || item.name || item.key || item.widget_key;
+          if (key === alias) {
+            return item.value ?? item.widget_value ?? item.data ?? item;
+          }
+        }
+        return undefined;
+      }
+
+      function createEmptyParticipant() {
+        return {
+          name: "",
+          signFiles: [],
+          signPreviewUrl: "",
+          signTime: "",
+        };
+      }
+
+      function normalizeParticipantName(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+
+      function normalizeParticipantRow(row) {
+        const source = row && typeof row === "object" ? row : {};
+        return {
+          name: normalizeParticipantName(source.name),
+          signFiles: Array.isArray(source.signFiles) ? source.signFiles.filter((item) => item && typeof item === "object") : [],
+          signPreviewUrl: String(source.signPreviewUrl || "").trim(),
+          signTime: normalizeDateTimeLocalValue(source.signTime),
+        };
+      }
+
+      function setParticipants(list) {
+        state.participants = (Array.isArray(list) ? list : []).map((item) => normalizeParticipantRow(item));
+        renderParticipantList();
+        syncParticipantCount();
+      }
+
+      function syncParticipantCount() {
+        const count = state.participants.filter((item) => Boolean(normalizeParticipantName(item.name))).length;
+        refs.attendeeCountInput.value = count ? String(count) : "";
+      }
+
+      function renderParticipantList() {
+        if (!state.participants.length) {
+          refs.participantList.innerHTML = '<div class="participant-empty">暂无参训人员，请点击“新增人员”开始录入。</div>';
+          return;
+        }
+
+        refs.participantList.innerHTML = state.participants
+          .map((item, index) => {
+            const hasSign = Array.isArray(item.signFiles) && item.signFiles.length > 0;
+            const signTimeText = item.signTime ? formatDateTimeForDisplay(item.signTime) : "";
+            return `
+              <div class="participant-row" data-participant-index="${index}">
+                <div class="participant-seq">${index + 1}</div>
+                <input
+                  class="input"
+                  type="text"
+                  data-role="participant-name"
+                  value="${escapeHtml(item.name)}"
+                  placeholder="请输入姓名"
+                />
+                <div class="participant-sign-cell">
+                  <button type="button" class="btn" data-action="sign">${hasSign ? "重签" : "点击签字"}</button>
+                  <span class="sign-state${hasSign ? " done" : ""}">${hasSign ? "已签" : "未签"}</span>
+                  ${hasSign ? '<button type="button" class="sign-preview-link" data-action="preview">预览</button>' : ""}
+                  ${hasSign ? '<button type="button" class="sign-preview-link" data-action="delete-sign">清除</button>' : ""}
+                </div>
+                <input
+                  class="input participant-time"
+                  type="text"
+                  value="${escapeHtml(signTimeText)}"
+                  placeholder="签字后自动记录"
+                  readonly
+                />
+                <button type="button" class="btn participant-delete" data-action="delete-row">删除</button>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function addParticipantRow() {
+        state.participants.push(createEmptyParticipant());
+        renderParticipantList();
+        syncParticipantCount();
+
+        const index = state.participants.length - 1;
+        const input = refs.participantList.querySelector(`[data-participant-index="${index}"] [data-role='participant-name']`);
+        if (input instanceof HTMLInputElement) {
+          input.focus();
+        }
+      }
+
+      function removeParticipantRow(index) {
+        state.participants.splice(index, 1);
+
+        if (state.activeSignatureIndex === index) {
+          closeSignatureModal();
+        } else if (state.activeSignatureIndex > index) {
+          state.activeSignatureIndex -= 1;
+        }
+
+        renderParticipantList();
+        syncParticipantCount();
+
+        if (!state.participants.length) {
+          addParticipantRow();
+        }
+      }
+
+      function clearParticipantSignature(index) {
+        const row = state.participants[index];
+        if (!row) {
+          return;
+        }
+
+        row.signFiles = [];
+        row.signPreviewUrl = "";
+        row.signTime = "";
+        renderParticipantList();
+        setStatus(`已清除第 ${index + 1} 行签字`);
+      }
+
+      function collectValidParticipants() {
+        const output = [];
+        const seen = new Set();
+
+        state.participants.forEach((item, index) => {
+          const row = normalizeParticipantRow(item);
+          const hasName = Boolean(row.name);
+          const hasSign = row.signFiles.length > 0;
+          const hasOtherValue = Boolean(row.signPreviewUrl || row.signTime || hasSign);
+
+          if (!hasName && !hasOtherValue) {
+            return;
+          }
+          if (!hasName) {
+            throw new Error(`第 ${index + 1} 行请先填写参训人员姓名`);
+          }
+          if (seen.has(row.name)) {
+            throw new Error(`参训人员“${row.name}”重复录入，请检查`);
+          }
+
+          seen.add(row.name);
+          if (!hasSign) {
+            row.signFiles = [];
+            row.signPreviewUrl = "";
+            row.signTime = "";
+          } else if (!row.signTime) {
+            row.signTime = formatDateTimeLocalValue(new Date());
+          }
+          output.push(row);
+        });
+
+        return output;
+      }
+
+      function previewSignature(index) {
+        const row = state.participants[index];
+        const previewUrl = String((row && row.signPreviewUrl) || "").trim();
+        if (!previewUrl) {
+          setStatus("当前签字暂无可预览图片", true);
+          return;
+        }
+        window.open(previewUrl, "_blank", "noopener,noreferrer");
+      }
+
+      function openSignatureModal(index) {
+        const row = state.participants[index];
+        if (!row) {
+          return;
+        }
+
+        const name = normalizeParticipantName(row.name);
+        if (!name) {
+          setStatus(`请先填写第 ${index + 1} 行参训人员姓名`, true);
+          const input = refs.participantList.querySelector(`[data-participant-index="${index}"] [data-role='participant-name']`);
+          if (input instanceof HTMLInputElement) {
+            input.focus();
+          }
+          return;
+        }
+
+        state.activeSignatureIndex = index;
+        refs.signatureModalTitle.textContent = `手写签字 - ${name}`;
+        refs.signatureModal.classList.remove("hidden");
+        resizeSignatureCanvas();
+        clearSignatureCanvas();
+        refs.signatureStatus.textContent = "请在签字板上书写后点击保存";
+      }
+
+      function closeSignatureModal() {
+        state.activeSignatureIndex = -1;
+        refs.signatureModal.classList.add("hidden");
+        clearSignatureCanvas();
+        refs.signatureStatus.textContent = "请开始签字";
+      }
+
+      function bindSignatureCanvas() {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+
+        canvas.addEventListener("pointerdown", handleSignaturePointerDown);
+        canvas.addEventListener("pointermove", handleSignaturePointerMove);
+        canvas.addEventListener("pointerup", handleSignaturePointerUp);
+        canvas.addEventListener("pointerleave", handleSignaturePointerUp);
+        canvas.addEventListener("pointercancel", handleSignaturePointerUp);
+
+        window.addEventListener("resize", () => {
+          if (!refs.signatureModal.classList.contains("hidden")) {
+            resizeSignatureCanvas();
+          }
+        });
+      }
+
+      function resizeSignatureCanvas() {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        const width = Math.max(Math.floor(rect.width * ratio), 320);
+        const height = Math.max(Math.floor(rect.height * ratio), 180);
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(ratio, ratio);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 2.6;
+        ctx.strokeStyle = "#18324d";
+        ctx.clearRect(0, 0, rect.width, rect.height);
+
+        state.signaturePad.dirty = false;
+        state.signaturePad.drawing = false;
+        state.signaturePad.pointerId = null;
+      }
+
+      function clearSignatureCanvas() {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        state.signaturePad.dirty = false;
+        state.signaturePad.drawing = false;
+        state.signaturePad.pointerId = null;
+        refs.signatureStatus.textContent = "已清空，请重新签字";
+      }
+
+      function handleSignaturePointerDown(event) {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+
+        event.preventDefault();
+        const point = getCanvasPoint(canvas, event);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        state.signaturePad.drawing = true;
+        state.signaturePad.pointerId = event.pointerId;
+        state.signaturePad.lastX = point.x;
+        state.signaturePad.lastY = point.y;
+        refs.signatureStatus.textContent = "正在签字...";
+
+        if (typeof canvas.setPointerCapture === "function") {
+          try {
+            canvas.setPointerCapture(event.pointerId);
+          } catch {
+            // ignore
+          }
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(point.x, point.y);
+      }
+
+      function handleSignaturePointerMove(event) {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        if (!state.signaturePad.drawing || state.signaturePad.pointerId !== event.pointerId) {
+          return;
+        }
+
+        event.preventDefault();
+        const point = getCanvasPoint(canvas, event);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(state.signaturePad.lastX, state.signaturePad.lastY);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+
+        state.signaturePad.lastX = point.x;
+        state.signaturePad.lastY = point.y;
+        state.signaturePad.dirty = true;
+      }
+
+      function handleSignaturePointerUp(event) {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        if (state.signaturePad.pointerId !== null && state.signaturePad.pointerId !== event.pointerId) {
+          return;
+        }
+
+        state.signaturePad.drawing = false;
+        state.signaturePad.pointerId = null;
+        if (state.signaturePad.dirty) {
+          refs.signatureStatus.textContent = "签字完成，点击保存后回填到当前人员";
+        }
+
+        if (typeof canvas.releasePointerCapture === "function") {
+          try {
+            canvas.releasePointerCapture(event.pointerId);
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      function getCanvasPoint(canvas, event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
+      }
+
+      async function saveSignatureToParticipant() {
+        const index = state.activeSignatureIndex;
+        const row = state.participants[index];
+        if (!row) {
+          setStatus("当前没有可保存的签字行", true);
+          return;
+        }
+        if (!state.signaturePad.dirty) {
+          refs.signatureStatus.textContent = "请先在签字板上完成签字";
+          return;
+        }
+
+        const canvas = refs.signatureCanvas;
+        const dataUrl = canvas.toDataURL("image/png");
+
+        refs.saveSignatureBtn.disabled = true;
+        refs.clearSignatureBtn.disabled = true;
+        refs.closeSignatureBtn.disabled = true;
+        refs.signatureStatus.textContent = "正在上传签字...";
+
+        try {
+          const result = await requestBackend("/partner-training/signature-upload", "POST", {
+            dataUrl,
+            name: `participant-sign-${Date.now()}.png`,
+          });
+          const files = Array.isArray(result?.data?.files) ? result.data.files.filter((item) => item && typeof item === "object") : [];
+          if (!files.length) {
+            throw new Error("上传成功但未返回签字文件");
+          }
+
+          row.signFiles = files;
+          row.signPreviewUrl = dataUrl;
+          row.signTime = formatDateTimeLocalValue(new Date());
+          renderParticipantList();
+          syncParticipantCount();
+          setStatus(`第 ${index + 1} 行签字已保存`);
+          closeSignatureModal();
+        } catch (error) {
+          const message = `签字上传失败：${error.message}`;
+          refs.signatureStatus.textContent = message;
+          setStatus(message, true);
+        } finally {
+          refs.saveSignatureBtn.disabled = false;
+          refs.clearSignatureBtn.disabled = false;
+          refs.closeSignatureBtn.disabled = false;
+        }
+      }
+
+      function toDisplayText(value) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return String(value).trim();
+        }
+
+        if (Array.isArray(value)) {
+          return value
+            .map((item) => toDisplayText(item))
+            .filter(Boolean)
+            .join("、");
+        }
+
+        if (typeof value === "object") {
+          if (typeof value.display_name === "string") {
+            return value.display_name.trim();
+          }
+          if (typeof value.name === "string") {
+            return value.name.trim();
+          }
+          if (typeof value.label === "string") {
+            return value.label.trim();
+          }
+          if (typeof value.title === "string") {
+            return value.title.trim();
+          }
+          if (typeof value.value === "string" || typeof value.value === "number") {
+            return String(value.value).trim();
+          }
+          return Object.values(value)
+            .map((item) => toDisplayText(item))
+            .filter(Boolean)
+            .join("、");
+        }
+
+        return "";
+      }
+
+      function normalizeCompareText(value) {
+        return String(value || "")
+          .replace(/\s+/g, "")
+          .toLowerCase();
+      }
+
+      function normalizeDateInput(value) {
+        const text = String(toDisplayText(value) || "").trim();
+        if (!text) {
+          return "";
+        }
+
+        const normalized = text
+          .replace(/年/g, "-")
+          .replace(/月/g, "-")
+          .replace(/日/g, "")
+          .replace(/\//g, "-")
+          .replace(/\s+/g, " ");
+
+        const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s].*)?$/);
+        if (!match) {
+          return "";
+        }
+
+        const year = match[1];
+        const month = match[2].padStart(2, "0");
+        const day = match[3].padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function normalizeDateTimeLocalValue(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "";
+        }
+
+        const normalized = text
+          .replace(/年/g, "-")
+          .replace(/月/g, "-")
+          .replace(/日/g, "")
+          .replace(/\//g, "-")
+          .replace(/\s+/g, " ")
+          .replace("T", " ");
+
+        const match = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/);
+        if (!match) {
+          return "";
+        }
+
+        const year = match[1];
+        const month = match[2].padStart(2, "0");
+        const day = match[3].padStart(2, "0");
+        const hour = match[4].padStart(2, "0");
+        const minute = match[5].padStart(2, "0");
+        return `${year}-${month}-${day}T${hour}:${minute}`;
+      }
+
+      function formatDateTimeForDisplay(value) {
+        const normalized = normalizeDateTimeLocalValue(value);
+        return normalized ? normalized.replace("T", " ") : "";
+      }
+
+      function formatDateTimeForApi(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return "";
+        }
+
+        const dateOnly = text.match(/^(\d{4}-\d{2}-\d{2})$/);
+        if (dateOnly) {
+          return `${dateOnly[1]} 00:00:00`;
+        }
+
+        const dateTime = text.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/);
+        if (dateTime) {
+          return `${dateTime[1]} ${dateTime[2]}:00`;
+        }
+
+        return "";
+      }
+
+      function formatDateTimeLocalValue(date) {
+        const d = date instanceof Date ? date : new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const hour = String(d.getHours()).padStart(2, "0");
+        const minute = String(d.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day}T${hour}:${minute}`;
+      }
+
+      function toDateInputValue(date) {
+        const d = date instanceof Date ? date : new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function toIntOrDefault(value, fallback = 0) {
+        const num = Number.parseInt(String(value || "").trim(), 10);
+        return Number.isFinite(num) ? num : fallback;
+      }
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      function isLocalOrPrivateWebHost(host) {
+        const value = String(host || "").trim().toLowerCase();
+        if (!value || window.location.protocol === "file:") {
+          return true;
+        }
+
+        const hostname = value.replace(/:\d+$/, "");
+        if (["localhost", "0.0.0.0", "::1", "[::1]"].includes(hostname)) {
+          return true;
+        }
+        if (hostname.endsWith(".local")) {
+          return true;
+        }
+        if (hostname.startsWith("127.")) {
+          return true;
+        }
+        if (hostname.startsWith("10.")) {
+          return true;
+        }
+        if (hostname.startsWith("192.168.")) {
+          return true;
+        }
+        if (hostname.startsWith("169.254.")) {
+          return true;
+        }
+
+        const parts = hostname.split(".");
+        if (parts.length === 4 && parts.every((item) => /^\d+$/.test(item))) {
+          const first = Number(parts[0]);
+          const second = Number(parts[1]);
+          if (first === 172 && second >= 16 && second <= 31) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+
+      function isApiSuccess(result) {
+        if (!result || typeof result !== "object") {
+          return true;
+        }
+
+        const values = [result.code, result.errcode, result.error_code, result.status];
+        for (const raw of values) {
+          if (raw === undefined || raw === null || raw === "") {
+            continue;
+          }
+          const text = String(raw).trim().toLowerCase();
+          if (["0", "200", "ok", "success", "true"].includes(text)) {
+            return true;
+          }
+          if (["1"].includes(text) && /success|ok/.test(String(result.msg || result.message || "").toLowerCase())) {
+            return true;
+          }
+          if (["400", "401", "403", "404", "500", "error", "false", "fail", "failed"].includes(text)) {
+            return false;
+          }
+          if (!Number.isNaN(Number(text))) {
+            return Number(text) >= 200 && Number(text) < 300;
+          }
+        }
+
+        return true;
+      }
+
+      function extractApiMessage(result) {
+        if (!result || typeof result !== "object") {
+          return "";
+        }
+
+        const candidates = [
+          result.msg,
+          result.message,
+          result.error,
+          result.errmsg,
+          result.error_msg,
+          result.errorMsg,
+          result.detail,
+          result.data && result.data.msg,
+          result.data && result.data.message,
+        ];
+
+        for (const item of candidates) {
+          const text = String(item || "").trim();
+          if (text) {
+            return text;
+          }
+        }
+        return "";
+      }
+
+      function setLoading(flag) {
+        state.loading = Boolean(flag);
+        refs.submitBtn.disabled = state.loading;
+        refs.resetBtn.disabled = state.loading;
+        refs.addParticipantBtn.disabled = state.loading;
+      }
+
+      function setStatus(message, isError = false) {
+        refs.statusBar.textContent = message;
+        refs.statusBar.classList.toggle("error", Boolean(isError));
+      }
+
+      function safeJsonParse(text) {
+        if (!text) {
+          return null;
+        }
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    </script>
+  </body>
+</html>

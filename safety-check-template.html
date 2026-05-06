@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>检查模板</title>
+    <link rel="stylesheet" href="safety-check-common.css" />
+    <link rel="stylesheet" href="compact-date-picker.css" />
+  </head>
+  <body>
+    <div class="page">
+      <section class="panel">
+        <div class="main-head">
+          <h1 id="pageTitle">检查模板</h1>
+          <div id="headActions" class="actions">
+            <button id="refreshBtn" class="btn">刷新</button>
+          </div>
+        </div>
+        <div id="content" class="content"></div>
+        <div id="statusBar" class="foot">准备就绪</div>
+      </section>
+    </div>
+    <div id="modalRoot"></div>
+    <div id="toast" class="toast"></div>
+    <script>window.SAFETY_CHECK_PAGE = "templates";</script>
+    <script src="compact-date-picker.js"></script>
+    <script src="safety-check-common.js"></script>
+  </body>
+</html>

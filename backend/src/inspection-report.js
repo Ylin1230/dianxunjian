@@ -1,3 +1,11 @@
+const {
+  listTaskAliasRecords,
+  shouldReadTasksFromDb,
+  shouldWriteTasksToBes,
+  shouldWriteTasksToDb,
+  updateTaskReportState,
+} = require("./task-store");
+
 const DEVICE_ENTRY_ID = "38104b6c9d74ce86a7c395b6";
 const CHEMICAL_ENTRY_ID = "9739459da9671a832692915d";
 const SITE_ENTRY_ID = "099e47809199d1d8214a984f";
@@ -5,6 +13,7 @@ const TASK_ENTRY_ID = "c0f0448b8de02de1a78829da";
 const STANDARD_DETAIL_ENTRY_ID = "99a2496eb8db1bcf9f1aae69";
 const REPORT_ENTRY_ID = "3d434c07be460e11b4d27d2e";
 const REPORT_DETAIL_ENTRY_ID = "51e34993af7355da52fb2fd8";
+const HAZARD_ENTRY_ID = "2759402bb574ebe89f9c0ea6";
 
 const MEMBER_FIELD = {
   user: "_widget_1711353655843",
@@ -129,6 +138,29 @@ const REPORT_DETAIL_FIELD = {
   submitTime: "_widget_1776080156486",
 };
 
+const HAZARD_FIELD = {
+  code: "_widget_1776821559042",
+  submissionId: "_widget_1776821559056",
+  submissionDetailId: "_widget_1776821559100",
+  title: "_widget_1776821861964",
+  description: "_widget_1776821861983",
+  riskLevel: "_widget_1776821862000",
+  target: "_widget_1776821862029",
+  ownerDept: "_widget_1776821862048",
+  ownerUser: "_widget_1776821862067",
+  deadline: "_widget_1776821862144",
+  requirement: "_widget_1776821862168",
+  status: "_widget_1776821862185",
+  actionDesc: "_widget_1776821862240",
+  beforePhotos: "_widget_1776821862257",
+  afterPhotos: "_widget_1776821862305",
+  verifier: "_widget_1776821862491",
+  verifyComment: "_widget_1776821862528",
+  closedAt: "_widget_1776821862545",
+  overdue: "_widget_1776821862569",
+  source: "_widget_1777338377500",
+};
+
 const TASK_STATUS_DONE_SET = new Set(["已完成", "完成", "异常", "已报工", "已关闭", "作废", "失效"]);
 const REPORTABLE_TASK_STATUS_SET = new Set(["", "未执行", "未开始", "待执行", "待点检", "执行中", "进行中"]);
 
@@ -214,7 +246,11 @@ function registerInspectionReportRoutes(app, config) {
     const targetDate = formatDate(startOfDay(req.query.date ? req.query.date : new Date()));
     const limit = clampNumber(toIntOrDefault(req.query.limit, 120), 20, 500);
     const [taskRecords, deviceRecords, chemicalRecords] = await Promise.all([
-      fetchEntryRecords(config, TASK_ENTRY_ID),
+      fetchReportTaskRecords(config, {
+        dashboardDate: targetDate,
+        doneStatuses: Array.from(TASK_STATUS_DONE_SET),
+        limit: Math.max(limit * 5, 500),
+      }),
       fetchEntryRecords(config, DEVICE_ENTRY_ID),
       fetchEntryRecords(config, CHEMICAL_ENTRY_ID),
     ]);
@@ -272,8 +308,10 @@ function registerInspectionReportRoutes(app, config) {
   app.get("/api/inspection-report/recent", asyncHandler(async (req, res) => {
     const limit = clampNumber(toIntOrDefault(req.query.limit, 20), 1, 100);
     const reporterFilter = normalizeCompareText(req.query.reporter);
+    const targetDate = normalizeDate(req.query.date) || formatDate(startOfDay(new Date()));
+    const targetMonth = targetDate ? targetDate.slice(0, 7) : "";
     const reportRecords = await fetchEntryRecords(config, REPORT_ENTRY_ID);
-    const list = reportRecords
+    const filteredList = reportRecords
       .map(mapReportRecord)
       .filter((row) => {
         if (!reporterFilter) {
@@ -284,12 +322,24 @@ function registerInspectionReportRoutes(app, config) {
           return false;
         }
         return reporter === reporterFilter || reporter.includes(reporterFilter) || reporterFilter.includes(reporter);
-      })
+      });
+    const summary = {
+      date: targetDate,
+      month: targetMonth,
+      dailyCount: filteredList.filter((row) => normalizeDate(row.reportDateText) === targetDate).length,
+      monthlyCount: filteredList.filter((row) => {
+        const reportDate = normalizeDate(row.reportDateText);
+        return targetMonth && reportDate.startsWith(targetMonth);
+      }).length,
+      totalCount: filteredList.length,
+    };
+    const list = filteredList
       .sort((a, b) => (b.reportDateText || "").localeCompare(a.reportDateText || ""))
       .slice(0, limit);
     res.json({
       ok: true,
       data: {
+        summary,
         list,
       },
     });
@@ -369,11 +419,10 @@ function registerInspectionReportRoutes(app, config) {
       return;
     }
 
-    const [deviceRecords, chemicalRecords, siteRecords, taskRecords] = await Promise.all([
+    const [deviceRecords, chemicalRecords, siteRecords] = await Promise.all([
       fetchEntryRecords(config, DEVICE_ENTRY_ID),
       fetchEntryRecords(config, CHEMICAL_ENTRY_ID),
       fetchEntryRecords(config, SITE_ENTRY_ID),
-      fetchEntryRecords(config, TASK_ENTRY_ID),
     ]);
 
     const chemicals = chemicalRecords.map(mapChemicalRecord);
@@ -393,6 +442,12 @@ function registerInspectionReportRoutes(app, config) {
     const targetChemicals = matchedSite
       ? chemicals.filter((chemical) => isChemicalInSite(chemical, matchedSite))
       : [];
+    const scanTaskTargets = matchedDevice ? [matchedDevice] : targetChemicals;
+    const taskRecords = await fetchReportTaskRecords(config, {
+      startDate: today,
+      endDate: today,
+      deviceTargets: buildDeviceTaskTargets(scanTaskTargets),
+    });
     const tasks = taskRecords
       .map(mapTaskRecord)
       .filter((task) => {
@@ -401,10 +456,14 @@ function registerInspectionReportRoutes(app, config) {
         }
         return targetChemicals.some((chemical) => isTaskBoundToDevice(task, chemical));
       })
-      .filter((task) => isTaskReportable(task, today))
-      .sort((a, b) => (a.taskDateText || "").localeCompare(b.taskDateText || ""));
+      .filter((task) => task.taskDateText === today)
+      .sort((a, b) => {
+        const doneA = TASK_STATUS_DONE_SET.has(toDisplayText(a.taskStatus)) ? 1 : 0;
+        const doneB = TASK_STATUS_DONE_SET.has(toDisplayText(b.taskStatus)) ? 1 : 0;
+        return doneA - doneB || (a.taskDateText || "").localeCompare(b.taskDateText || "");
+      });
 
-    const selectedTask = tasks.length ? tasks[0] : null;
+    const selectedTask = tasks.find((task) => !TASK_STATUS_DONE_SET.has(toDisplayText(task.taskStatus))) || null;
     const scanTarget = matchedDevice || {
       id: matchedSite.id,
       code: matchedSite.code,
@@ -437,7 +496,7 @@ function registerInspectionReportRoutes(app, config) {
     }
 
     const [taskRecords, detailRecords] = await Promise.all([
-      fetchEntryRecords(config, TASK_ENTRY_ID),
+      fetchReportTaskRecords(config, { taskId }),
       fetchEntryRecords(config, STANDARD_DETAIL_ENTRY_ID),
     ]);
 
@@ -449,15 +508,8 @@ function registerInspectionReportRoutes(app, config) {
 
     const allDetails = detailRecords.map(mapStandardDetailRecord);
     const enabledDetails = allDetails.filter((row) => isEnabledStatus(row.enableStatus));
-    let matchedDetails = enabledDetails.filter((row) => isDetailBelongToTask(row, task));
-    let matchSource = "primary";
-    if (!matchedDetails.length) {
-      const templateDetails = enabledDetails.filter((row) => isTemplateDetail(row));
-      if (templateDetails.length) {
-        matchedDetails = templateDetails;
-        matchSource = "template";
-      }
-    }
+    const matchedDetails = enabledDetails.filter((row) => isDetailBelongToTask(row, task));
+    const matchSource = "task-standard";
     const detailItems = matchedDetails
       .sort((a, b) => Number(a.seq || 0) - Number(b.seq || 0))
       .map(toReportItemTemplate);
@@ -510,7 +562,7 @@ function registerInspectionReportRoutes(app, config) {
     }
 
     const [taskRecords, deviceRecords, chemicalRecords] = await Promise.all([
-      fetchEntryRecords(config, TASK_ENTRY_ID),
+      fetchReportTaskRecords(config, { taskId }),
       fetchEntryRecords(config, DEVICE_ENTRY_ID),
       fetchEntryRecords(config, CHEMICAL_ENTRY_ID),
     ]);
@@ -528,7 +580,8 @@ function registerInspectionReportRoutes(app, config) {
       .find((row) => isTaskBoundToDevice(task, row));
 
     const normalizedItems = items.map((item, index) => normalizeSubmitItem(item, index + 1));
-    const abnormalCount = normalizedItems.filter((item) => item.isAbnormal).length;
+    const abnormalItems = normalizedItems.filter((item) => item.isAbnormal);
+    const abnormalCount = abnormalItems.length;
     const reportResult = abnormalCount > 0 ? "异常" : "正常";
     const needReview = abnormalCount > 0 ? "是" : "否";
     const currentStatus = "已完成";
@@ -589,14 +642,35 @@ function registerInspectionReportRoutes(app, config) {
       });
     }
 
-    await requestEntry(config, TASK_ENTRY_ID, "data_update", {
-      data_id: task.id,
-      data: {
-        [TASK_FIELD.taskStatus]: abnormalCount > 0 ? "异常" : "已完成",
-        [TASK_FIELD.reportStatus]: "已报工",
-        [TASK_FIELD.reportedCount]: task.shouldReportCount > 0 ? task.shouldReportCount : normalizedItems.length,
-      },
-    });
+    const hazardIds = [];
+    let hazardStartCount = 0;
+    let hazardWarning = "";
+    if (abnormalItems.length) {
+      const hazardPayload = buildHazardFromInspectionReport({
+        task,
+        device,
+        reportId,
+        reporter,
+        reportDateText,
+        remark,
+        abnormalItems,
+      });
+      const hazardResult = await createHazardRecord(config, hazardPayload, payload);
+      const hazardId = extractRecordId(hazardResult.response && hazardResult.response.data ? hazardResult.response.data : hazardResult.response);
+      hazardStartCount += 1;
+      if (hazardId) {
+        hazardIds.push(hazardId);
+      } else {
+        hazardWarning = "点检异常工单已发起，但百数云未返回工单ID";
+      }
+    }
+
+    const taskUpdatePayload = {
+      [TASK_FIELD.taskStatus]: abnormalCount > 0 ? "异常" : "已完成",
+      [TASK_FIELD.reportStatus]: "已报工",
+      [TASK_FIELD.reportedCount]: task.shouldReportCount > 0 ? task.shouldReportCount : normalizedItems.length,
+    };
+    await updateTaskByConfiguredStore(config, task, taskUpdatePayload);
 
     res.json({
       ok: true,
@@ -604,6 +678,10 @@ function registerInspectionReportRoutes(app, config) {
         reportId,
         reportResult,
         abnormalCount,
+        hazardIds,
+        flowIds: hazardIds,
+        flowStartCount: hazardStartCount,
+        hazardWarning,
         detailCount: normalizedItems.length,
         taskStatus: abnormalCount > 0 ? "异常" : "已完成",
       },
@@ -622,6 +700,125 @@ function asyncHandler(fn) {
       });
     }
   };
+}
+
+async function createHazardRecord(config, values, options = {}) {
+  const operator = toDisplayText(options.operator || options.operatorUserId || options.user_id || options.userId || options.webpage_user_id);
+  const payloads = [
+    { requiredValidation: false, values },
+    { requiredValidation: false, data: values },
+  ].map((payload) => {
+    if (operator) {
+      payload.operator = operator;
+    }
+    return payload;
+  });
+  const errors = [];
+  for (const payload of payloads) {
+    try {
+      const response = await requestEntry(config, HAZARD_ENTRY_ID, "flow_start", payload);
+      return { response };
+    } catch (error) {
+      errors.push(error.message);
+    }
+  }
+  throw new Error(`点检异常工单发起失败：${errors.filter(Boolean).join("；") || "未知错误"}`);
+}
+
+function buildHazardFromInspectionReport(context) {
+  const task = context.task || {};
+  const device = context.device || {};
+  const abnormalItems = Array.isArray(context.abnormalItems) ? context.abnormalItems : [];
+  const deviceName = task.deviceName || device.name || "点检对象";
+  const deviceCode = task.deviceCode || device.code || "";
+  const standardName = task.standardName || "点检标准";
+  const title = `${deviceName} - ${standardName}异常`;
+  const target = deviceCode ? `${deviceName}（${deviceCode}）` : deviceName;
+  const beforePhotos = abnormalItems
+    .map((item) => item.abnormalPhotos)
+    .filter(Boolean)
+    .join(",");
+
+  return {
+    [HAZARD_FIELD.submissionId]: context.reportId || "",
+    [HAZARD_FIELD.submissionDetailId]: task.id || "",
+    [HAZARD_FIELD.title]: title,
+    [HAZARD_FIELD.description]: buildInspectionHazardDescription({
+      task,
+      device,
+      reportId: context.reportId,
+      reporter: context.reporter,
+      reportDateText: context.reportDateText,
+      remark: context.remark,
+      abnormalItems,
+    }),
+    [HAZARD_FIELD.riskLevel]: "一般",
+    [HAZARD_FIELD.target]: target,
+    [HAZARD_FIELD.ownerDept]: "",
+    [HAZARD_FIELD.ownerUser]: "",
+    [HAZARD_FIELD.deadline]: formatDateTime(addDays(new Date(), 7)),
+    [HAZARD_FIELD.requirement]: "请根据点检异常项完成整改，并在工单中上传整改记录。",
+    [HAZARD_FIELD.status]: "待整改",
+    [HAZARD_FIELD.actionDesc]: "",
+    [HAZARD_FIELD.beforePhotos]: beforePhotos,
+    [HAZARD_FIELD.afterPhotos]: "",
+    [HAZARD_FIELD.verifier]: "",
+    [HAZARD_FIELD.verifyComment]: "",
+    [HAZARD_FIELD.closedAt]: "",
+    [HAZARD_FIELD.overdue]: "否",
+    [HAZARD_FIELD.source]: "点巡检",
+  };
+}
+
+function buildInspectionHazardDescription(input) {
+  const abnormalItems = Array.isArray(input.abnormalItems) ? input.abnormalItems : [];
+  const lines = [
+    `异常项数：${abnormalItems.length}`,
+    "异常明细：",
+  ];
+  abnormalItems.forEach((item, index) => {
+    lines.push(formatInspectionAbnormalLine(item, index + 1));
+  });
+  return lines.join("\n");
+}
+
+function formatInspectionAbnormalLine(item, index) {
+  const desc = item.abnormalDesc || "-";
+  const handling = item.handling || "-";
+  return `${index}. 异常描述：${desc}；处理措施：${handling}`;
+}
+
+async function fetchReportTaskRecords(config, filters = {}) {
+  if (shouldReadTasksFromDb(config)) {
+    return listTaskAliasRecords(config, TASK_FIELD, filters);
+  }
+  return fetchEntryRecords(config, TASK_ENTRY_ID);
+}
+
+async function updateTaskByConfiguredStore(config, task, data) {
+  if (shouldWriteTasksToBes(config)) {
+    await requestEntry(config, TASK_ENTRY_ID, "data_update", {
+      data_id: task.id,
+      data,
+    });
+  }
+  if (shouldWriteTasksToDb(config)) {
+    await updateTaskReportState(config, task, data, TASK_FIELD);
+  }
+}
+
+function buildDeviceTaskTargets(devices) {
+  const output = new Set();
+  (Array.isArray(devices) ? devices : [devices]).forEach((device) => {
+    if (!device) {
+      return;
+    }
+    [device.id, device.code, device.qrCodeNo, device.qrContent, device.qrCode]
+      .map((item) => toDisplayText(item))
+      .filter(Boolean)
+      .forEach((item) => output.add(item));
+  });
+  return Array.from(output);
 }
 
 function findMatchedDevice(devices, scanValue) {
@@ -766,40 +963,26 @@ function isDetailBelongToTask(detail, task) {
   if (!detail || !task) {
     return false;
   }
-  const detailIdSet = buildCompareVariants(detail.standardId);
-  const detailNameSet = buildCompareVariants(detail.standardName);
-  const taskSet = new Set([
-    ...buildCompareVariants(task.standardId),
-    ...buildCompareVariants(task.standardCode),
-    ...buildCompareVariants(task.standardName),
-  ]);
+  const detailStandardId = normalizeCompareText(detail.standardId);
+  const detailStandardName = normalizeCompareText(detail.standardName);
+  const taskStandardKeys = [
+    task.standardId,
+    task.standardCode,
+    task.standardName,
+  ]
+    .map((item) => normalizeCompareText(item))
+    .filter(Boolean);
 
-  if (hasSetIntersection(detailIdSet, taskSet)) {
+  if (!taskStandardKeys.length) {
+    return false;
+  }
+  if (detailStandardId && taskStandardKeys.includes(detailStandardId)) {
     return true;
   }
-  if (hasSetIntersection(detailNameSet, taskSet)) {
-    return true;
-  }
-  if (hasContainsMatch(detailIdSet, taskSet)) {
-    return true;
-  }
-  if (hasContainsMatch(detailNameSet, taskSet)) {
-    return true;
-  }
-
-  const detailName = normalizeCompareText(detail.standardName);
-  const taskStandardName = normalizeCompareText(task.standardName);
-  if (detailName && taskStandardName && (detailName.includes(taskStandardName) || taskStandardName.includes(detailName))) {
+  if (detailStandardName && taskStandardKeys.includes(detailStandardName)) {
     return true;
   }
   return false;
-}
-
-function isTemplateDetail(detail) {
-  if (!detail) {
-    return false;
-  }
-  return !normalizeCompareText(detail.standardId) && !normalizeCompareText(detail.standardName);
 }
 
 function toReportItemTemplate(row) {
@@ -1580,78 +1763,6 @@ function normalizeCompareText(value) {
     .toLowerCase();
 }
 
-function buildCompareVariants(value) {
-  const raw = toDisplayText(value);
-  const base = normalizeCompareText(raw);
-  const set = new Set();
-  if (!raw && !base) {
-    return set;
-  }
-  if (base) {
-    set.add(base);
-  }
-
-  raw
-    .split(/[\s,，、|/；;:：\-_\(\)（）\[\]【】]+/)
-    .map((item) => normalizeCompareText(item))
-    .filter(Boolean)
-    .forEach((token) => set.add(token));
-
-  const digits = raw.match(/\d+/g) || [];
-  digits.forEach((num) => {
-    const valueText = normalizeCompareText(num);
-    if (valueText) {
-      set.add(valueText);
-    }
-    if (/^\d+$/.test(valueText)) {
-      const trimmed = String(Number(valueText));
-      if (trimmed && trimmed !== "NaN") {
-        set.add(trimmed);
-      }
-    }
-  });
-
-  const alphaNum = raw.match(/[A-Za-z]+\d+|\d+[A-Za-z]+/g) || [];
-  alphaNum
-    .map((item) => normalizeCompareText(item))
-    .filter(Boolean)
-    .forEach((token) => set.add(token));
-
-  return set;
-}
-
-function hasSetIntersection(a, b) {
-  if (!a || !b || !a.size || !b.size) {
-    return false;
-  }
-  for (const value of a) {
-    if (b.has(value)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function hasContainsMatch(a, b) {
-  if (!a || !b || !a.size || !b.size) {
-    return false;
-  }
-  for (const left of a) {
-    if (!left || left.length < 3) {
-      continue;
-    }
-    for (const right of b) {
-      if (!right || right.length < 3) {
-        continue;
-      }
-      if (left.includes(right) || right.includes(left)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 function toIntOrDefault(value, fallback) {
   if (value === null || value === undefined) {
     return fallback;
@@ -1757,6 +1868,16 @@ function formatDateTime(date) {
   const mm = String(d.getMinutes()).padStart(2, "0");
   const ss = String(d.getSeconds()).padStart(2, "0");
   return `${y}-${m}-${day} ${hh}:${mm}:${ss}`;
+}
+
+function addDays(date, days) {
+  const d = date instanceof Date ? new Date(date.getTime()) : parseDateTimeOrNull(date);
+  if (!(d instanceof Date) || !Number.isFinite(d.getTime())) {
+    return new Date();
+  }
+  const n = Number(days);
+  d.setDate(d.getDate() + (Number.isFinite(n) ? n : 7));
+  return d;
 }
 
 function safeJsonParse(text) {

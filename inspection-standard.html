@@ -22,9 +22,17 @@
         box-sizing: border-box;
       }
 
+      html {
+        width: 100%;
+        min-height: 100%;
+        overflow: auto;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
+        min-height: 100dvh;
+        overflow: auto;
         font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
         color: var(--text);
         background: var(--bg);
@@ -32,6 +40,10 @@
 
       .app-layout {
         min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        max-width: 100%;
+        overflow: auto;
         display: grid;
         grid-template-columns: 280px minmax(0, 1fr);
         gap: 10px;
@@ -39,6 +51,7 @@
       }
 
       .panel {
+        min-width: 0;
         background: var(--panel);
         border: 1px solid var(--line);
       }
@@ -53,15 +66,18 @@
         display: grid;
         grid-template-rows: auto minmax(0, 1fr) auto;
         min-height: 0;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .main-switch-row {
         display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 4px 10px 0;
-        border-bottom: 0;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 8px 10px 0;
+        border-bottom: 1px solid var(--line);
       }
 
       .panel-head {
@@ -98,11 +114,12 @@
       }
 
       .switch-actions {
-        padding-bottom: 0;
         display: grid;
         grid-template-columns: repeat(3, 56px);
         gap: 6px;
-        justify-content: end;
+        justify-content: start;
+        order: 0;
+        padding-bottom: 2px;
       }
 
       .switch-actions .btn {
@@ -259,6 +276,404 @@
         box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
       }
 
+      .native-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .combo {
+        position: relative;
+      }
+
+      .combo-button {
+        width: 100%;
+        height: 32px;
+        border: 1px solid #cad3e1;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 32px 0 8px;
+        font: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .combo.has-value .combo-button {
+        padding-right: 42px;
+      }
+
+      .combo-button::after {
+        content: "";
+        position: absolute;
+        right: 11px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #6f7d93;
+        border-bottom: 1px solid #6f7d93;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .combo.has-value .combo-button::after {
+        display: none;
+      }
+
+      .combo-clear {
+        position: absolute;
+        right: 9px;
+        top: 16px;
+        z-index: 3;
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #cbd4e2;
+        color: #fff;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+
+      .combo-clear::before,
+      .combo-clear::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .combo-clear::before {
+        transform: rotate(45deg);
+      }
+
+      .combo-clear::after {
+        transform: rotate(-45deg);
+      }
+
+      .combo.has-value .combo-clear {
+        display: inline-flex;
+      }
+
+      .combo-clear:hover {
+        background: #b9c3d3;
+      }
+
+      .combo-button span {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .combo-button.is-placeholder {
+        color: #8a97ad;
+      }
+
+      .combo-button:focus,
+      .combo.is-open .combo-button {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .combo-panel {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        z-index: 50;
+        border: 1px solid #aab8cc;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(27, 48, 78, 0.16);
+        overflow: hidden;
+      }
+
+      .combo-panel.hidden {
+        display: none;
+      }
+
+      .combo-search-wrap {
+        padding: 8px;
+        border-bottom: 1px solid #e5edf8;
+        background: #f8fbff;
+      }
+
+      .combo-search {
+        height: 32px;
+      }
+
+      .combo-list {
+        max-height: 240px;
+        overflow: auto;
+        padding: 4px;
+      }
+
+      .combo-option {
+        width: 100%;
+        min-height: 32px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text);
+        display: block;
+        padding: 7px 8px;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      .combo-option:hover,
+      .combo-option.is-selected {
+        background: var(--blue-soft);
+        color: #195bb5;
+      }
+
+      .combo-empty {
+        padding: 12px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .combo-panel {
+        border-color: #aab8cc;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(27, 48, 78, 0.16);
+      }
+
+      .combo-search-wrap {
+        border-bottom-color: #e5edf8;
+        background: #f8fbff;
+      }
+
+      .combo-search {
+        border-color: #c9d3e2;
+        background: #fff;
+        color: var(--text);
+      }
+
+      .combo-option {
+        min-height: 28px;
+        border-radius: 3px;
+        color: var(--text);
+        padding: 5px 8px 5px 24px;
+        line-height: 1.4;
+        position: relative;
+      }
+
+      .combo-option:hover,
+      .combo-option.is-selected {
+        background: var(--blue-soft);
+        color: #195bb5;
+      }
+
+      .combo-option.is-selected::before {
+        content: "✓";
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--blue);
+        font-weight: 700;
+      }
+
+      .combo-empty {
+        color: var(--muted);
+      }
+
+      .native-select-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .select-proxy {
+        position: relative;
+      }
+
+      .select-proxy-button {
+        width: 100%;
+        min-height: 32px;
+        border: 1px solid #c9d3e2;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 30px 0 10px;
+        font: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .select-proxy.has-value .select-proxy-button {
+        padding-right: 42px;
+      }
+
+      .select-proxy-button::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #65758c;
+        border-bottom: 1px solid #65758c;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-button::after {
+        display: none;
+      }
+
+      .select-proxy-clear {
+        position: absolute;
+        right: 9px;
+        top: 50%;
+        z-index: 3;
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #cbd4e2;
+        color: #fff;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+
+      .select-proxy-clear::before,
+      .select-proxy-clear::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .select-proxy-clear::before {
+        transform: rotate(45deg);
+      }
+
+      .select-proxy-clear::after {
+        transform: rotate(-45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-clear {
+        display: inline-flex;
+      }
+
+      .select-proxy-clear:hover {
+        background: #b9c3d3;
+      }
+
+      .select-proxy-button span {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-button:focus,
+      .select-proxy.is-open .select-proxy-button {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .select-proxy-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 90;
+        max-height: 260px;
+        overflow: auto;
+        padding: 4px;
+        border: 1px solid #9fb2cb;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(27, 48, 78, 0.16);
+      }
+
+      .select-proxy-panel.hidden {
+        display: none;
+      }
+
+      .select-proxy-option {
+        width: 100%;
+        min-height: 28px;
+        border: 0;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--text);
+        display: block;
+        padding: 5px 8px 5px 24px;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-option:hover,
+      .select-proxy-option.is-selected {
+        background: var(--blue-soft);
+        color: #195bb5;
+      }
+
+      .select-proxy-group {
+        padding: 7px 8px 3px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .select-proxy-option.is-grouped {
+        padding-left: 32px;
+      }
+
+      .select-proxy-option.is-grouped.is-selected::before {
+        left: 16px;
+      }
+
+      .select-proxy-option.is-selected::before {
+        content: "✓";
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--blue);
+        font-weight: 700;
+      }
+
       .readonly {
         background: #f6f8fb;
         color: #6d7c93;
@@ -269,6 +684,7 @@
         gap: 2px;
         padding: 0;
         background: transparent;
+        order: 1;
       }
 
       .tab-btn {
@@ -414,6 +830,56 @@
         min-width: 860px;
       }
 
+      .detail-list-table {
+        min-width: 1120px;
+        table-layout: fixed;
+      }
+
+      .detail-list-table tbody tr {
+        height: 42px;
+      }
+
+      .detail-list-table td {
+        height: 42px;
+        line-height: 20px;
+      }
+
+      .detail-list-table .text-ellipsis {
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .modal-detail-table-wrap {
+        max-height: none;
+        overflow: visible;
+        padding-bottom: 10px;
+      }
+
+      .modal-detail-table-wrap table {
+        min-width: 1120px;
+      }
+
+      .modal-detail-table-wrap td {
+        overflow: visible;
+      }
+
+      .modal-detail-table-wrap .select-proxy.is-open {
+        z-index: 180;
+      }
+
+      .modal-object-table-wrap {
+        min-height: 180px;
+        max-height: clamp(180px, 34vh, 380px);
+        overflow: auto;
+      }
+
+      .picker-table-wrap {
+        max-height: clamp(260px, 62vh, 620px);
+        overflow: auto;
+      }
+
       th,
       td {
         border: 1px solid #e4eaf3;
@@ -445,6 +911,55 @@
       .row-editor .select {
         height: 30px;
         font-size: 12px;
+      }
+
+      .range-input {
+        display: inline-grid;
+        grid-template-columns: 36px 10px 36px;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        width: 82px;
+        height: 30px;
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid #c7d5e8;
+        border-radius: 5px;
+        background: #fff;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .range-input:focus-within {
+        border-color: #2f7cf0;
+        box-shadow: 0 0 0 2px rgba(47, 124, 240, 0.12);
+      }
+
+      .range-input .input {
+        width: 36px;
+        height: 28px;
+        min-width: 0;
+        padding: 0 2px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        text-align: center;
+      }
+
+      .range-input .input:focus {
+        outline: none;
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .range-separator {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #d94a4a;
+        font-size: 11px;
+        font-weight: 600;
       }
 
       .cell-actions {
@@ -517,9 +1032,11 @@
         z-index: 40;
         background: rgba(17, 28, 44, 0.32);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         padding: 14px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
       .modal-mask.hidden {
@@ -527,18 +1044,28 @@
       }
 
       .modal {
-        width: min(1260px, 100%);
-        max-height: calc(100vh - 30px);
+        width: min(1260px, calc(100vw - 28px));
+        max-height: calc(100vh - 28px);
+        max-height: calc(100dvh - 28px);
+        min-height: 0;
         background: #fff;
         border: 1px solid #cfd8e6;
         border-radius: 6px;
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr) auto;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       }
 
       .modal.small {
-        width: min(900px, 100%);
+        width: min(900px, calc(100vw - 28px));
+      }
+
+      .modal > form {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
 
       .modal-head {
@@ -555,16 +1082,24 @@
       }
 
       .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
         overflow: auto;
         padding: 10px 12px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
 
       .modal-foot {
         border-top: 1px solid var(--line);
+        background: #fff;
         padding: 8px 12px;
         display: flex;
         justify-content: flex-end;
         gap: 8px;
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
       }
 
       .card {
@@ -614,6 +1149,26 @@
         grid-column: 1 / -1;
       }
 
+      .form-inline-error {
+        grid-column: 3 / -1;
+        border: 1px solid #efb8b8;
+        background: #fff5f5;
+        color: #bc3f3f;
+        border-radius: 8px;
+        padding: 6px 9px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .form-inline-error.hidden {
+        display: none;
+      }
+
+      .date-field.is-error .input {
+        border-color: #dc5555;
+        box-shadow: 0 0 0 3px rgba(220, 85, 85, 0.14);
+      }
+
       .required {
         color: #df4f4f;
         margin-right: 2px;
@@ -640,10 +1195,52 @@
         transform: translateY(0);
       }
 
+      @media (max-width: 1320px) {
+        .app-layout {
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
+
+        .modal .grid.cols-4 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .form-inline-error {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-height: 720px) {
+        .modal-mask {
+          padding: 8px;
+        }
+
+        .modal {
+          width: min(1260px, calc(100vw - 16px));
+          max-height: calc(100vh - 16px);
+          max-height: calc(100dvh - 16px);
+        }
+
+        .modal.small {
+          width: min(900px, calc(100vw - 16px));
+        }
+
+        .modal-body {
+          padding: 8px;
+        }
+
+        .card {
+          margin-bottom: 8px;
+        }
+
+        .modal-object-table-wrap {
+          min-height: 160px;
+          max-height: 220px;
+        }
+      }
+
       @media (max-width: 1160px) {
         .app-layout {
-          grid-template-columns: 1fr;
-          grid-template-rows: 320px minmax(0, 1fr);
+          grid-template-columns: 200px minmax(0, 1fr);
         }
 
         .grid.cols-4,
@@ -667,7 +1264,7 @@
 
         .switch-actions {
           display: flex;
-          justify-content: flex-end;
+          justify-content: flex-start;
           padding-bottom: 6px;
         }
 
@@ -681,8 +1278,25 @@
         .grid.cols-3 {
           grid-template-columns: 1fr;
         }
+
+        .combo-panel {
+          position: fixed;
+          left: 12px;
+          right: 12px;
+          top: auto;
+          bottom: 12px;
+          max-height: min(70vh, 520px);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .combo-list {
+          max-height: none;
+          flex: 1;
+        }
       }
     </style>
+    <link rel="stylesheet" href="compact-date-picker.css" />
   </head>
   <body>
     <div class="app-layout">
@@ -705,7 +1319,7 @@
             <button id="objectsTabBtn" class="tab-btn" data-tab="devices">适用范围</button>
           </div>
           <div class="actions switch-actions">
-            <button id="addStandardTopBtn" class="btn primary">新建</button>
+            <button id="addStandardTopBtn" class="btn primary">新增</button>
             <button id="editStandardBtn" class="btn">编辑</button>
             <button id="deleteStandardBtn" class="btn danger">删除</button>
           </div>
@@ -718,17 +1332,17 @@
             <button id="detailResetBtn" class="btn">重置</button>
           </div>
           <div class="table-wrap">
-            <table>
+            <table class="detail-list-table">
               <thead>
                 <tr>
                   <th style="width: 62px">序号</th>
                   <th style="width: 120px">点检部位</th>
-                  <th>点检项目名称</th>
+                  <th style="width: 270px">点检项目名称</th>
                   <th style="width: 110px">执行方式</th>
                   <th style="width: 110px">点检类型</th>
                   <th style="width: 220px">标准内容</th>
                   <th style="width: 90px">参数单位</th>
-                  <th style="width: 160px">判断标准</th>
+                  <th style="width: 120px">判断标准</th>
                 </tr>
               </thead>
               <tbody id="detailTableBody"></tbody>
@@ -801,19 +1415,19 @@
                     <option value="危化品">危化品</option>
                   </select>
                 </div>
-                <div class="field">
-                  <label for="stdVersionInput">标准版本</label>
-                  <input id="stdVersionInput" class="input" type="text" placeholder="例如 V1.0" />
-                </div>
+                <input id="stdVersionInput" type="hidden" />
 
                 <div class="field">
                   <label for="stdWorkshopInput">所属车间</label>
-                  <input id="stdWorkshopInput" class="input" type="text" list="workshopOptions" />
-                  <datalist id="workshopOptions"></datalist>
+                  <select id="stdWorkshopInput" class="select">
+                    <option value="">请选择所属车间</option>
+                  </select>
                 </div>
                 <div class="field">
                   <label for="stdAreaInput">所属区域</label>
-                  <input id="stdAreaInput" class="input" type="text" />
+                  <select id="stdAreaInput" class="select">
+                    <option value="">请选择所属区域</option>
+                  </select>
                 </div>
                 <div class="field">
                   <label for="stdPostInput">责任岗位</label>
@@ -828,15 +1442,39 @@
                 </div>
 
                 <div class="field">
-                  <label for="stdDeptInput">责任部门</label>
-                  <select id="stdDeptInput" class="select">
+                  <label for="stdDeptComboButton">责任部门</label>
+                  <div id="stdDeptCombo" class="combo">
+                    <button id="stdDeptComboButton" class="combo-button is-placeholder" type="button">
+                      <span id="stdDeptComboText">请选择责任部门</span>
+                    </button>
+                    <button id="stdDeptComboClear" class="combo-clear" type="button" aria-label="清空责任部门"></button>
+                    <div id="stdDeptComboPanel" class="combo-panel hidden">
+                      <div class="combo-search-wrap">
+                        <input id="stdDeptKeywordInput" class="input combo-search" type="text" placeholder="输入部门名称搜索" autocomplete="off" />
+                      </div>
+                      <div id="stdDeptOptionList" class="combo-list"></div>
+                    </div>
+                  </div>
+                  <select id="stdDeptInput" class="select native-hidden" tabindex="-1" aria-hidden="true">
                     <option value="">请选择责任部门</option>
                   </select>
                   <input id="stdDeptIdInput" type="hidden" />
                 </div>
                 <div class="field">
-                  <label for="stdOwnerInput">默认负责人</label>
-                  <select id="stdOwnerInput" class="select">
+                  <label for="stdOwnerComboButton">默认负责人</label>
+                  <div id="stdOwnerCombo" class="combo">
+                    <button id="stdOwnerComboButton" class="combo-button is-placeholder" type="button">
+                      <span id="stdOwnerComboText">请选择默认负责人</span>
+                    </button>
+                    <button id="stdOwnerComboClear" class="combo-clear" type="button" aria-label="清空默认负责人"></button>
+                    <div id="stdOwnerComboPanel" class="combo-panel hidden">
+                      <div class="combo-search-wrap">
+                        <input id="stdOwnerKeywordInput" class="input combo-search" type="text" placeholder="输入姓名/账号/手机号搜索" autocomplete="off" />
+                      </div>
+                      <div id="stdOwnerOptionList" class="combo-list"></div>
+                    </div>
+                  </div>
+                  <select id="stdOwnerInput" class="select native-hidden" tabindex="-1" aria-hidden="true">
                     <option value="">请选择默认负责人</option>
                   </select>
                   <input id="stdOwnerIdInput" type="hidden" />
@@ -845,7 +1483,7 @@
                   <label for="stdStartDisplayInput">生效日期</label>
                   <div id="stdStartDateField" class="date-field">
                     <input id="stdStartDisplayInput" class="input date-display-input" type="text" placeholder="YYYY-MM-DD" readonly />
-                    <input id="stdStartInput" class="date-native-input" type="date" tabindex="-1" aria-hidden="true" />
+                    <input id="stdStartInput" type="hidden" />
                     <span class="date-field-icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24">
                         <rect x="3" y="4" width="18" height="17" rx="2"></rect>
@@ -858,7 +1496,7 @@
                   <label for="stdEndDisplayInput">失效日期</label>
                   <div id="stdEndDateField" class="date-field">
                     <input id="stdEndDisplayInput" class="input date-display-input" type="text" placeholder="YYYY-MM-DD" readonly />
-                    <input id="stdEndInput" class="date-native-input" type="date" tabindex="-1" aria-hidden="true" />
+                    <input id="stdEndInput" type="hidden" />
                     <span class="date-field-icon" aria-hidden="true">
                       <svg viewBox="0 0 24 24">
                         <rect x="3" y="4" width="18" height="17" rx="2"></rect>
@@ -867,6 +1505,7 @@
                     </span>
                   </div>
                 </div>
+                <div id="standardDateError" class="form-inline-error hidden" role="alert"></div>
 
                 <div class="field full">
                   <label for="stdRemarkInput">备注</label>
@@ -882,18 +1521,18 @@
                   <button id="modalAddDetailBtn" type="button" class="btn primary">新增</button>
                 </div>
               </div>
-              <div class="table-wrap compact" style="max-height: 250px">
+              <div class="table-wrap compact modal-detail-table-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th style="width: 62px">序号</th>
                       <th style="width: 120px">点检部位</th>
-                      <th>点检项目名称</th>
+                      <th style="width: 220px">点检项目名称</th>
                       <th style="width: 110px">执行方式</th>
                       <th style="width: 110px">点检类型</th>
                       <th style="width: 180px">标准内容</th>
                       <th style="width: 90px">参数单位</th>
-                      <th style="width: 150px">判断标准</th>
+                      <th style="width: 118px">判断标准</th>
                       <th style="width: 90px">是否报工</th>
                       <th style="width: 90px">操作</th>
                     </tr>
@@ -911,7 +1550,7 @@
                   <button id="modalUnbindDeviceBtn" type="button" class="btn danger">移除关联</button>
                 </div>
               </div>
-              <div class="table-wrap compact" style="max-height: 240px">
+              <div class="table-wrap compact modal-object-table-wrap">
                 <table>
                   <thead id="modalDeviceTableHead">
                     <tr>
@@ -933,7 +1572,7 @@
           </div>
           <div class="modal-foot">
             <button id="cancelStandardBtn" type="button" class="btn">取消</button>
-            <button type="submit" class="btn primary">保存</button>
+            <button id="saveStandardBtn" type="submit" class="btn primary">保存</button>
           </div>
         </form>
       </div>
@@ -1023,7 +1662,7 @@
               <button id="pickerSearchBtn" type="button" class="btn">搜索</button>
               <button id="pickerResetBtn" type="button" class="btn">重置</button>
             </div>
-            <div class="table-wrap compact" style="max-height: 480px">
+            <div class="table-wrap compact picker-table-wrap">
               <table>
                 <thead id="pickerTableHead">
                   <tr>
@@ -1052,15 +1691,17 @@
 
     <div id="toast" class="toast"></div>
 
+    <script src="compact-date-picker.js"></script>
     <script>
       const API_CONFIG = {
         baseUrl: resolveApiBaseUrl(),
-        appId: "5a94c4d1642bd8a84c772356",
+        appId: "59b376f42fee5822c6ac906a",
         masterEntryId: "37204bb798aefcc5156f493e",
         detailEntryId: "99a2496eb8db1bcf9f1aae69",
         deviceEntryId: "38104b6c9d74ce86a7c395b6",
         chemicalEntryId: "9739459da9671a832692915d",
         siteEntryId: "099e47809199d1d8214a984f",
+        relationEntryId: "f9fd4c8daab08083af9096a7",
       };
 
       const MASTER_FIELD = {
@@ -1162,6 +1803,16 @@
         owner: "_widget_1776300861656",
       };
 
+      const RELATION_FIELD = {
+        standardId: "_widget_1776932400951",
+        standardCode: "_widget_1776932400932",
+        ruleId: "_widget_1776932401006",
+        objectType: "_widget_1776932401079",
+        objectId: "_widget_1776932401107",
+        objectCode: "_widget_1776932401126",
+        status: "_widget_1776932401145",
+      };
+
       const OPTIONS = {
         category: ["日检", "周检", "月检", "定期点检"],
         applicableDeviceType: ["设备", "危化品"],
@@ -1175,6 +1826,7 @@
         devicePool: [],
         chemicalPool: [],
         sitePool: [],
+        relationPool: [],
         contacts: {
           loaded: false,
           loading: false,
@@ -1182,6 +1834,15 @@
           departments: [],
           users: [],
         },
+        externalContext: {
+          userId: "",
+          userName: "",
+          uniqueId: "",
+          mobile: "",
+          email: "",
+          account: "",
+        },
+        openCombo: "",
         selectedStandardId: "",
         activeTab: "details",
         search: {
@@ -1202,6 +1863,7 @@
         modal: {
           standard: {
             mode: "add",
+            saving: false,
             draft: null,
             selectedDetailIds: new Set(),
             selectedDeviceIds: new Set(),
@@ -1254,6 +1916,7 @@
         standardModalTitle: document.getElementById("standardModalTitle"),
         closeStandardModalBtn: document.getElementById("closeStandardModalBtn"),
         cancelStandardBtn: document.getElementById("cancelStandardBtn"),
+        saveStandardBtn: document.getElementById("saveStandardBtn"),
         standardForm: document.getElementById("standardForm"),
 
         stdCodeInput: document.getElementById("stdCodeInput"),
@@ -1265,7 +1928,21 @@
         stdAreaInput: document.getElementById("stdAreaInput"),
         stdPostInput: document.getElementById("stdPostInput"),
         stdStatusInput: document.getElementById("stdStatusInput"),
+        stdDeptCombo: document.getElementById("stdDeptCombo"),
+        stdDeptComboButton: document.getElementById("stdDeptComboButton"),
+        stdDeptComboText: document.getElementById("stdDeptComboText"),
+        stdDeptComboClear: document.getElementById("stdDeptComboClear"),
+        stdDeptComboPanel: document.getElementById("stdDeptComboPanel"),
+        stdDeptKeywordInput: document.getElementById("stdDeptKeywordInput"),
+        stdDeptOptionList: document.getElementById("stdDeptOptionList"),
         stdDeptInput: document.getElementById("stdDeptInput"),
+        stdOwnerCombo: document.getElementById("stdOwnerCombo"),
+        stdOwnerComboButton: document.getElementById("stdOwnerComboButton"),
+        stdOwnerComboText: document.getElementById("stdOwnerComboText"),
+        stdOwnerComboClear: document.getElementById("stdOwnerComboClear"),
+        stdOwnerComboPanel: document.getElementById("stdOwnerComboPanel"),
+        stdOwnerKeywordInput: document.getElementById("stdOwnerKeywordInput"),
+        stdOwnerOptionList: document.getElementById("stdOwnerOptionList"),
         stdOwnerInput: document.getElementById("stdOwnerInput"),
         stdDeptIdInput: document.getElementById("stdDeptIdInput"),
         stdOwnerIdInput: document.getElementById("stdOwnerIdInput"),
@@ -1276,6 +1953,7 @@
         stdEndDisplayInput: document.getElementById("stdEndDisplayInput"),
         stdStartInput: document.getElementById("stdStartInput"),
         stdEndInput: document.getElementById("stdEndInput"),
+        standardDateError: document.getElementById("standardDateError"),
         stdRemarkInput: document.getElementById("stdRemarkInput"),
 
         modalAddDetailBtn: document.getElementById("modalAddDetailBtn"),
@@ -1305,8 +1983,6 @@
         detStandardInput: document.getElementById("detStandardInput"),
         detRemarkInput: document.getElementById("detRemarkInput"),
 
-        workshopOptions: document.getElementById("workshopOptions"),
-
         devicePickerModal: document.getElementById("devicePickerModal"),
         pickerTitle: document.getElementById("pickerTitle"),
         closePickerBtn: document.getElementById("closePickerBtn"),
@@ -1325,12 +2001,42 @@
         toast: document.getElementById("toast"),
       };
 
+      const standardDatePickers = {
+        start: null,
+        end: null,
+      };
+
       init();
 
       async function init() {
+        collectExternalContext();
         renderDatalistOptions();
         bindEvents();
+        bindSelectProxyShell();
+        enhanceSelectProxies(document);
         await refreshAll();
+      }
+
+      function collectExternalContext() {
+        const params = new URLSearchParams(window.location.search || "");
+        state.externalContext = {
+          userId: readUrlParam(params, "webpage_user_id", "user_id", "userId"),
+          userName: readUrlParam(params, "webpage_user_name", "user_name", "userName", "name"),
+          uniqueId: readUrlParam(params, "webpage_corp_user_id", "uniqueid", "uniqueId"),
+          mobile: readUrlParam(params, "webpage_phone", "mobile", "phone"),
+          email: readUrlParam(params, "webpage_email", "email"),
+          account: readUrlParam(params, "webpage_account", "account", "loginName", "login_name"),
+        };
+      }
+
+      function readUrlParam(params, ...keys) {
+        for (const key of keys) {
+          const value = String(params.get(key) || "").trim();
+          if (value) {
+            return value;
+          }
+        }
+        return "";
       }
 
       function renderDatalistOptions() {
@@ -1338,7 +2044,8 @@
         refs.stdApplicableDeviceTypeInput.innerHTML = OPTIONS.applicableDeviceType
           .map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`)
           .join("");
-        refs.workshopOptions.innerHTML = OPTIONS.workshop.map((item) => `<option value="${escapeHtml(item)}"></option>`).join("");
+        renderWorkshopSelectOptions();
+        renderAreaSelectOptions();
         renderDepartmentSelectOptions();
         renderOwnerSelectOptions();
         syncModalSelectPlaceholderState();
@@ -1378,9 +2085,79 @@
         updateSelectPlaceholderState(refs.stdCategoryInput);
       }
 
+      function getSiteByWorkshop(value) {
+        const text = String(value || "").trim();
+        if (!text) {
+          return null;
+        }
+        return state.sitePool.find((site) => site.name === text || site.code === text) || null;
+      }
+
+      function getSiteAreas() {
+        return unique(state.sitePool.map((site) => site.area).filter(Boolean)).sort((a, b) => String(a).localeCompare(String(b), "zh-Hans-CN"));
+      }
+
+      function renderWorkshopSelectOptions(selectedValue = String(refs.stdWorkshopInput?.value || "").trim()) {
+        const selected = String(selectedValue || "").trim();
+        const grouped = new Map();
+        state.sitePool.forEach((site) => {
+          const area = site.area || "未配置区域";
+          if (!grouped.has(area)) {
+            grouped.set(area, []);
+          }
+          grouped.get(area).push(site);
+        });
+
+        const options = ['<option value="">请选择所属车间</option>'];
+        Array.from(grouped.keys())
+          .sort((a, b) => String(a).localeCompare(String(b), "zh-Hans-CN"))
+          .forEach((area) => {
+            options.push(`<optgroup label="${escapeHtml(area)}">`);
+            grouped
+              .get(area)
+              .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "zh-Hans-CN"))
+              .forEach((site) => {
+                const label = site.code ? `${site.name}（${site.code}）` : site.name;
+                options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(label)}</option>`);
+              });
+            options.push("</optgroup>");
+          });
+
+        if (selected && !state.sitePool.some((site) => site.name === selected)) {
+          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+        }
+
+        refs.stdWorkshopInput.innerHTML = options.join("");
+        refs.stdWorkshopInput.value = selected;
+        updateSelectPlaceholderState(refs.stdWorkshopInput);
+      }
+
+      function renderAreaSelectOptions(selectedValue = String(refs.stdAreaInput?.value || "").trim()) {
+        const selected = String(selectedValue || "").trim();
+        const areas = getSiteAreas();
+        const options = ['<option value="">请选择所属区域</option>'];
+        areas.forEach((area) => {
+          options.push(`<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`);
+        });
+        if (selected && !areas.includes(selected)) {
+          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+        }
+
+        refs.stdAreaInput.innerHTML = options.join("");
+        refs.stdAreaInput.value = selected;
+        updateSelectPlaceholderState(refs.stdAreaInput);
+      }
+
+      function fillStandardAreaByWorkshop() {
+        const site = getSiteByWorkshop(refs.stdWorkshopInput.value);
+        renderAreaSelectOptions(site?.area || "");
+      }
+
       function syncModalSelectPlaceholderState() {
         updateSelectPlaceholderState(refs.stdCategoryInput);
         updateSelectPlaceholderState(refs.stdApplicableDeviceTypeInput);
+        updateSelectPlaceholderState(refs.stdWorkshopInput);
+        updateSelectPlaceholderState(refs.stdAreaInput);
         updateSelectPlaceholderState(refs.stdDeptInput);
         updateSelectPlaceholderState(refs.stdOwnerInput);
       }
@@ -1746,6 +2523,8 @@
           fallbackOption,
         });
         refs.stdDeptIdInput.value = targetDeptId || "";
+        renderContactComboList("dept");
+        updateContactComboDisplay("dept");
         updateSelectPlaceholderState(refs.stdDeptInput);
       }
 
@@ -1795,7 +2574,180 @@
           fallbackOption,
         });
         syncSelectedOwnerIdInput();
+        renderContactComboList("owner");
+        updateContactComboDisplay("owner");
         updateSelectPlaceholderState(refs.stdOwnerInput);
+      }
+
+      function getContactComboRefs(type) {
+        return type === "owner"
+          ? {
+              root: refs.stdOwnerCombo,
+              button: refs.stdOwnerComboButton,
+              text: refs.stdOwnerComboText,
+              clear: refs.stdOwnerComboClear,
+              panel: refs.stdOwnerComboPanel,
+              keyword: refs.stdOwnerKeywordInput,
+              list: refs.stdOwnerOptionList,
+              select: refs.stdOwnerInput,
+              placeholder: state.contacts.loading ? "默认负责人加载中..." : "请选择默认负责人",
+            }
+          : {
+              root: refs.stdDeptCombo,
+              button: refs.stdDeptComboButton,
+              text: refs.stdDeptComboText,
+              clear: refs.stdDeptComboClear,
+              panel: refs.stdDeptComboPanel,
+              keyword: refs.stdDeptKeywordInput,
+              list: refs.stdDeptOptionList,
+              select: refs.stdDeptInput,
+              placeholder: state.contacts.loading ? "责任部门加载中..." : "请选择责任部门",
+            };
+      }
+
+      function normalizeSearchText(value) {
+        return toDisplayText(value).replace(/\s+/g, "").toLowerCase();
+      }
+
+      function filterContactComboRows(type, keyword = "") {
+        const text = normalizeSearchText(keyword);
+        if (type === "owner") {
+          return state.contacts.users.filter((user) => {
+            if (!text) return true;
+            return [user.name, user.userId, user.account, user.mobile, user.email, user.mainDeptName].map(normalizeSearchText).join("|").includes(text);
+          });
+        }
+        return state.contacts.departments.filter((dept) => {
+          if (!text) return true;
+          return [dept.name, dept.deptId, dept.deptNo, dept.parentId].map(normalizeSearchText).join("|").includes(text);
+        });
+      }
+
+      function getContactComboLabel(type, value) {
+        const select = type === "owner" ? refs.stdOwnerInput : refs.stdDeptInput;
+        const option = Array.from(select.options || []).find((item) => item.value === value);
+        return String(option?.textContent || "").trim();
+      }
+
+      function renderContactComboList(type) {
+        const combo = getContactComboRefs(type);
+        const rows = filterContactComboRows(type, combo.keyword.value);
+        const selectedValue = String(combo.select.value || "").trim();
+
+        if (!rows.length) {
+          combo.list.innerHTML = `<div class="combo-empty">${type === "owner" ? "未找到匹配负责人" : "未找到匹配责任部门"}</div>`;
+          return;
+        }
+
+        combo.list.innerHTML = rows
+          .map((row) => {
+            if (type === "owner") {
+              const userId = String(row.userId || "").trim();
+              const name = String(row.name || userId).trim();
+              const value = makeOwnerSelectValue(userId, name);
+              const deptLabel = row.mainDeptName ? `（${row.mainDeptName}）` : "";
+              const label = `${name}${deptLabel}`;
+              return `<button type="button" class="combo-option${value === selectedValue ? " is-selected" : ""}" data-combo-value="${escapeHtml(value)}">${escapeHtml(label)}</button>`;
+            }
+
+            const deptId = String(row.deptId || "").trim();
+            const name = String(row.name || deptId).trim();
+            const value = makeDepartmentSelectValue(deptId, name);
+            return `<button type="button" class="combo-option${value === selectedValue ? " is-selected" : ""}" data-combo-value="${escapeHtml(value)}">${escapeHtml(name)}</button>`;
+          })
+          .join("");
+      }
+
+      function updateContactComboDisplay(type) {
+        const combo = getContactComboRefs(type);
+        const value = String(combo.select.value || "").trim();
+        const label = value ? getContactComboLabel(type, value) : "";
+        combo.text.textContent = label || combo.placeholder;
+        combo.button.classList.toggle("is-placeholder", !label);
+        combo.root.classList.toggle("has-value", Boolean(value));
+      }
+
+      function openContactCombo(type) {
+        closeContactCombos(type);
+        const combo = getContactComboRefs(type);
+        state.openCombo = type;
+        combo.root.classList.add("is-open");
+        combo.panel.classList.remove("hidden");
+        renderContactComboList(type);
+        window.setTimeout(() => {
+          combo.keyword.focus();
+          combo.keyword.select();
+        }, 0);
+      }
+
+      function closeContactCombos(exceptType = "") {
+        ["dept", "owner"].forEach((type) => {
+          if (type === exceptType) return;
+          const combo = getContactComboRefs(type);
+          combo.root.classList.remove("is-open");
+          combo.panel.classList.add("hidden");
+          const value = String(combo.select.value || "").trim();
+          combo.keyword.value = value ? getContactComboLabel(type, value) : "";
+          renderContactComboList(type);
+          updateContactComboDisplay(type);
+        });
+        state.openCombo = exceptType || "";
+      }
+
+      function toggleContactCombo(type) {
+        if (state.openCombo === type) {
+          closeContactCombos();
+          return;
+        }
+        openContactCombo(type);
+      }
+
+      function selectContactComboValue(type, value, { close = false } = {}) {
+        const combo = getContactComboRefs(type);
+        combo.select.value = String(value || "").trim();
+        if (type === "owner") {
+          syncSelectedOwnerIdInput();
+        } else {
+          refs.stdDeptIdInput.value = getSelectedDepartmentMeta().deptId || "";
+        }
+        const label = getContactComboLabel(type, combo.select.value);
+        combo.keyword.value = label;
+        renderContactComboList(type);
+        updateContactComboDisplay(type);
+        updateSelectPlaceholderState(combo.select);
+        if (close) {
+          closeContactCombos();
+          combo.button.focus();
+        }
+      }
+
+      function bindContactCombo(type) {
+        const combo = getContactComboRefs(type);
+        combo.button.addEventListener("click", () => toggleContactCombo(type));
+        combo.clear.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          selectContactComboValue(type, "", { close: true });
+        });
+        combo.keyword.addEventListener("input", () => renderContactComboList(type));
+        combo.keyword.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeContactCombos();
+            combo.button.focus();
+            return;
+          }
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          const first = combo.list.querySelector("[data-combo-value]");
+          if (first) {
+            selectContactComboValue(type, first.dataset.comboValue || "", { close: true });
+          }
+        });
+        combo.list.addEventListener("click", (event) => {
+          const option = event.target instanceof HTMLElement ? event.target.closest("[data-combo-value]") : null;
+          if (!option) return;
+          selectContactComboValue(type, option.dataset.comboValue || "", { close: true });
+        });
       }
 
       function upsertContactDepartment(deptId, deptName) {
@@ -1865,6 +2817,53 @@
         state.contacts.users.sort((a, b) => (a.name || a.userId).localeCompare(b.name || b.userId, "zh-Hans-CN"));
       }
 
+      function findCurrentContactUser() {
+        const ctx = state.externalContext || {};
+        const candidates = [ctx.userId, ctx.uniqueId, ctx.userName, ctx.account, ctx.mobile, ctx.email]
+          .map((item) => String(item || "").trim())
+          .filter(Boolean);
+        if (!candidates.length) {
+          return null;
+        }
+        return (Array.isArray(state.contacts.users) ? state.contacts.users : []).find((user) => {
+          const values = [user.userId, user.name, user.account, user.mobile, user.email]
+            .map((item) => String(item || "").trim())
+            .filter(Boolean);
+          return values.some((value) => candidates.includes(value));
+        }) || null;
+      }
+
+      function applyCurrentUserToStandardDraft(member, { silent = false } = {}) {
+        const draft = state.modal.standard.draft;
+        if (!draft || !member) {
+          return false;
+        }
+
+        const ownerName = toDisplayText(member.userName || member.name || member.user || member.account);
+        const ownerId = extractComplexId(member.userId || member.id || member.uniqueId);
+        const deptName = toDisplayText(member.mainDepartmentName || member.mainDeptName || member.departmentsName);
+        const deptId = extractComplexId(member.mainDepartmentId || member.mainDeptId || member.departmentsId);
+
+        if (!ownerId && !ownerName) {
+          return false;
+        }
+
+        draft.defaultOwner = ownerName || ownerId;
+        draft.defaultOwnerId = ownerId;
+        draft.defaultOwnerRaw = ownerId || ownerName || null;
+        draft.responsibilityDept = deptName;
+        draft.responsibilityDeptId = deptId;
+        draft.responsibilityDeptRaw = deptId || deptName || null;
+        upsertContactDepartment(deptId, deptName);
+        upsertContactUser(ownerId, ownerName || ownerId, deptId, deptName);
+        populateStandardFormByDraft();
+
+        if (!silent) {
+          showToast(`已带入当前成员：${draft.defaultOwner}`);
+        }
+        return true;
+      }
+
       async function ensureContactsLoaded({ force = false, silent = false } = {}) {
         if (!force && state.contacts.loaded) {
           return;
@@ -1931,6 +2930,7 @@
             selectedOwnerName: draft?.defaultOwner || "",
           });
           syncModalSelectPlaceholderState();
+          refreshSelectProxies(refs.standardForm);
         }
       }
 
@@ -2048,6 +3048,12 @@
         refs.stdCategoryInput.addEventListener("change", () => {
           updateSelectPlaceholderState(refs.stdCategoryInput);
         });
+        refs.stdWorkshopInput.addEventListener("change", () => {
+          fillStandardAreaByWorkshop();
+        });
+        refs.stdAreaInput.addEventListener("change", () => {
+          updateSelectPlaceholderState(refs.stdAreaInput);
+        });
         refs.stdApplicableDeviceTypeInput.addEventListener("change", () => {
           const draft = state.modal.standard.draft;
           const nextType = normalizeApplicableDeviceType(refs.stdApplicableDeviceTypeInput.value);
@@ -2070,13 +3076,33 @@
           updateSelectPlaceholderState(refs.stdDeptInput);
           const selectedDept = getSelectedDepartmentMeta();
           refs.stdDeptIdInput.value = selectedDept.deptId || "";
+          updateContactComboDisplay("dept");
         });
         refs.stdOwnerInput.addEventListener("change", () => {
           updateSelectPlaceholderState(refs.stdOwnerInput);
           syncSelectedOwnerIdInput();
+          updateContactComboDisplay("owner");
         });
-        bindStandardDateField(refs.stdStartDateField, refs.stdStartDisplayInput, refs.stdStartInput);
-        bindStandardDateField(refs.stdEndDateField, refs.stdEndDisplayInput, refs.stdEndInput);
+        bindContactCombo("dept");
+        bindContactCombo("owner");
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof Node)) return;
+          if (!refs.stdDeptCombo.contains(event.target) && !refs.stdOwnerCombo.contains(event.target)) {
+            closeContactCombos();
+          }
+        });
+        standardDatePickers.start = window.CompactDatePicker?.attach({
+          field: refs.stdStartDateField,
+          displayInput: refs.stdStartDisplayInput,
+          valueInput: refs.stdStartInput,
+          onChange: handleStandardDateChange,
+        });
+        standardDatePickers.end = window.CompactDatePicker?.attach({
+          field: refs.stdEndDateField,
+          displayInput: refs.stdEndDisplayInput,
+          valueInput: refs.stdEndInput,
+          onChange: handleStandardDateChange,
+        });
 
         refs.modalAddDetailBtn.addEventListener("click", () => {
           addDraftDetailRow();
@@ -2092,8 +3118,9 @@
           if (!rowId || !field) {
             return;
           }
-          updateDraftDetailRowField(rowId, field, target.value);
-          if (field === "executeMode" || field === "standard" || field === "standardText") {
+          const value = isRangeInputField(field) ? sanitizeRangeInputElement(target) : target.value;
+          updateDraftDetailRowField(rowId, field, value);
+          if (field === "executeMode" || field === "standard" || field === "standardText" || field === "rangeMin" || field === "rangeMax") {
             renderDraftDetailTable();
           }
         });
@@ -2108,7 +3135,8 @@
           if (!rowId || !field) {
             return;
           }
-          updateDraftDetailRowField(rowId, field, target.value);
+          const value = isRangeInputField(field) ? sanitizeRangeInputElement(target) : target.value;
+          updateDraftDetailRowField(rowId, field, value);
         });
 
         refs.modalDetailTableBody.addEventListener("click", (event) => {
@@ -2247,69 +3275,153 @@
         });
       }
 
-      function bindStandardDateField(fieldWrapper, displayInput, nativeInput) {
-        if (
-          !(fieldWrapper instanceof HTMLElement) ||
-          !(displayInput instanceof HTMLInputElement) ||
-          !(nativeInput instanceof HTMLInputElement)
-        ) {
-          return;
-        }
-
-        fieldWrapper.addEventListener("click", () => {
-          openNativeDatePicker(nativeInput);
-          displayInput.focus();
-        });
-
-        displayInput.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
-            event.preventDefault();
-            openNativeDatePicker(nativeInput);
+      function bindSelectProxyShell() {
+        if (window.__selectProxyShellBound) return;
+        window.__selectProxyShellBound = true;
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement) || !event.target.closest(".select-proxy")) {
+            closeSelectProxies();
           }
         });
-
-        nativeInput.addEventListener("input", () => {
-          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
-        });
-        nativeInput.addEventListener("change", () => {
-          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
-        });
-
-        syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
+        new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node instanceof HTMLElement) {
+                enhanceSelectProxies(node);
+              }
+            });
+          });
+        }).observe(document.body, { childList: true, subtree: true });
       }
 
-      function syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput) {
-        if (
-          !(fieldWrapper instanceof HTMLElement) ||
-          !(displayInput instanceof HTMLInputElement) ||
-          !(nativeInput instanceof HTMLInputElement)
-        ) {
+      function enhanceSelectProxies(scope = document) {
+        if (!scope) return;
+        const selector = "select.select:not(.native-hidden)";
+        if (scope instanceof HTMLSelectElement && scope.matches(selector)) {
+          enhanceSelectProxy(scope);
+        }
+        scope.querySelectorAll?.(selector).forEach((select) => enhanceSelectProxy(select));
+      }
+
+      function enhanceSelectProxy(select) {
+        if (select.classList.contains("native-select-hidden")) {
+          refreshSelectProxy(select);
           return;
         }
-        const normalized = normalizeDateInput(nativeInput.value);
-        displayInput.value = normalized || "";
-        fieldWrapper.classList.toggle("has-value", Boolean(normalized));
+        const next = select.nextElementSibling;
+        if (next && next.classList.contains("select-proxy")) {
+          next.remove();
+        }
+        select.classList.add("native-select-hidden");
+
+        const proxy = document.createElement("div");
+        proxy.className = "select-proxy";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "select-proxy-button";
+        const text = document.createElement("span");
+        button.appendChild(text);
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "select-proxy-clear";
+        clear.setAttribute("aria-label", "清空选择");
+        const panel = document.createElement("div");
+        panel.className = "select-proxy-panel hidden";
+        const list = document.createElement("div");
+        panel.appendChild(list);
+        proxy.appendChild(button);
+        proxy.appendChild(clear);
+        proxy.appendChild(panel);
+        select.insertAdjacentElement("afterend", proxy);
+
+        const render = () => renderSelectProxy(select, proxy, text, list);
+        clear.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (select.disabled) return;
+          const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+          if (!hasEmptyOption) return;
+          select.value = "";
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          closeSelectProxies();
+        });
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const willOpen = panel.classList.contains("hidden");
+          closeSelectProxies();
+          render();
+          if (willOpen) {
+            proxy.classList.add("is-open");
+            panel.classList.remove("hidden");
+          }
+        });
+        select.addEventListener("change", render);
+        new MutationObserver(render).observe(select, { childList: true, subtree: true });
+        render();
+      }
+
+      function renderSelectProxy(select, proxy, text, list) {
+        const selected = select.selectedOptions && select.selectedOptions[0];
+        text.textContent = selected?.textContent || "请选择";
+        const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+        proxy.classList.toggle("has-value", Boolean(select.value) && hasEmptyOption && !select.disabled);
+        list.innerHTML = "";
+        const appendOption = (option, grouped = false) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = `select-proxy-option${grouped ? " is-grouped" : ""}${option.value === select.value ? " is-selected" : ""}`;
+          item.textContent = option.textContent || "请选择";
+          item.disabled = option.disabled;
+          item.addEventListener("click", () => {
+            select.value = option.value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            closeSelectProxies();
+          });
+          list.appendChild(item);
+        };
+        Array.from(select.children).forEach((child) => {
+          if (child instanceof HTMLOptGroupElement) {
+            const group = document.createElement("div");
+            group.className = "select-proxy-group";
+            group.textContent = child.label || "";
+            list.appendChild(group);
+            Array.from(child.children).forEach((option) => {
+              if (option instanceof HTMLOptionElement) {
+                appendOption(option, true);
+              }
+            });
+            return;
+          }
+          if (child instanceof HTMLOptionElement) {
+            appendOption(child, false);
+          }
+        });
+        proxy.classList.toggle("is-disabled", select.disabled);
+      }
+
+      function refreshSelectProxy(select) {
+        const proxy = select?.nextElementSibling;
+        if (!proxy || !proxy.classList.contains("select-proxy")) return;
+        const text = proxy.querySelector(".select-proxy-button span");
+        const list = proxy.querySelector(".select-proxy-panel > div");
+        if (text && list) {
+          renderSelectProxy(select, proxy, text, list);
+        }
+      }
+
+      function refreshSelectProxies(scope = document) {
+        if (!scope) return;
+        scope.querySelectorAll("select.native-select-hidden").forEach(refreshSelectProxy);
+      }
+
+      function closeSelectProxies() {
+        document.querySelectorAll(".select-proxy.is-open").forEach((proxy) => proxy.classList.remove("is-open"));
+        document.querySelectorAll(".select-proxy-panel:not(.hidden)").forEach((panel) => panel.classList.add("hidden"));
       }
 
       function syncStandardDateFields() {
-        syncDateFieldDisplay(refs.stdStartDateField, refs.stdStartDisplayInput, refs.stdStartInput);
-        syncDateFieldDisplay(refs.stdEndDateField, refs.stdEndDisplayInput, refs.stdEndInput);
-      }
-
-      function openNativeDatePicker(input) {
-        if (!(input instanceof HTMLInputElement)) {
-          return;
-        }
-        if (typeof input.showPicker === "function") {
-          try {
-            input.showPicker();
-            return;
-          } catch (error) {
-            // Some browsers require direct user gestures. Fallback below.
-          }
-        }
-        input.focus();
-        input.click();
+        standardDatePickers.start?.sync();
+        standardDatePickers.end?.sync();
       }
 
       async function refreshAll({ preserveSelectedId = "" } = {}) {
@@ -2318,7 +3430,7 @@
         setLoading(true);
         setStatus("正在同步数据...");
         try {
-          await Promise.all([syncRuleOptions(), syncDevicePool(), syncStandards(previousId)]);
+          await Promise.all([syncRuleOptions(), syncDevicePool(), syncRelationPool(), syncStandards(previousId)]);
           renderRuleSelectOptions();
           const current = getSelectedStandard();
           if (current) {
@@ -2354,6 +3466,8 @@
             ...site,
             chemicalCount: state.chemicalPool.filter((chemical) => isChemicalInStore(chemical, site)).length,
           }));
+        renderWorkshopSelectOptions();
+        renderAreaSelectOptions();
       }
 
       async function syncRuleOptions() {
@@ -2376,6 +3490,14 @@
             }
             return String(a.name).localeCompare(String(b.name), "zh-CN");
           });
+      }
+
+      async function syncRelationPool() {
+        const relationRecords = await fetchEntryRecords(API_CONFIG.relationEntryId);
+        state.relationPool = relationRecords
+          .map((record) => mapRelationRecord(record))
+          .filter((item) => item.cloudId && item.standardId && item.objectId)
+          .sort((a, b) => String(a.standardCode || "").localeCompare(String(b.standardCode || ""), "zh-CN"));
       }
 
       async function syncStandards(preferredId = "") {
@@ -2603,6 +3725,21 @@
         };
       }
 
+      function mapRelationRecord(record) {
+        const cloudId = extractRecordId(record);
+        return {
+          id: cloudId || uid("rel"),
+          cloudId,
+          standardId: toDisplayText(getAliasRawValue(record, RELATION_FIELD.standardId)),
+          standardCode: toDisplayText(getAliasRawValue(record, RELATION_FIELD.standardCode)),
+          ruleId: toDisplayText(getAliasRawValue(record, RELATION_FIELD.ruleId)),
+          objectType: normalizeRelationObjectType(getAliasRawValue(record, RELATION_FIELD.objectType)),
+          objectId: toDisplayText(getAliasRawValue(record, RELATION_FIELD.objectId)),
+          objectCode: toDisplayText(getAliasRawValue(record, RELATION_FIELD.objectCode)),
+          status: normalizeStatus(toDisplayText(getAliasRawValue(record, RELATION_FIELD.status)) || "启用"),
+        };
+      }
+
       function renderAll() {
         renderStandardList();
         renderTabState();
@@ -2667,13 +3804,13 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `
               <td>${escapeHtml(row.no)}</td>
-              <td>${escapeHtml(row.part || "-")}</td>
-              <td>${escapeHtml(row.item || "-")}</td>
+              <td class="text-ellipsis" title="${escapeHtml(row.part || "-")}">${escapeHtml(row.part || "-")}</td>
+              <td class="text-ellipsis" title="${escapeHtml(row.item || "-")}">${escapeHtml(row.item || "-")}</td>
               <td>${escapeHtml(row.executeMode || "-")}</td>
               <td>${escapeHtml(row.inspectType || "-")}</td>
-              <td>${escapeHtml(row.standard || "-")}</td>
+              <td class="text-ellipsis" title="${escapeHtml(row.standard || "-")}">${escapeHtml(row.standard || "-")}</td>
               <td>${escapeHtml(row.unit || "-")}</td>
-              <td>${escapeHtml(row.standardText || "-")}</td>
+              <td class="text-ellipsis" title="${escapeHtml(row.standardText || "-")}">${escapeHtml(row.standardText || "-")}</td>
             `;
             refs.detailTableBody.appendChild(tr);
           });
@@ -2770,8 +3907,26 @@
       }
 
       function closeStandardModal() {
+        if (state.modal.standard.saving) {
+          showToast("正在保存，请稍候");
+          return;
+        }
+        closeStandardModalForce();
+      }
+
+      function closeStandardModalForce() {
         clearInlineDetailState("draft");
         refs.standardModal.classList.add("hidden");
+        setStandardSaveState(false);
+      }
+
+      function setStandardSaveState(isSaving) {
+        state.modal.standard.saving = Boolean(isSaving);
+        if (!refs.saveStandardBtn) {
+          return;
+        }
+        refs.saveStandardBtn.disabled = Boolean(isSaving);
+        refs.saveStandardBtn.textContent = isSaving ? "保存中..." : "保存";
       }
 
       function createEmptyStandardDraft() {
@@ -2791,7 +3946,7 @@
           defaultOwnerId: "",
           defaultOwnerRaw: null,
           status: "启用",
-          version: "V1.0",
+          version: "",
           applicableDeviceType: "设备",
           effectiveDate: "",
           expiryDate: "",
@@ -2817,8 +3972,9 @@
         refs.stdCategoryInput.value = draft.category || "";
         refs.stdApplicableDeviceTypeInput.value = normalizeApplicableDeviceType(draft.applicableDeviceType);
         refs.stdVersionInput.value = draft.version || "";
-        refs.stdWorkshopInput.value = draft.workshop || "";
-        refs.stdAreaInput.value = draft.area || "";
+        renderWorkshopSelectOptions(draft.workshop || "");
+        const matchedSite = getSiteByWorkshop(draft.workshop || "");
+        renderAreaSelectOptions(draft.area || matchedSite?.area || "");
         refs.stdPostInput.value = draft.responsibilityPost || "";
         refs.stdStatusInput.value = draft.status || "启用";
         renderDepartmentSelectOptions({
@@ -2832,12 +3988,17 @@
         refs.stdStartInput.value = draft.effectiveDate || "";
         refs.stdEndInput.value = draft.expiryDate || "";
         syncStandardDateFields();
+        validateAndRenderStandardDateRange({ focus: false });
         refs.stdRemarkInput.value = draft.remark || "";
         syncModalSelectPlaceholderState();
+        refreshSelectProxies(refs.standardForm);
       }
 
       async function saveStandard(event) {
         event.preventDefault();
+        if (state.modal.standard.saving) {
+          return;
+        }
         const draft = state.modal.standard.draft;
         if (!draft) {
           return;
@@ -2855,6 +4016,12 @@
           return;
         }
 
+        const dateValidation = validateAndRenderStandardDateRange();
+        if (!dateValidation.ok) {
+          refs.stdEndDisplayInput.focus();
+          return;
+        }
+
         const detailValidation = validateAndNormalizeDraftDetails(draft.details || []);
         if (!detailValidation.ok) {
           showToast(detailValidation.message);
@@ -2862,6 +4029,7 @@
         }
         draft.details = detailValidation.rows;
 
+        setStandardSaveState(true);
         setLoading(true);
         setStatus("正在保存标准...");
 
@@ -2869,7 +4037,7 @@
           if (state.modal.standard.mode === "add") {
             const createdId = await createStandardWithRelations(draft);
             const taskSync = await syncStandardTasksAfterSave(createdId);
-            closeStandardModal();
+            closeStandardModalForce();
             await refreshAll({ preserveSelectedId: createdId });
             const message = formatSaveTaskSyncMessage("标准已新增", taskSync);
             showToast(message);
@@ -2877,7 +4045,7 @@
           } else {
             const updatedId = await updateStandardWithRelations(draft);
             const taskSync = await syncStandardTasksAfterSave(updatedId);
-            closeStandardModal();
+            closeStandardModalForce();
             await refreshAll({ preserveSelectedId: updatedId });
             const message = formatSaveTaskSyncMessage("标准已更新", taskSync);
             showToast(message);
@@ -2888,6 +4056,7 @@
           setStatus(`保存失败：${error.message}`, true);
         } finally {
           setLoading(false);
+          setStandardSaveState(false);
         }
       }
 
@@ -2974,14 +4143,96 @@
         draft.remark = refs.stdRemarkInput.value.trim();
       }
 
+      function validateStandardDateRange(draft) {
+        const effectiveDate = normalizeDateInput(draft?.effectiveDate);
+        const expiryDate = normalizeDateInput(draft?.expiryDate);
+        if (effectiveDate && expiryDate && expiryDate < effectiveDate) {
+          return {
+            ok: false,
+            message: "失效日期不能早于生效日期",
+          };
+        }
+        return { ok: true };
+      }
+
+      function validateAndRenderStandardDateRange({ focus = true } = {}) {
+        syncStandardDateFields();
+        const draft = state.modal.standard.draft;
+        if (draft) {
+          draft.effectiveDate = refs.stdStartInput.value.trim();
+          draft.expiryDate = refs.stdEndInput.value.trim();
+        }
+        const validation = validateStandardDateRange({
+          effectiveDate: refs.stdStartInput.value,
+          expiryDate: refs.stdEndInput.value,
+        });
+        setStandardDateError(validation.ok ? "" : validation.message, { focus });
+        return validation;
+      }
+
+      function handleStandardDateChange() {
+        validateAndRenderStandardDateRange({ focus: false });
+      }
+
+      function setStandardDateError(message, { focus = false } = {}) {
+        const text = String(message || "").trim();
+        if (refs.standardDateError) {
+          refs.standardDateError.textContent = text;
+          refs.standardDateError.classList.toggle("hidden", !text);
+        }
+        refs.stdStartDateField?.classList.toggle("is-error", Boolean(text));
+        refs.stdEndDateField?.classList.toggle("is-error", Boolean(text));
+        if (text && focus) {
+          refs.standardDateError?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+
+      function isStandardActiveForToday(standard) {
+        return normalizeStatus(standard?.status || "启用") === "启用" && isStandardEffectiveOnDate(standard, getTodayDateText());
+      }
+
+      function isStandardEffectiveOnDate(standard, dateText) {
+        const targetDate = normalizeDateInput(dateText) || getTodayDateText();
+        const effectiveDate = normalizeDateInput(standard?.effectiveDate);
+        const expiryDate = normalizeDateInput(standard?.expiryDate);
+        if (effectiveDate && targetDate < effectiveDate) {
+          return false;
+        }
+        if (expiryDate && targetDate > expiryDate) {
+          return false;
+        }
+        return true;
+      }
+
+      function getTodayDateText() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
       async function fillCurrentOwnerFromApi({ silent = false } = {}) {
         const draft = state.modal.standard.draft;
         if (!draft) {
           return;
         }
 
+        const currentContact = findCurrentContactUser();
+        if (currentContact && applyCurrentUserToStandardDraft(currentContact, { silent })) {
+          return;
+        }
+
         try {
-          const result = await requestApi("/inspection-report/current-member");
+          const query = {};
+          const ctx = state.externalContext || {};
+          if (ctx.userId) query.webpage_user_id = ctx.userId;
+          if (ctx.userName) query.webpage_user_name = ctx.userName;
+          if (ctx.uniqueId) query.webpage_corp_user_id = ctx.uniqueId;
+          if (ctx.mobile) query.webpage_phone = ctx.mobile;
+          if (ctx.email) query.webpage_email = ctx.email;
+          if (ctx.account) query.webpage_account = ctx.account;
+          const result = await requestApi("/inspection-report/current-member", query);
           const data = result?.data || {};
           const member = data.member || null;
           if (!member) {
@@ -2991,30 +4242,10 @@
             return;
           }
 
-          const ownerName = toDisplayText(member.userName || member.user);
-          const ownerId = extractComplexId(member.userId || member.uniqueId || member.id);
-          const deptName = toDisplayText(member.mainDepartmentName || member.departmentsName);
-          const deptId = extractComplexId(member.mainDepartmentId);
-
-          if (!ownerId) {
+          if (!applyCurrentUserToStandardDraft(member, { silent })) {
             if (!silent) {
               showToast("当前成员缺少 userId，无法自动写入负责人");
             }
-            return;
-          }
-
-          draft.defaultOwner = ownerName || ownerId;
-          draft.defaultOwnerId = ownerId;
-          draft.defaultOwnerRaw = ownerId;
-          draft.responsibilityDept = deptName;
-          draft.responsibilityDeptId = deptId;
-          draft.responsibilityDeptRaw = deptId || deptName || null;
-          upsertContactDepartment(deptId, deptName);
-          upsertContactUser(ownerId, ownerName || ownerId, deptId, deptName);
-          populateStandardFormByDraft();
-
-          if (!silent) {
-            showToast(`已带入当前成员：${draft.defaultOwner}`);
           }
         } catch (error) {
           if (!silent) {
@@ -3048,7 +4279,7 @@
           detailsLoaded: true,
         };
 
-        if (standard.status === "启用") {
+        if (isStandardActiveForToday(standard)) {
           await updateRecord(API_CONFIG.masterEntryId, cloudId, {
             [MASTER_FIELD.activeRuleId]: cloudId,
           });
@@ -3069,7 +4300,7 @@
         const desiredDeviceIds = new Set((draft.devices || []).map((item) => item.deviceId));
         const originDeviceIds = state.modal.standard.originDeviceIds;
 
-        const payload = buildMasterPayload(draft, draft.devices || [], draft.status === "启用" ? draft.cloudId : "");
+        const payload = buildMasterPayload(draft, draft.devices || [], isStandardActiveForToday(draft) ? draft.cloudId : "");
         await updateRecord(API_CONFIG.masterEntryId, draft.cloudId, payload);
 
         const standard = {
@@ -3135,17 +4366,7 @@
       }
 
       function buildMasterPayload(draft, linkedDevices, activeRuleId) {
-        const deviceNames = unique(linkedDevices.map((item) => item.name)).join("、");
-        const deviceCodes = unique(linkedDevices.map((item) => item.code)).join("、");
-        const deviceTypes = unique(linkedDevices.map((item) => item.deviceType || item.category)).join("、");
-        const deviceRanges = unique(
-          linkedDevices.map((item) => {
-            if (item.deviceType === "危化品库") {
-              return item.location || item.name || item.area || item.workshop;
-            }
-            return item.workshop || item.area || item.location;
-          })
-        ).join("、");
+        const objectSummary = buildStandardObjectSummaryValues(linkedDevices);
         const deptValue = coerceDepartmentSingleValue(
           draft.responsibilityDeptId,
           draft.responsibilityDeptRaw,
@@ -3169,15 +4390,32 @@
           [MASTER_FIELD.scanRequired]: draft.scanRequired || "否",
           [MASTER_FIELD.remark]: draft.remark || "",
 
-          [MASTER_FIELD.deviceName]: deviceNames,
-          [MASTER_FIELD.deviceCode]: deviceCodes,
-          [MASTER_FIELD.deviceType]: deviceTypes,
-          [MASTER_FIELD.linkedDeviceType]: deviceTypes,
-          [MASTER_FIELD.linkedDeviceRange]: deviceRanges,
+          [MASTER_FIELD.deviceName]: objectSummary.deviceNames,
+          [MASTER_FIELD.deviceCode]: objectSummary.deviceCodes,
+          [MASTER_FIELD.deviceType]: objectSummary.deviceTypes,
+          [MASTER_FIELD.linkedDeviceType]: objectSummary.deviceTypes,
+          [MASTER_FIELD.linkedDeviceRange]: objectSummary.deviceRanges,
           [MASTER_FIELD.activeRuleId]: activeRuleId || "",
         };
 
         return payload;
+      }
+
+      function buildStandardObjectSummaryValues(linkedDevices) {
+        const rows = Array.isArray(linkedDevices) ? linkedDevices : [];
+        return {
+          deviceNames: unique(rows.map((item) => item.name)).join("、"),
+          deviceCodes: unique(rows.map((item) => item.code)).join("、"),
+          deviceTypes: unique(rows.map((item) => item.deviceType || item.category)).join("、"),
+          deviceRanges: unique(
+            rows.map((item) => {
+              if (item.deviceType === "危化品库") {
+                return item.location || item.name || item.area || item.workshop;
+              }
+              return item.workshop || item.area || item.location;
+            })
+          ).join("、"),
+        };
       }
 
       function coerceDepartmentSingleValue(deptId, rawValue, fallbackText) {
@@ -3282,16 +4520,16 @@
 
       async function replaceStandardDetails(standard, detailRows) {
         const existing = await fetchDetailRecordsByStandard(standard);
-        for (const row of existing) {
-          if (row.cloudId) {
-            await requestEntry(API_CONFIG.detailEntryId, "data_delete", { data_id: row.cloudId }, "POST");
-          }
-        }
+        await Promise.all(
+          existing
+            .filter((row) => row.cloudId)
+            .map((row) => requestEntry(API_CONFIG.detailEntryId, "data_delete", { data_id: row.cloudId }, "POST"))
+        );
 
-        for (const row of detailRows) {
+        await Promise.all(detailRows.map((row) => {
           const payload = buildDetailPayload(row, standard);
-          await requestEntry(API_CONFIG.detailEntryId, "data_create", { data: payload }, "POST");
-        }
+          return requestEntry(API_CONFIG.detailEntryId, "data_create", { data: payload }, "POST");
+        }));
       }
 
       async function fetchDetailRecordsByStandard(standard) {
@@ -3345,34 +4583,32 @@
         }
 
         const objectType = normalizeApplicableDeviceType(standard?.applicableDeviceType);
-        const pool = getObjectPool(objectType);
-        for (const deviceId of deviceIds) {
+        const relationObjectType = getRelationObjectTypeValue(objectType);
+        const ruleId = resolveRuleIdForStandard(standard);
+        const pool = getObjectPool(objectType).filter((item) => isObjectLinkable(item, objectType));
+        const uniqueDeviceIds = Array.from(new Set(deviceIds.map((id) => String(id || "").trim()).filter(Boolean)));
+        await Promise.all(uniqueDeviceIds.map(async (deviceId) => {
           const device = pool.find((item) => item.id === deviceId);
           if (!device) {
-            continue;
+            return;
           }
-          if (objectType === "危化品") {
-            const chemicals = state.chemicalPool.filter((chemical) => isChemicalInStore(chemical, device));
-            for (const chemical of chemicals) {
-              if (!chemical.cloudId) continue;
-              await updateRecord(API_CONFIG.chemicalEntryId, chemical.cloudId, {
-                [CHEMICAL_FIELD.inspectStandardId]: standard.cloudId || "",
-              });
-              chemical.inspectStandardId = standard.cloudId || "";
-            }
-          } else {
-            if (!device.cloudId) {
-              continue;
-            }
-            await updateRecord(API_CONFIG.deviceEntryId, device.cloudId, {
-              [DEVICE_FIELD.inspectStandardId]: standard.cloudId || "",
-              [DEVICE_FIELD.inspectStandardCode]: standard.code || "",
-            });
+          const payload = buildRelationPayload(standard, device, relationObjectType, ruleId);
+          const existing = findRelationRecord({
+            standardId: standard.cloudId,
+            objectType: relationObjectType,
+            objectId: device.id,
+            objectCode: device.code,
+          });
+
+          if (existing?.cloudId) {
+            await updateRecord(API_CONFIG.relationEntryId, existing.cloudId, payload);
+            applyLocalRelationUpsert(existing.cloudId, payload);
+            return;
           }
 
-          device.inspectStandardId = standard.cloudId || "";
-          device.inspectStandardCode = standard.code || "";
-        }
+          const created = await requestEntry(API_CONFIG.relationEntryId, "data_create", { data: payload }, "POST");
+          applyLocalRelationUpsert(extractRecordId(created?.data || created), payload);
+        }));
       }
 
       async function unbindDevicesFromStandard(deviceIds, standard) {
@@ -3381,41 +4617,35 @@
         }
 
         const objectType = normalizeApplicableDeviceType(standard?.applicableDeviceType);
+        const relationObjectType = getRelationObjectTypeValue(objectType);
         const pool = getObjectPool(objectType);
         for (const deviceId of deviceIds) {
           const device = pool.find((item) => item.id === deviceId);
           if (!device) {
             continue;
           }
+          const matchedRelations = state.relationPool.filter((item) => {
+            const sameStandard = standard.cloudId && String(item.standardId || "") === String(standard.cloudId || "");
+            const sameType = normalizeRelationObjectType(item.objectType) === relationObjectType;
+            const sameId = String(item.objectId || "") === String(device.id || "");
+            const sameCode = device.code && String(item.objectCode || "") === String(device.code || "");
+            return sameStandard && sameType && (sameId || sameCode) && isRelationActive(item.status);
+          });
 
-          if (objectType === "危化品") {
-            const chemicals = state.chemicalPool.filter((chemical) => {
-              return isChemicalInStore(chemical, device) && standard.cloudId && String(chemical.inspectStandardId || "") === String(standard.cloudId || "");
+          for (const relation of matchedRelations) {
+            await updateRecord(API_CONFIG.relationEntryId, relation.cloudId, {
+              [RELATION_FIELD.status]: "停用",
             });
-            for (const chemical of chemicals) {
-              if (!chemical.cloudId) continue;
-              await updateRecord(API_CONFIG.chemicalEntryId, chemical.cloudId, {
-                [CHEMICAL_FIELD.inspectStandardId]: "",
-              });
-              chemical.inspectStandardId = "";
-            }
-          } else {
-            if (!device.cloudId) {
-              continue;
-            }
-            const shouldClearById = standard.cloudId && String(device.inspectStandardId || "") === String(standard.cloudId || "");
-            const shouldClearByCode = standard.code && String(device.inspectStandardCode || "") === String(standard.code || "");
-            if (!shouldClearById && !shouldClearByCode) {
-              continue;
-            }
-            await updateRecord(API_CONFIG.deviceEntryId, device.cloudId, {
-              [DEVICE_FIELD.inspectStandardId]: "",
-              [DEVICE_FIELD.inspectStandardCode]: "",
+            applyLocalRelationUpsert(relation.cloudId, {
+              [RELATION_FIELD.standardId]: relation.standardId,
+              [RELATION_FIELD.standardCode]: relation.standardCode,
+              [RELATION_FIELD.ruleId]: relation.ruleId,
+              [RELATION_FIELD.objectType]: relation.objectType,
+              [RELATION_FIELD.objectId]: relation.objectId,
+              [RELATION_FIELD.objectCode]: relation.objectCode,
+              [RELATION_FIELD.status]: "停用",
             });
           }
-
-          device.inspectStandardId = "";
-          device.inspectStandardCode = "";
         }
       }
 
@@ -3463,6 +4693,7 @@
           refs.detailModalTitle.textContent = "新增点检明细";
         }
 
+        refreshSelectProxies(refs.detailForm);
         refs.detailModal.classList.remove("hidden");
       }
 
@@ -3737,11 +4968,12 @@
           return;
         }
         const draft = { ...inline.draft, [field]: value };
+        const trigger = applyRangeInputValue(draft, field, value);
         if (field === "no") {
           draft.no = toIntOrDefault(value, 1);
           draft.sortNo = draft.no;
         }
-        inline.draft = normalizeInlineDraftByMode(draft, { trigger: field });
+        inline.draft = normalizeInlineDraftByMode(draft, { trigger });
       }
 
       function cancelInlineDetail(target, { silent = false } = {}) {
@@ -3884,6 +5116,10 @@
         const standardPlaceholder = executeMode === "状态" ? "例如 前进,待修,停用" : defaultStandardByMode(executeMode);
         const judgePlaceholder =
           executeMode === "抄表" ? "例如 48-80" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
+        const judgeControl =
+          executeMode === "抄表"
+            ? renderRangeInputControl(row)
+            : `<input class="input" type="text" data-inline-field="standardText" ${judgeReadonly} placeholder="${escapeHtml(judgePlaceholder)}" value="${escapeHtml(row.standardText || "")}" />`;
         const tr = document.createElement("tr");
         tr.className = "row-editor";
         tr.innerHTML = `
@@ -3903,7 +5139,7 @@
           </td>
           <td><input class="input" type="text" data-inline-field="standard" ${standardReadonly} placeholder="${escapeHtml(standardPlaceholder)}" value="${escapeHtml(row.standard || "")}" /></td>
           <td><input class="input" type="text" data-inline-field="unit" value="${escapeHtml(row.unit || "")}" /></td>
-          <td><input class="input" type="text" data-inline-field="standardText" ${judgeReadonly} placeholder="${escapeHtml(judgePlaceholder)}" value="${escapeHtml(row.standardText || "")}" /></td>
+          <td>${judgeControl}</td>
           <td>
             <div class="cell-actions">
               <button class="text-btn" data-action="save">保存</button>
@@ -3957,6 +5193,10 @@
           const standardPlaceholder = executeMode === "状态" ? "例如 前进,待修,停用" : defaultStandardByMode(executeMode);
           const judgePlaceholder =
             executeMode === "抄表" ? "例如 48-80" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
+          const judgeControl =
+            executeMode === "抄表"
+              ? renderRangeInputControl(row, { rowId: row.id })
+              : `<input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standardText" ${judgeReadonly} placeholder="${escapeHtml(judgePlaceholder)}" value="${escapeHtml(row.standardText || "")}" />`;
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td><input class="input" type="number" min="1" step="1" data-row-id="${escapeHtml(row.id)}" data-inline-field="no" value="${escapeHtml(row.no ?? "")}" /></td>
@@ -3974,7 +5214,7 @@
             </td>
             <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standard" ${standardReadonly} placeholder="${escapeHtml(standardPlaceholder)}" value="${escapeHtml(row.standard || "")}" /></td>
             <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="unit" value="${escapeHtml(row.unit || "")}" /></td>
-            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standardText" ${judgeReadonly} placeholder="${escapeHtml(judgePlaceholder)}" value="${escapeHtml(row.standardText || "")}" /></td>
+            <td>${judgeControl}</td>
             <td>
               <select class="select" data-row-id="${escapeHtml(row.id)}" data-inline-field="enabledStatus">
                 ${renderReportRequiredOptions(row.enabledStatus)}
@@ -3988,6 +5228,95 @@
           `;
           refs.modalDetailTableBody.appendChild(tr);
         });
+      }
+
+      function renderRangeInputControl(row, { rowId = "" } = {}) {
+        const range = getRangeInputParts(row);
+        const rowAttr = rowId ? ` data-row-id="${escapeHtml(rowId)}"` : "";
+        return `
+          <div class="range-input" aria-label="判断标准区间">
+            <input class="input" type="text" inputmode="decimal" autocomplete="off"${rowAttr} data-inline-field="rangeMin" placeholder="下限" value="${escapeHtml(range.min)}" />
+            <span class="range-separator">-</span>
+            <input class="input" type="text" inputmode="decimal" autocomplete="off"${rowAttr} data-inline-field="rangeMax" placeholder="上限" value="${escapeHtml(range.max)}" />
+          </div>
+        `;
+      }
+
+      function getRangeInputParts(row) {
+        const directMin = row && row.rangeMin !== undefined && row.rangeMin !== null ? String(row.rangeMin).trim() : "";
+        const directMax = row && row.rangeMax !== undefined && row.rangeMax !== null ? String(row.rangeMax).trim() : "";
+        if (directMin || directMax) {
+          return { min: directMin, max: directMax };
+        }
+
+        const range = parseNumericRange(row && row.standardText);
+        if (!range) {
+          return { min: "", max: "" };
+        }
+        return {
+          min: formatNumeric(range.min),
+          max: formatNumeric(range.max),
+        };
+      }
+
+      function applyRangeInputValue(draft, field, value) {
+        if (field !== "rangeMin" && field !== "rangeMax") {
+          return field;
+        }
+
+        const current = getRangeInputParts(draft);
+        if (field === "rangeMin") {
+          current.min = sanitizeRangeNumberText(value);
+        } else {
+          current.max = sanitizeRangeNumberText(value);
+        }
+        draft.rangeMin = current.min;
+        draft.rangeMax = current.max;
+        draft.standardText = composeRangeText(current.min, current.max);
+        return "standardText";
+      }
+
+      function isRangeInputField(field) {
+        return field === "rangeMin" || field === "rangeMax";
+      }
+
+      function sanitizeRangeInputElement(element) {
+        const value = sanitizeRangeNumberText(element.value);
+        if (element.value !== value) {
+          element.value = value;
+        }
+        return value;
+      }
+
+      function sanitizeRangeNumberText(value) {
+        let text = String(value || "")
+          .replace(/[^\d.-]/g, "")
+          .replace(/(?!^)-/g, "");
+        const negative = text.startsWith("-");
+        text = `${negative ? "-" : ""}${text.replace(/-/g, "")}`;
+        const parts = text.split(".");
+        if (parts.length > 2) {
+          text = `${parts.shift()}.${parts.join("")}`;
+        }
+        return text;
+      }
+
+      function composeRangeText(minValue, maxValue) {
+        const min = String(minValue || "").trim();
+        const max = String(maxValue || "").trim();
+        if (!min && !max) {
+          return "";
+        }
+        if (!min || !max) {
+          return `${min}-${max}`;
+        }
+
+        const minNumber = Number(min);
+        const maxNumber = Number(max);
+        if (Number.isFinite(minNumber) && Number.isFinite(maxNumber)) {
+          return `${formatNumeric(Math.min(minNumber, maxNumber))}-${formatNumeric(Math.max(minNumber, maxNumber))}`;
+        }
+        return `${min}-${max}`;
       }
 
       function openDevicePicker(target) {
@@ -4030,6 +5359,9 @@
 
         return getObjectPool(objectType).filter((item) => {
           if (excludedIds.has(item.id)) {
+            return false;
+          }
+          if (!isObjectLinkable(item, objectType)) {
             return false;
           }
           if (!keyword) {
@@ -4080,16 +5412,23 @@
         if (target === "draft") {
           const draftDevices = getDraftDevices();
           const objectType = getPickerObjectType();
+          const pool = getObjectPool(objectType).filter((item) => isObjectLinkable(item, objectType));
+          let addedCount = 0;
           selectedIds.forEach((id) => {
-            const device = getObjectPool(objectType).find((item) => item.id === id);
+            const device = pool.find((item) => item.id === id);
             if (!device) {
               return;
             }
             draftDevices.push(toDeviceRelation(device, objectType));
+            addedCount += 1;
           });
+          if (!addedCount) {
+            showToast("请选择启用中的对象");
+            return;
+          }
           closeDevicePicker();
           renderDraftDeviceTable();
-          showToast(`已关联 ${selectedIds.length} 个${getObjectTypeLabel(objectType)}`);
+          showToast(`已关联 ${addedCount} 个${getObjectTypeLabel(objectType)}`);
           return;
         }
 
@@ -4103,10 +5442,18 @@
         setStatus("正在关联对象...");
 
         try {
-          await bindDevicesToStandard(selectedIds, current);
+          const objectType = getPickerObjectType();
+          const pool = getObjectPool(objectType).filter((item) => isObjectLinkable(item, objectType));
+          const linkableIds = selectedIds.filter((id) => pool.some((item) => item.id === id));
+          if (!linkableIds.length) {
+            showToast("请选择启用中的对象");
+            return;
+          }
+          await bindDevicesToStandard(linkableIds, current);
+          await syncStandardObjectSummary(current);
           closeDevicePicker();
           renderDeviceTable();
-          showToast(`已关联 ${selectedIds.length} 个${getObjectTypeLabel(current.applicableDeviceType)}`);
+          showToast(`已关联 ${linkableIds.length} 个${getObjectTypeLabel(current.applicableDeviceType)}`);
           setStatus("对象关联成功");
         } catch (error) {
           showToast(`关联失败：${error.message}`);
@@ -4151,6 +5498,7 @@
         setStatus("正在移除关联对象...");
         try {
           await unbindDevicesFromStandard(ids, standard);
+          await syncStandardObjectSummary(standard);
           ids.forEach((id) => state.selected.deviceIds.delete(id));
           renderDeviceTable();
           showToast(`已移除 ${ids.length} 个对象`);
@@ -4176,25 +5524,12 @@
           return [];
         }
 
-        const stdId = String(standard.cloudId || "").trim();
-        const stdCode = String(standard.code || "").trim();
         const objectType = normalizeApplicableDeviceType(standard.applicableDeviceType);
-        const pool = getObjectPool(objectType);
-
-        if (objectType === "危化品") {
-          const linkedChemicals = state.chemicalPool.filter((chemical) => {
-            return stdId && String(chemical.inspectStandardId || "").trim() === stdId;
-          });
-          return sitesFromChemicals(linkedChemicals).map((site) => toDeviceRelation(site, objectType));
-        }
-
-        return pool
-          .filter((device) => {
-            const byId = stdId && String(device.inspectStandardId || "").trim() === stdId;
-            const byCode = objectType === "设备" && stdCode && String(device.inspectStandardCode || "").trim() === stdCode;
-            return byId || byCode;
-          })
-          .map((device) => toDeviceRelation(device, objectType));
+        const relations = getActiveRelationsByStandard(standard).filter((item) => normalizeRelationObjectType(item.objectType) === getRelationObjectTypeValue(objectType));
+        return relations
+          .map((relation) => resolveRelationObject(relation, objectType))
+          .filter(Boolean)
+          .map((item) => toDeviceRelation(item, objectType));
       }
 
       function toDeviceRelation(device, objectType = "设备") {
@@ -4256,11 +5591,12 @@
         }
         const current = rows[index];
         const draft = { ...current, [field]: value };
+        const trigger = applyRangeInputValue(draft, field, value);
         if (field === "no") {
           draft.no = toIntOrDefault(value, 1);
           draft.sortNo = draft.no;
         }
-        rows[index] = normalizeInlineDraftByMode(draft, { trigger: field });
+        rows[index] = normalizeInlineDraftByMode(draft, { trigger });
       }
 
       function removeDraftDetailRow(rowId) {
@@ -4305,12 +5641,153 @@
         return state.modal.standard.draft?.details || [];
       }
 
+      function normalizeRuleBindingText(value) {
+        return toDisplayText(value).replace(/\s+/g, "").trim().toLowerCase();
+      }
+
+      function resolveRuleIdForStandard(standard) {
+        const binding = normalizeRuleBindingText(standard?.category);
+        if (!binding) {
+          return "";
+        }
+        const matched = state.rules.find((rule) => {
+          return (
+            binding === normalizeRuleBindingText(rule.name) ||
+            binding === normalizeRuleBindingText(rule.code) ||
+            binding === normalizeRuleBindingText(rule.category)
+          );
+        });
+        return matched?.id || "";
+      }
+
       function normalizeApplicableDeviceType(value) {
         const text = toDisplayText(value);
         if (text.includes("危") || text.includes("化")) {
           return "危化品";
         }
         return "设备";
+      }
+
+      function normalizeRelationObjectType(value) {
+        const text = toDisplayText(value);
+        if (text.includes("危") || text.includes("化")) {
+          return "危化品库";
+        }
+        return "设备";
+      }
+
+      function getRelationObjectTypeValue(objectType) {
+        return normalizeApplicableDeviceType(objectType) === "危化品" ? "危化品库" : "设备";
+      }
+
+      function isRelationActive(status) {
+        return normalizeStatus(status || "启用") === "启用";
+      }
+
+      function getActiveRelationsByStandard(standard) {
+        const standardId = String(standard?.cloudId || standard?.id || "").trim();
+        if (!standardId) {
+          return [];
+        }
+        return state.relationPool.filter((item) => String(item.standardId || "").trim() === standardId && isRelationActive(item.status));
+      }
+
+      function findRelationRecord({ standardId = "", objectType = "", objectId = "", objectCode = "" } = {}) {
+        const normalizedStandardId = String(standardId || "").trim();
+        const normalizedType = normalizeRelationObjectType(objectType);
+        const normalizedObjectId = String(objectId || "").trim();
+        const normalizedObjectCode = String(objectCode || "").trim();
+        return state.relationPool.find((item) => {
+          const sameStandard = String(item.standardId || "").trim() === normalizedStandardId;
+          const sameType = normalizeRelationObjectType(item.objectType) === normalizedType;
+          const sameId = normalizedObjectId && String(item.objectId || "").trim() === normalizedObjectId;
+          const sameCode = normalizedObjectCode && String(item.objectCode || "").trim() === normalizedObjectCode;
+          return sameStandard && sameType && (sameId || sameCode);
+        }) || null;
+      }
+
+      function resolveRelationObject(relation, objectType) {
+        const pool = getObjectPool(objectType);
+        const objectId = String(relation?.objectId || "").trim();
+        const objectCode = String(relation?.objectCode || "").trim();
+        const matched =
+          pool.find((item) => objectId && String(item.id || "").trim() === objectId) ||
+          pool.find((item) => objectCode && String(item.code || "").trim() === objectCode) ||
+          null;
+        if (matched) {
+          return matched;
+        }
+        if (normalizeApplicableDeviceType(objectType) === "危化品" && objectCode) {
+          return {
+            id: objectId || `store:${normalizeCompareText(objectCode)}`,
+            cloudId: objectId || "",
+            code: objectCode,
+            name: objectCode,
+            category: "危化品库",
+            deviceType: "危化品库",
+            workshop: "",
+            area: "",
+            owner: "",
+            location: objectCode,
+            status: "启用",
+            objectType: "危化品库",
+            chemicalCount: state.chemicalPool.filter((item) => isSameStoreName(item.location, objectCode) || isSameStoreName(item.area, objectCode)).length,
+          };
+        }
+        return null;
+      }
+
+      function buildRelationPayload(standard, object, relationObjectType, ruleId) {
+        return {
+          [RELATION_FIELD.standardId]: standard.cloudId || standard.id || "",
+          [RELATION_FIELD.standardCode]: standard.code || "",
+          [RELATION_FIELD.ruleId]: ruleId || "",
+          [RELATION_FIELD.objectType]: normalizeRelationObjectType(relationObjectType),
+          [RELATION_FIELD.objectId]: object.id || object.cloudId || "",
+          [RELATION_FIELD.objectCode]: object.code || "",
+          [RELATION_FIELD.status]: "启用",
+        };
+      }
+
+      function applyLocalRelationUpsert(cloudId, payload) {
+        const normalized = {
+          id: cloudId || uid("rel"),
+          cloudId: cloudId || "",
+          standardId: toDisplayText(payload?.[RELATION_FIELD.standardId]),
+          standardCode: toDisplayText(payload?.[RELATION_FIELD.standardCode]),
+          ruleId: toDisplayText(payload?.[RELATION_FIELD.ruleId]),
+          objectType: normalizeRelationObjectType(payload?.[RELATION_FIELD.objectType]),
+          objectId: toDisplayText(payload?.[RELATION_FIELD.objectId]),
+          objectCode: toDisplayText(payload?.[RELATION_FIELD.objectCode]),
+          status: normalizeStatus(toDisplayText(payload?.[RELATION_FIELD.status]) || "启用"),
+        };
+        const index = state.relationPool.findIndex((item) => item.cloudId && cloudId && item.cloudId === cloudId);
+        if (index >= 0) {
+          state.relationPool.splice(index, 1, normalized);
+          return normalized;
+        }
+        state.relationPool.push(normalized);
+        return normalized;
+      }
+
+      async function syncStandardObjectSummary(standard) {
+        if (!standard?.cloudId) {
+          return;
+        }
+        const linkedDevices = getStandardLinkedDevices(standard);
+        const summary = buildStandardObjectSummaryValues(linkedDevices);
+        await updateRecord(API_CONFIG.masterEntryId, standard.cloudId, {
+          [MASTER_FIELD.deviceName]: summary.deviceNames,
+          [MASTER_FIELD.deviceCode]: summary.deviceCodes,
+          [MASTER_FIELD.deviceType]: summary.deviceTypes,
+          [MASTER_FIELD.linkedDeviceType]: summary.deviceTypes,
+          [MASTER_FIELD.linkedDeviceRange]: summary.deviceRanges,
+        });
+        standard.backendDeviceName = summary.deviceNames;
+        standard.backendDeviceCode = summary.deviceCodes;
+        standard.backendDeviceType = summary.deviceTypes;
+        standard.backendLinkedType = summary.deviceTypes;
+        standard.backendLinkedRange = summary.deviceRanges;
       }
 
       function getObjectTypeLabel(objectType) {
@@ -4325,6 +5802,17 @@
 
       function getObjectPool(objectType) {
         return normalizeApplicableDeviceType(objectType) === "危化品" ? state.sitePool : state.devicePool;
+      }
+
+      function isObjectLinkable(item, objectType) {
+        if (!item) {
+          return false;
+        }
+        const normalizedType = normalizeApplicableDeviceType(objectType);
+        if (normalizedType === "设备") {
+          return normalizeStatus(item.status) === "启用";
+        }
+        return normalizeStatus(item.status || "启用") === "启用";
       }
 
       function sitesFromChemicals(chemicals) {

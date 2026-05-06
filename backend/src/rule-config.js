@@ -1,8 +1,18 @@
+const {
+  createTaskFromAliasPayload,
+  deleteFutureUnstartedTasksByRule: deleteDbFutureUnstartedTasksByRule,
+  listTaskAliasRecords,
+  shouldWriteTasksToBes,
+  shouldWriteTasksToDb,
+} = require("./task-store");
+
 const RULE_ENTRY_ID = "a00a40d98daef7b34214eb93";
 const STANDARD_ENTRY_ID = "37204bb798aefcc5156f493e";
 const DETAIL_ENTRY_ID = "99a2496eb8db1bcf9f1aae69";
 const DEVICE_ENTRY_ID = "38104b6c9d74ce86a7c395b6";
 const CHEMICAL_ENTRY_ID = "9739459da9671a832692915d";
+const SITE_ENTRY_ID = "099e47809199d1d8214a984f";
+const RELATION_ENTRY_ID = "f9fd4c8daab08083af9096a7";
 const TASK_ENTRY_ID = "c0f0448b8de02de1a78829da";
 
 const RULE_FIELD = {
@@ -27,6 +37,8 @@ const STANDARD_FIELD = {
   category: "_widget_1775876696570",
   status: "_widget_1775876697472",
   version: "_widget_1776078594892",
+  effectiveDate: "_widget_1776078594911",
+  expiryDate: "_widget_1776078594976",
   applicableDeviceType: "_widget_1776740454451",
   linkedDeviceRange: "_widget_1776078595037",
 };
@@ -57,6 +69,23 @@ const CHEMICAL_FIELD = {
   owner: "_widget_1776739402004",
   inspectStandardId: "_widget_1776738897791",
   qrCode: "_widget_1776738897828",
+};
+
+const SITE_FIELD = {
+  code: "_widget_1776300861592",
+  area: "_widget_1776754790282",
+  name: "_widget_1776300861606",
+  owner: "_widget_1776300861656",
+};
+
+const RELATION_FIELD = {
+  standardId: "_widget_1776932400951",
+  standardCode: "_widget_1776932400932",
+  ruleId: "_widget_1776932401006",
+  objectType: "_widget_1776932401079",
+  objectId: "_widget_1776932401107",
+  objectCode: "_widget_1776932401126",
+  status: "_widget_1776932401145",
 };
 
 const TASK_FIELD = {
@@ -543,6 +572,16 @@ async function syncTasksByStandardChange(config, { standardId }) {
     };
   }
 
+  const today = formatDate(startOfDay(new Date()));
+  if (!isStandardEffectiveOnDate(standard, today)) {
+    return {
+      standard,
+      rule: null,
+      sync: summary,
+      message: "点检标准不在生效日期范围内，未生成任务",
+    };
+  }
+
   if (!standard.category) {
     return {
       standard,
@@ -567,7 +606,6 @@ async function syncTasksByStandardChange(config, { standardId }) {
     };
   }
 
-  const today = formatDate(startOfDay(new Date()));
   const generated = await generateTasksByRule(config, rule, {
     startDate: today,
     endDate: today,
@@ -726,30 +764,46 @@ function mergeSyncSummary(target, source) {
 }
 
 async function deleteFutureUnstartedTasksByRule(config, ruleId) {
-  const taskRecords = await fetchEntryRecords(config, TASK_ENTRY_ID);
   const tomorrow = addDays(startOfDay(new Date()), 1);
-  const list = taskRecords
-    .map(mapTaskRecord)
-    .filter((item) => {
-      if (String(item.ruleId || "") !== String(ruleId || "")) {
-        return false;
-      }
-      if (!item.taskDate || item.taskDate < tomorrow) {
-        return false;
-      }
-      return isUnstartedTaskStatus(item.taskStatus);
-    });
+  let besDeleted = 0;
+  let dbDeleted = 0;
 
-  for (const row of list) {
-    if (!row.id) {
-      continue;
+  if (shouldWriteTasksToBes(config)) {
+    const taskRecords = await fetchEntryRecords(config, TASK_ENTRY_ID);
+    const list = taskRecords
+      .map(mapTaskRecord)
+      .filter((item) => {
+        if (String(item.ruleId || "") !== String(ruleId || "")) {
+          return false;
+        }
+        if (!item.taskDate || item.taskDate < tomorrow) {
+          return false;
+        }
+        return isUnstartedTaskStatus(item.taskStatus);
+      });
+
+    for (const row of list) {
+      if (!row.id) {
+        continue;
+      }
+      await requestEntry(config, TASK_ENTRY_ID, "data_delete", {
+        data_id: row.id,
+      });
     }
-    await requestEntry(config, TASK_ENTRY_ID, "data_delete", {
-      data_id: row.id,
+    besDeleted = list.length;
+  }
+
+  if (shouldWriteTasksToDb(config)) {
+    dbDeleted = await deleteDbFutureUnstartedTasksByRule(config, ruleId, {
+      fromDate: tomorrow,
+      statuses: Array.from(UNSTARTED_TASK_STATUS_SET),
     });
   }
 
-  return list.length;
+  if (shouldWriteTasksToBes(config) && shouldWriteTasksToDb(config)) {
+    return Math.max(besDeleted, dbDeleted);
+  }
+  return besDeleted + dbDeleted;
 }
 
 async function generateTasksByRule(config, rule, { startDate, endDate, forceIncludeToday = false, standardIds = [] } = {}) {
@@ -760,12 +814,14 @@ async function generateTasksByRule(config, rule, { startDate, endDate, forceIncl
     return summary;
   }
 
-  const [standardRecords, detailRecords, deviceRecords, chemicalRecords, taskRecords] = await Promise.all([
+  const [standardRecords, detailRecords, deviceRecords, chemicalRecords, siteRecords, relationRecords, taskRecords] = await Promise.all([
     fetchEntryRecords(config, STANDARD_ENTRY_ID),
     fetchEntryRecords(config, DETAIL_ENTRY_ID),
     fetchEntryRecords(config, DEVICE_ENTRY_ID),
     fetchEntryRecords(config, CHEMICAL_ENTRY_ID),
-    fetchEntryRecords(config, TASK_ENTRY_ID),
+    fetchEntryRecords(config, SITE_ENTRY_ID),
+    fetchEntryRecords(config, RELATION_ENTRY_ID),
+    fetchTaskRecordsForGeneration(config, dateList),
   ]);
 
   const targetStandardIdSet = new Set(
@@ -788,24 +844,24 @@ async function generateTasksByRule(config, rule, { startDate, endDate, forceIncl
   const detailsByStandard = buildDetailCountMap(detailRecords);
   const devices = deviceRecords.map(mapDeviceRecord);
   const chemicals = chemicalRecords.map(mapChemicalRecord);
+  const sites = siteRecords.map(mapSiteRecord);
+  const relations = relationRecords.map(mapRelationRecord).filter((item) => isRelationActive(item.status));
   const batchId = `RULE_SYNC_${Date.now()}`;
   const existingTaskKeySet = new Set(taskRecords.map((record) => buildTaskKey(mapTaskRecord(record))));
 
   for (const standard of standards) {
     const objectType = normalizeApplicableDeviceType(standard.applicableDeviceType);
+    const standardRelations = getActiveRelationsByStandard(relations, standard);
+    const linkedSites = objectType === "危化品" ? resolveRelationObjects(standardRelations, sites, objectType) : [];
     const linkedDevices =
       objectType === "危化品"
         ? chemicals.filter((chemical) => {
             if (!isEnabledStatus(chemical.status) || normalizeYesNo(chemical.included) !== "是") {
               return false;
             }
-            return isChemicalBoundToStandard(chemical, standard);
+            return linkedSites.some((site) => isChemicalInStore(chemical, site));
           })
-        : devices.filter((device) => {
-            const byId = standard.id && String(device.inspectStandardId || "") === String(standard.id || "");
-            const byCode = standard.code && String(device.inspectStandardCode || "") === String(standard.code || "");
-            return byId || byCode;
-          });
+        : resolveRelationObjects(standardRelations, devices, objectType);
 
     summary.devices += linkedDevices.length;
     if (!linkedDevices.length) {
@@ -813,6 +869,9 @@ async function generateTasksByRule(config, rule, { startDate, endDate, forceIncl
     }
 
     for (const plannedDate of dateList) {
+      if (!isStandardEffectiveOnDate(standard, plannedDate)) {
+        continue;
+      }
       for (const device of linkedDevices) {
         const taskKey = buildTaskKey({
           ruleId: rule.id,
@@ -835,9 +894,7 @@ async function generateTasksByRule(config, rule, { startDate, endDate, forceIncl
           batchId,
         });
 
-        await requestEntry(config, TASK_ENTRY_ID, "data_create", {
-          data: payload,
-        });
+        await createTaskByConfiguredStore(config, payload);
         existingTaskKeySet.add(taskKey);
         summary.created += 1;
       }
@@ -845,6 +902,31 @@ async function generateTasksByRule(config, rule, { startDate, endDate, forceIncl
   }
 
   return summary;
+}
+
+async function fetchTaskRecordsForGeneration(config, dateList) {
+  const output = [];
+  if (shouldWriteTasksToBes(config)) {
+    output.push(...await fetchEntryRecords(config, TASK_ENTRY_ID));
+  }
+  if (shouldWriteTasksToDb(config)) {
+    output.push(...await listTaskAliasRecords(config, TASK_FIELD, {
+      startDate: dateList[0],
+      endDate: dateList[dateList.length - 1],
+    }));
+  }
+  return output;
+}
+
+async function createTaskByConfiguredStore(config, payload) {
+  if (shouldWriteTasksToBes(config)) {
+    await requestEntry(config, TASK_ENTRY_ID, "data_create", {
+      data: payload,
+    });
+  }
+  if (shouldWriteTasksToDb(config)) {
+    await createTaskFromAliasPayload(config, payload, TASK_FIELD);
+  }
 }
 
 function buildDetailCountMap(detailRecords) {
@@ -880,42 +962,119 @@ function getDetailCount(detailMap, standard) {
   return 0;
 }
 
-function isChemicalBoundToStandard(chemical, standard) {
-  if (!chemical || !standard) {
+function normalizeRelationObjectType(value) {
+  const text = toDisplayText(value);
+  if (text.includes("危") || text.includes("化")) {
+    return "危化品库";
+  }
+  return "设备";
+}
+
+function getRelationObjectTypeValue(applicableDeviceType) {
+  return normalizeApplicableDeviceType(applicableDeviceType) === "危化品" ? "危化品库" : "设备";
+}
+
+function isRelationActive(status) {
+  return isEnabledStatus(status || "启用");
+}
+
+function isStandardEffectiveOnDate(standard, dateValue) {
+  const date = startOfDay(parseDateTime(dateValue || new Date()));
+  const effectiveDate = parseOptionalDate(standard && standard.effectiveDate);
+  const expiryDate = parseOptionalDate(standard && standard.expiryDate);
+  if (effectiveDate && date < effectiveDate) {
     return false;
   }
-  if (standard.id && String(chemical.inspectStandardId || "") === String(standard.id || "")) {
-    return true;
-  }
-
-  const locations = splitLinkedRangeTexts(standard.linkedDeviceRange);
-  if (!locations.length) {
+  if (expiryDate && date > expiryDate) {
     return false;
   }
-  const chemicalLocations = [
-    chemical.storageLocation,
-    chemical.location,
-    chemical.usageLocation,
-    chemical.workshop,
-  ]
-    .map(normalizeLocationText)
-    .filter(Boolean);
+  return true;
+}
 
-  return locations.some((item) => {
-    const target = normalizeLocationText(item);
-    return chemicalLocations.some((location) => location === target || location.includes(target) || target.includes(location));
+function parseOptionalDate(value) {
+  const normalized = normalizeDate(value);
+  if (!normalized) {
+    return null;
+  }
+  const [year, month, day] = normalized.split("-").map((item) => Number(item));
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return null;
+  }
+  return new Date(year, month - 1, day);
+}
+
+function getActiveRelationsByStandard(relations, standard) {
+  const standardId = String(standard?.id || "").trim();
+  if (!standardId) {
+    return [];
+  }
+  const relationObjectType = getRelationObjectTypeValue(standard.applicableDeviceType);
+  return (Array.isArray(relations) ? relations : []).filter((item) => {
+    return String(item.standardId || "").trim() === standardId && normalizeRelationObjectType(item.objectType) === relationObjectType;
   });
 }
 
-function splitLinkedRangeTexts(value) {
-  return toDisplayText(value)
-    .split(/[、,，;；\n\r]+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
+function resolveRelationObjects(relations, pool, objectType) {
+  const normalizedType = getRelationObjectTypeValue(objectType);
+  const source = Array.isArray(pool) ? pool : [];
+  const seen = new Set();
+  const output = [];
+
+  (Array.isArray(relations) ? relations : []).forEach((relation) => {
+    if (normalizeRelationObjectType(relation.objectType) !== normalizedType) {
+      return;
+    }
+    const matched =
+      source.find((item) => relation.objectId && String(item.id || "").trim() === String(relation.objectId || "").trim()) ||
+      source.find((item) => relation.objectCode && String(item.code || "").trim() === String(relation.objectCode || "").trim()) ||
+      null;
+    const fallback =
+      !matched && normalizedType === "危化品库" && relation.objectCode
+        ? {
+            id: relation.objectId || `store:${normalizeCompareText(relation.objectCode)}`,
+            code: relation.objectCode,
+            name: relation.objectCode,
+            area: "",
+            workshop: "",
+            location: relation.objectCode,
+            owner: "",
+          }
+        : null;
+    const target = matched || fallback;
+    if (!target) {
+      return;
+    }
+    const key = `${String(target.id || "").trim()}|${String(target.code || "").trim()}`;
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    output.push(target);
+  });
+
+  return output;
 }
 
-function normalizeLocationText(value) {
-  return toDisplayText(value).replace(/\s+/g, "").toLowerCase();
+function isChemicalInStore(chemical, site) {
+  if (!chemical || !site) {
+    return false;
+  }
+  return (
+    isSameStoreName(chemical.location, site.name) ||
+    isSameStoreName(chemical.storageLocation, site.name) ||
+    isSameStoreName(chemical.location, site.code) ||
+    isSameStoreName(chemical.storageLocation, site.code)
+  );
+}
+
+function isSameStoreName(left, right) {
+  const a = normalizeCompareText(left);
+  const b = normalizeCompareText(right);
+  return Boolean(a && b && a === b);
+}
+
+function normalizeCompareText(value) {
+  return toDisplayText(value).replace(/\s+/g, "").trim().toLowerCase();
 }
 
 function buildTaskPayload({ rule, standard, device, plannedDate, detailCount, batchId }) {
@@ -982,6 +1141,8 @@ function mapStandardRecord(record) {
     category: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.category)),
     status: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.status)),
     version: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.version)),
+    effectiveDate: normalizeDate(getAliasRawValue(record, STANDARD_FIELD.effectiveDate)),
+    expiryDate: normalizeDate(getAliasRawValue(record, STANDARD_FIELD.expiryDate)),
     applicableDeviceType: normalizeApplicableDeviceType(toDisplayText(getAliasRawValue(record, STANDARD_FIELD.applicableDeviceType))),
     linkedDeviceRange: toDisplayText(getAliasRawValue(record, STANDARD_FIELD.linkedDeviceRange)),
   };
@@ -1018,6 +1179,34 @@ function mapChemicalRecord(record) {
     qrContent: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.qrCode)),
     riskLevel: toDisplayText(getAliasRawValue(record, CHEMICAL_FIELD.accidentType)),
     location: storageLocation || usageLocation,
+  };
+}
+
+function mapSiteRecord(record) {
+  const area = toDisplayText(getAliasRawValue(record, SITE_FIELD.area)) || "未配置区域";
+  const name = toDisplayText(getAliasRawValue(record, SITE_FIELD.name));
+  const code = toDisplayText(getAliasRawValue(record, SITE_FIELD.code));
+  return {
+    id: extractRecordId(record) || code || name,
+    code,
+    name,
+    area,
+    workshop: area,
+    location: name,
+    owner: toDisplayText(getAliasRawValue(record, SITE_FIELD.owner)),
+  };
+}
+
+function mapRelationRecord(record) {
+  return {
+    id: extractRecordId(record),
+    standardId: toDisplayText(getAliasRawValue(record, RELATION_FIELD.standardId)),
+    standardCode: toDisplayText(getAliasRawValue(record, RELATION_FIELD.standardCode)),
+    ruleId: toDisplayText(getAliasRawValue(record, RELATION_FIELD.ruleId)),
+    objectType: normalizeRelationObjectType(getAliasRawValue(record, RELATION_FIELD.objectType)),
+    objectId: toDisplayText(getAliasRawValue(record, RELATION_FIELD.objectId)),
+    objectCode: toDisplayText(getAliasRawValue(record, RELATION_FIELD.objectCode)),
+    status: toDisplayText(getAliasRawValue(record, RELATION_FIELD.status)) || "启用",
   };
 }
 

@@ -1,0 +1,219 @@
+.date-field {
+  position: relative;
+}
+
+.date-display-input {
+  background: #fff;
+  color: var(--text, #1f2a3a);
+  padding-right: 36px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  user-select: none;
+}
+
+.input.date-display-input[readonly] {
+  background: #fff;
+  color: var(--text, #1f2a3a);
+  cursor: pointer;
+}
+
+.date-trigger-button {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.date-field-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--muted, var(--minor, #6f7d93));
+  pointer-events: none;
+}
+
+.date-field:focus-within .date-field-icon,
+.date-field:hover .date-field-icon,
+.date-field.is-open .date-field-icon {
+  color: var(--accent, var(--blue, var(--primary, #2c79ea)));
+}
+
+.date-field-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.date-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 236px;
+  border: 1px solid var(--border, var(--line, #d7deea));
+  border-radius: 8px;
+  background: var(--panel, #ffffff);
+  box-shadow: 0 10px 20px rgba(18, 30, 48, 0.14);
+  padding: 8px;
+  z-index: 120;
+}
+
+.date-field.has-time .date-panel {
+  width: 260px;
+}
+
+.date-panel.hidden {
+  display: none;
+}
+
+.date-panel-head {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.date-panel-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text, #1f2a3a);
+  font-variant-numeric: tabular-nums;
+}
+
+.date-nav-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border, var(--line, #d7deea));
+  border-radius: 5px;
+  background: #fff;
+  color: var(--text, #1f2a3a);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+
+.date-nav-btn:hover {
+  border-color: #b7c4d8;
+  color: var(--accent, var(--blue, var(--primary, #2c79ea)));
+}
+
+.date-weekdays,
+.date-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.date-weekdays {
+  margin-bottom: 4px;
+  color: var(--muted, var(--minor, #6f7d93));
+  font-size: 11px;
+  text-align: center;
+}
+
+.date-weekdays span {
+  min-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-day-btn {
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text, #1f2a3a);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  padding: 0;
+}
+
+.date-day-btn:hover {
+  background: #f3f7ff;
+  border-color: #d7e5ff;
+}
+
+.date-day-btn.is-outside {
+  color: #a5afbf;
+}
+
+.date-day-btn.is-today {
+  border-color: #c7dafd;
+  color: var(--accent, var(--blue, var(--primary, #2c79ea)));
+}
+
+.date-day-btn.is-selected {
+  background: var(--accent-soft, var(--blue-soft, #edf4ff));
+  border-color: #a9c6f7;
+  color: var(--accent, var(--blue, var(--primary, #2c79ea)));
+  font-weight: 600;
+}
+
+.date-time-row {
+  margin-top: 6px;
+  padding: 8px 4px 6px;
+  border-top: 1px solid var(--border, var(--line, #d7deea));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.date-time-row label {
+  color: var(--muted, var(--minor, #6f7d93));
+  font-size: 12px;
+}
+
+.date-time-input {
+  width: 116px;
+  min-height: 30px;
+  border: 1px solid var(--border, var(--line, #d7deea));
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text, #1f2a3a);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 6px;
+}
+
+.date-time-input:focus {
+  outline: none;
+  border-color: #89afe8;
+  box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+}
+
+.date-panel-foot {
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.text-btn {
+  border: 0;
+  background: transparent;
+  color: var(--accent, var(--blue, var(--primary, #2c79ea)));
+  font-size: 12px;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.text-btn:hover {
+  color: #1f5fbf;
+}

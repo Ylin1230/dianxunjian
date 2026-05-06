@@ -1,0 +1,1613 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>安全检查</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --panel: #ffffff;
+        --border: #d7deea;
+        --line: #e5ebf4;
+        --text: #1f2a3a;
+        --muted: #6f7d93;
+        --accent: #2c79ea;
+        --accent-soft: #edf4ff;
+        --danger: #d24b4b;
+        --warning: #c07a1a;
+        --success: #1e8750;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .app {
+        max-width: 480px;
+        min-height: 100vh;
+        margin: 0 auto;
+        background: var(--bg);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        padding: 12px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: 18px;
+      }
+
+      h2 {
+        font-size: 16px;
+      }
+
+      h3 {
+        font-size: 15px;
+      }
+
+      .view {
+        display: none;
+        min-height: 0;
+        overflow: auto;
+        padding: 14px 14px 92px;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      .toolbar {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .home-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .overview-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .overview-main {
+        padding: 14px;
+      }
+
+      .overview-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .overview-icon,
+      .task-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        flex: 0 0 auto;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-top: 1px solid var(--line);
+      }
+
+      .stat-cell {
+        padding: 11px 4px;
+        text-align: center;
+        border-right: 1px solid var(--line);
+      }
+
+      .stat-cell:last-child {
+        border-right: 0;
+      }
+
+      .stat-cell strong {
+        display: block;
+        font-size: 21px;
+        line-height: 1.2;
+      }
+
+      .stat-cell span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .stat-cell.danger strong {
+        color: var(--danger);
+      }
+
+      .stat-cell.primary strong {
+        color: var(--accent);
+      }
+
+      .stat-cell.ok strong {
+        color: var(--success);
+      }
+
+      .home-panel {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 11px;
+      }
+
+      .home-panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .home-panel-head h2 {
+        line-height: 1.35;
+      }
+
+      .home-panel-head .meta {
+        margin-top: 3px;
+      }
+
+      .home-search {
+        margin-bottom: 10px;
+      }
+
+      .temporary-toggle {
+        width: 100%;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      .temporary-toggle.primary-card {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .temporary-toggle.primary-card span:last-child {
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .temporary-toggle span:last-child {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 400;
+      }
+
+      .temporary-panel {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .temporary-panel.hidden {
+        display: none;
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        background: rgba(17, 28, 44, 0.36);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 14px;
+      }
+
+      .sheet {
+        width: min(452px, 100%);
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid var(--border);
+        box-shadow: 0 18px 42px rgba(31, 42, 58, 0.18);
+        overflow: hidden;
+      }
+
+      .sheet-head {
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .sheet-body {
+        padding: 14px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .sheet-foot {
+        padding: 10px 14px 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .section-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 0 10px;
+        font-size: 14px;
+        background: #fff;
+        color: var(--text);
+      }
+
+      .textarea {
+        padding: 9px 10px;
+        min-height: 78px;
+        resize: vertical;
+      }
+
+      .btn {
+        min-height: 38px;
+        border: 1px solid #b7c4d8;
+        background: #fff;
+        color: #30445f;
+        border-radius: 5px;
+        padding: 0 12px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .btn:disabled {
+        opacity: 0.58;
+        cursor: not-allowed;
+      }
+
+      .btn.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .btn.danger {
+        border-color: #f0c0c0;
+        background: #fff9f9;
+        color: var(--danger);
+      }
+
+      .btn.link {
+        border-color: transparent;
+        background: transparent;
+        color: var(--accent);
+      }
+
+      .icon-btn {
+        width: 40px;
+        min-height: 40px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: #fff;
+        color: var(--accent);
+        border-color: #cbd9ee;
+        box-shadow: none;
+      }
+
+      .icon-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .cards {
+        display: grid;
+        gap: 10px;
+      }
+
+      .execute-items {
+        margin-left: -14px;
+        margin-right: -14px;
+        padding: 0 14px;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 11px;
+      }
+
+      .task-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        padding: 12px;
+      }
+
+      .task-card.overdue {
+        border-color: #f2c9c9;
+        background: #fffafa;
+      }
+
+      .task-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .task-main {
+        min-width: 0;
+      }
+
+      .task-main h3 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .task-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 7px;
+      }
+
+      .task-action {
+        min-width: 76px;
+        padding: 0 10px;
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .meta {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        min-height: 22px;
+        border-radius: 4px;
+        padding: 0 7px;
+        background: #eef3fb;
+        color: #4c5d74;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .tag.ok {
+        background: #eef8f2;
+        color: var(--success);
+      }
+
+      .tag.warn {
+        background: #fff7e8;
+        color: var(--warning);
+      }
+
+      .tag.danger {
+        background: #fff1f1;
+        color: var(--danger);
+      }
+
+      .execute-head {
+        position: static;
+        z-index: 4;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 0 0 10px 10px;
+        padding: 13px 14px 12px;
+        margin: -14px -14px 12px;
+      }
+
+      .execute-head .meta,
+      .execute-head .progress-row {
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      .execute-head .tag {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+      }
+
+      .execute-head .btn.link {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.22);
+        min-height: 28px;
+        padding: 0 9px;
+        font-size: 13px;
+      }
+
+      .execute-head h2 {
+        font-size: 17px;
+      }
+
+      .progress-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .progress {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.28);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 7px;
+      }
+
+      .progress > span {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: #fff;
+      }
+
+      .result-bar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 9px;
+      }
+
+      .result-btn {
+        min-height: 40px;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 8px;
+        color: #30445f;
+        font-size: 14px;
+      }
+
+      .result-btn.active.normal {
+        border-color: #77bc92;
+        background: #eef8f2;
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      .result-btn.active.abnormal {
+        border-color: #e09c9c;
+        background: #fff1f1;
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .result-btn.active.na {
+        border-color: #b7c4d8;
+        background: #f5f7fb;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .field {
+        display: grid;
+        gap: 5px;
+        margin-top: 9px;
+      }
+
+      .check-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        padding: 11px;
+      }
+
+      .check-card.done-normal {
+        border-color: #b9e2c8;
+        background: #fbfffc;
+      }
+
+      .check-card.done-abnormal {
+        border-color: #f0b7b7;
+        background: #fffafa;
+      }
+
+      .check-card.done-na {
+        border-color: #cfd7e3;
+        background: #f8fafc;
+      }
+
+      .check-title-row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 9px;
+        align-items: start;
+      }
+
+      .item-index {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .item-state {
+        min-width: 44px;
+        justify-content: center;
+      }
+
+      .item-group-title {
+        margin: 4px 2px -2px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .item-content-line {
+        margin-top: 8px;
+        color: #526179;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .item-standard-line {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .field label {
+        font-size: 12px;
+        color: #48586f;
+      }
+
+      .photo-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .photo-add-btn {
+        min-height: 32px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 11px;
+        font-size: 13px;
+      }
+
+      .photos {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .photo-card {
+        min-width: 0;
+      }
+
+      .photo-thumb {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f7faff;
+        cursor: pointer;
+      }
+
+      .photo-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .photo-file {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .photo-remove {
+        position: absolute;
+        right: 4px;
+        top: 4px;
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(16, 28, 44, 0.72);
+        color: #fff;
+        font-size: 17px;
+        line-height: 20px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .photo-name {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .photo-preview-body {
+        width: min(452px, 100%);
+      }
+
+      .photo-preview-wrap {
+        padding: 12px;
+        background: #f7faff;
+      }
+
+      .photo-preview-wrap img {
+        display: block;
+        width: 100%;
+        max-height: 72vh;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .required {
+        color: var(--danger);
+        margin-right: 2px;
+      }
+
+      .bottom-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        background: #fff;
+        border-top: 1px solid var(--border);
+        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        box-shadow: 0 -8px 18px rgba(31, 42, 58, 0.08);
+      }
+
+      .bottom-bar.hidden {
+        display: none;
+      }
+
+      .empty {
+        padding: 28px 12px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .summary-hero {
+        margin: 0 0 12px;
+        padding: 28px 18px 24px;
+        background: #fff;
+        color: var(--text);
+        text-align: center;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+
+      .summary-badge {
+        display: inline-flex;
+        min-width: 54px;
+        min-height: 32px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        font-weight: 700;
+      }
+
+      .summary-hero .meta {
+        color: var(--muted);
+      }
+
+      .summary-section-title {
+        margin: 14px 0 8px;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 74px;
+        transform: translate(-50%, 8px);
+        z-index: 20;
+        background: rgba(23, 35, 55, 0.92);
+        color: #fff;
+        font-size: 13px;
+        padding: 8px 11px;
+        border-radius: 5px;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.2s ease;
+        max-width: 82vw;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 560px) {
+        .app {
+          max-width: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <h1 id="title">安全检查</h1>
+        <button id="refreshBtn" class="btn icon-btn" type="button" aria-label="刷新" title="刷新">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+            <path d="M21 3v6h-6"></path>
+          </svg>
+        </button>
+      </header>
+
+      <section id="homeView" class="view active">
+        <div class="home-stack">
+          <section class="overview-card">
+            <div class="overview-main">
+              <div class="overview-title">
+                <span class="overview-icon">检</span>
+                <div>
+                  <h2 id="overviewDate">今日安全检查</h2>
+                  <div id="overviewMeta" class="meta">正在加载任务...</div>
+                </div>
+              </div>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-cell danger">
+                <strong id="statOverdue">0</strong>
+                <span>逾期</span>
+              </div>
+              <div class="stat-cell primary">
+                <strong id="statPending">0</strong>
+                <span>未逾期</span>
+              </div>
+              <div class="stat-cell ok">
+                <strong id="statTemplates">0</strong>
+                <span>检查中</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="home-panel">
+            <div class="field" style="margin-top:0">
+              <label for="inspectorInput">检查人</label>
+              <select id="inspectorInput" class="select"></select>
+            </div>
+          </section>
+
+          <section class="home-panel">
+            <div class="section-title-row">
+              <h2>待检查任务</h2>
+              <span id="taskCountText" class="tag">0 项</span>
+            </div>
+            <input id="keywordInput" class="input home-search" placeholder="搜索待检查任务/区域对象/责任人" />
+            <div id="taskCards" class="cards"></div>
+          </section>
+
+        </div>
+      </section>
+
+      <section id="executeView" class="view">
+        <div class="execute-head">
+          <div class="card-head">
+            <div>
+              <h2 id="executeTitle">安全检查</h2>
+              <div id="executeMeta" class="meta"></div>
+            </div>
+            <span id="abnormalCountTag" class="tag">0 异常</span>
+          </div>
+          <div class="progress-row" style="margin-top:7px">
+            <span id="progressText">0 / 0 项</span>
+            <button id="markAllNormalBtn" class="btn link" type="button">全部正常</button>
+          </div>
+          <div class="progress"><span id="progressBar"></span></div>
+        </div>
+        <div id="itemCards" class="cards execute-items"></div>
+      </section>
+
+      <section id="summaryView" class="view">
+        <div class="summary-hero">
+          <div id="summaryResultTag" class="summary-badge">正常</div>
+          <h2>检查完成</h2>
+          <div id="summaryText" class="meta"></div>
+        </div>
+        <h2 class="summary-section-title">异常项</h2>
+        <div id="summaryAbnormalList" class="cards" style="margin-top:10px"></div>
+      </section>
+
+      <div id="bottomBar" class="bottom-bar hidden">
+        <button id="backBtn" class="btn">返回</button>
+        <button id="submitBtn" class="btn primary">提交检查</button>
+      </div>
+    </div>
+
+    <div id="modalRoot"></div>
+    <div id="photoPreviewModal" class="modal-mask hidden">
+      <div class="sheet photo-preview-body">
+        <div class="sheet-head">
+          <h3>照片预览</h3>
+          <button id="closePhotoPreviewBtn" class="btn link" type="button">关闭</button>
+        </div>
+        <div class="photo-preview-wrap">
+          <img id="photoPreviewImage" alt="异常照片预览" />
+        </div>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_BASE = resolveApiBaseUrl();
+
+      const state = {
+        templates: [],
+        items: [],
+        tasks: [],
+        users: [],
+        options: {},
+        selectedTask: null,
+        selectedTemplate: null,
+        selectedItems: [],
+        startTime: "",
+        target: "",
+        summary: null,
+        currentUserId: "",
+        currentCorpId: "",
+      };
+
+      const refs = {};
+
+      document.addEventListener("DOMContentLoaded", () => {
+        collectExternalContext();
+        collectRefs();
+        bindEvents();
+        loadData();
+      });
+
+      function collectExternalContext() {
+        const params = new URLSearchParams(window.location.search || "");
+        state.currentUserId = params.get("webpage_user_id") || params.get("user_id") || "";
+        state.currentCorpId = params.get("webpage_crop_id") || params.get("crop_id") || "";
+      }
+
+      function collectRefs() {
+        [
+          "title", "refreshBtn", "homeView", "executeView", "summaryView", "bottomBar", "modalRoot", "photoPreviewModal", "closePhotoPreviewBtn", "photoPreviewImage", "toast",
+          "overviewDate", "overviewMeta", "statOverdue", "statPending", "statTemplates",
+          "inspectorInput", "keywordInput", "taskCards", "taskCountText",
+          "executeTitle", "executeMeta", "abnormalCountTag", "progressText", "progressBar", "markAllNormalBtn", "itemCards",
+          "backBtn", "submitBtn", "summaryResultTag", "summaryText", "summaryAbnormalList",
+        ].forEach((id) => {
+          refs[id] = document.getElementById(id);
+        });
+      }
+
+      function bindEvents() {
+        refs.refreshBtn.addEventListener("click", () => loadData({ goHome: true }));
+        refs.keywordInput.addEventListener("input", renderHome);
+        refs.markAllNormalBtn.addEventListener("click", markAllNormal);
+        refs.backBtn.addEventListener("click", () => switchView("home"));
+        refs.submitBtn.addEventListener("click", submitInspection);
+        refs.itemCards.addEventListener("click", (event) => {
+          const removePhotoBtn = event.target.closest("[data-action='remove-photo']");
+          if (removePhotoBtn) {
+            event.stopPropagation();
+            removeItemPhoto(Number(removePhotoBtn.dataset.index), removePhotoBtn.dataset.photoId || "");
+            return;
+          }
+
+          const previewPhotoBtn = event.target.closest("[data-action='preview-photo']");
+          if (previewPhotoBtn) {
+            openPhotoPreview(Number(previewPhotoBtn.dataset.index), previewPhotoBtn.dataset.photoId || "");
+            return;
+          }
+
+          const btn = event.target.closest("[data-result]");
+          if (!btn) return;
+          const index = Number(btn.dataset.index);
+          const item = state.selectedItems[index];
+          if (!item) return;
+          item.result = btn.dataset.result;
+          renderExecute();
+        });
+        refs.itemCards.addEventListener("input", (event) => {
+          handleItemFieldInput(event);
+        });
+        refs.itemCards.addEventListener("change", (event) => {
+          const target = event.target;
+          const field = target.dataset.field;
+          if (field === "photoInput" && target.files) {
+            void addItemPhotos(Number(target.dataset.index), target.files, target);
+            return;
+          }
+          handleItemFieldInput(event);
+        });
+        refs.closePhotoPreviewBtn.addEventListener("click", closePhotoPreview);
+        refs.photoPreviewModal.addEventListener("click", (event) => {
+          if (event.target === refs.photoPreviewModal) {
+            closePhotoPreview();
+          }
+        });
+      }
+
+      function handleItemFieldInput(event) {
+          const target = event.target;
+          const index = Number(target.dataset.index);
+          const field = target.dataset.field;
+          if (!field || !state.selectedItems[index]) return;
+          if (field === "photoInput") {
+            return;
+          }
+          state.selectedItems[index][field] = target.value;
+          updateProgress();
+      }
+
+      async function loadData(options = {}) {
+        showToast("正在加载...");
+        try {
+          const [bootstrap, userResult] = await Promise.allSettled([
+            requestApi("/safety-check/bootstrap"),
+            requestApi("/contacts/users"),
+          ]);
+          if (bootstrap.status !== "fulfilled") {
+            throw bootstrap.reason;
+          }
+          const resp = bootstrap.value;
+          const data = resp.data || {};
+          state.templates = data.templates || [];
+          state.items = data.items || [];
+          state.tasks = (data.tasks || []).filter((item) => ["", "待检查", "检查中"].includes(item.status || ""));
+          state.options = data.options || {};
+          if (userResult.status === "fulfilled") {
+            state.users = userResult.value.data?.users || [];
+          }
+          fillInspectorSelect();
+          renderHome();
+          if (options.goHome) {
+            switchView("home");
+          }
+        } catch (error) {
+          showToast(`加载失败：${error.message}`);
+        }
+      }
+
+      function renderHome() {
+        if (refs.homeView.classList.contains("active")) {
+          refs.title.textContent = "安全检查";
+          refs.bottomBar.classList.add("hidden");
+        }
+        const keyword = refs.keywordInput.value.trim().toLowerCase();
+        const tasks = state.tasks.filter((item) => {
+          const text = [item.code, item.templateName, item.target, item.ownerUser, item.ownerDept].join(" ").toLowerCase();
+          return !keyword || text.includes(keyword);
+        });
+        const overdueCount = tasks.filter((task) => task.overdue === "是").length;
+        const checkingCount = tasks.filter((task) => task.status === "检查中").length;
+        refs.overviewDate.textContent = formatChineseDate(new Date());
+        refs.overviewMeta.textContent = `${tasks.length} 项任务待处理`;
+        refs.statOverdue.textContent = overdueCount;
+        refs.statPending.textContent = Math.max(tasks.length - overdueCount, 0);
+        refs.statTemplates.textContent = checkingCount;
+        refs.taskCountText.textContent = `${tasks.length} 项`;
+        refs.taskCards.innerHTML = tasks.length ? tasks.map(renderTaskCard).join("") : `<div class="empty">暂无待检查任务</div>`;
+        refs.taskCards.querySelectorAll("[data-start-task]").forEach((btn) => {
+          btn.addEventListener("click", () => startTask(btn.dataset.startTask));
+        });
+      }
+
+      function fillInspectorSelect() {
+        const current = refs.inspectorInput.value;
+        refs.inspectorInput.innerHTML = `<option value="">请选择检查人</option>`;
+        state.users.forEach((user) => {
+          const userId = user.userId || user.id || user._id || user.value || "";
+          const label = user.name || user.nickname || user.userName || userId;
+          if (!userId && !label) return;
+          const option = document.createElement("option");
+          option.value = userId || label;
+          option.textContent = user.mainDeptName ? `${label}（${user.mainDeptName}）` : label;
+          option.dataset.label = label;
+          refs.inspectorInput.appendChild(option);
+        });
+        if (state.currentUserId && ![...refs.inspectorInput.options].some((option) => option.value === state.currentUserId)) {
+          const option = document.createElement("option");
+          option.value = state.currentUserId;
+          option.textContent = state.currentUserId;
+          option.dataset.label = state.currentUserId;
+          refs.inspectorInput.appendChild(option);
+        }
+        const preferred = state.currentUserId || current || localStorage.getItem("safety_check_inspector_id") || "";
+        if (preferred && [...refs.inspectorInput.options].some((option) => option.value === preferred)) {
+          refs.inspectorInput.value = preferred;
+        }
+      }
+
+      function selectedInspector() {
+        const option = refs.inspectorInput.selectedOptions && refs.inspectorInput.selectedOptions[0];
+        return {
+          id: refs.inspectorInput.value.trim(),
+          label: option?.dataset?.label || option?.textContent || "",
+        };
+      }
+
+      function renderTaskCard(task) {
+        const overdue = task.overdue === "是";
+        return `
+          <article class="task-card ${overdue ? "overdue" : ""}">
+            <div class="task-row">
+              <span class="task-icon">检</span>
+              <div class="task-main">
+                <h3>${escapeHtml(task.templateName || "安全检查")}</h3>
+                <div class="meta">${escapeHtml(task.target || "未填写区域/对象")} · 截止 ${escapeHtml(shortDateTime(task.deadline))}</div>
+                <div class="task-chips">
+                  ${renderTaskTag(task)}
+                  ${task.ownerUser ? `<span class="tag">${escapeHtml(task.ownerUser)}</span>` : ""}
+                </div>
+              </div>
+              <button class="btn primary task-action" data-start-task="${escapeHtml(task.id)}">去执行</button>
+            </div>
+          </article>
+        `;
+      }
+
+      function startTask(taskId) {
+        const task = state.tasks.find((item) => item.id === taskId);
+        if (!task) {
+          showToast("未找到任务");
+          return;
+        }
+        const template = state.templates.find((item) => item.id === task.templateId);
+        startInspection({ task, template, target: task.target || template?.target || "" });
+      }
+
+      function startInspection({ task, template, target }) {
+        const inspector = selectedInspector();
+        if (!inspector.id) {
+          showToast("请选择检查人");
+          return;
+        }
+        if (!template) {
+          showToast("未找到检查模板");
+          return;
+        }
+        localStorage.setItem("safety_check_inspector_id", inspector.id);
+        const details = state.items
+          .filter((item) => item.templateId === template.id && item.enabled !== "停用")
+          .sort((a, b) => Number(a.seq || 0) - Number(b.seq || 0));
+        if (!details.length) {
+          showToast("该模板暂无检查项");
+          return;
+        }
+        state.selectedTask = task;
+        state.selectedTemplate = template;
+        state.target = target;
+        state.startTime = nowDateTimeText();
+        state.selectedItems = details.map((item) => ({
+          ...item,
+          result: "",
+          inputValue: "",
+          abnormalDesc: "",
+          handling: "",
+          photos: [],
+        }));
+        renderExecute();
+        switchView("execute");
+      }
+
+      function renderExecute() {
+        refs.title.textContent = "执行检查";
+        refs.executeTitle.textContent = state.selectedTemplate?.name || "安全检查";
+        refs.executeMeta.textContent = `${state.target || "未填写区域/对象"} · ${selectedInspector().label || "检查人"}`;
+        refs.itemCards.innerHTML = renderGroupedItemCards();
+        updateProgress();
+      }
+
+      function renderGroupedItemCards() {
+        const counts = state.selectedItems.reduce((acc, item) => {
+          const category = item.category || "未分类";
+          acc[category] = (acc[category] || 0) + 1;
+          return acc;
+        }, {});
+        let lastCategory = "";
+        return state.selectedItems.map((item, index) => {
+          const category = item.category || "未分类";
+          const heading = category !== lastCategory ? `<div class="item-group-title">${escapeHtml(category)}（${counts[category]}项）</div>` : "";
+          lastCategory = category;
+          return `${heading}${renderItemCard(item, index)}`;
+        }).join("");
+      }
+
+      function renderItemCard(item, index) {
+        const resultType = item.resultType || "正常异常";
+        const hasNA = resultType === "正常异常不适用" || String(item.resultOptions || "").includes("不适用");
+        const stateClass = item.result === "正常" ? "done-normal" : item.result === "异常" ? "done-abnormal" : item.result === "不适用" ? "done-na" : "pending";
+        const stateText = item.result || "待检";
+        return `
+          <article class="check-card ${stateClass}">
+            <div class="check-title-row">
+              <span class="item-index">${String(item.seq || index + 1).padStart(2, "0")}</span>
+              <div>
+                <h3>${escapeHtml(item.item || "检查项")}</h3>
+              </div>
+              <span class="tag item-state ${item.result === "异常" ? "danger" : item.result === "正常" ? "ok" : ""}">${escapeHtml(stateText)}</span>
+            </div>
+            ${renderResultInput(item, index, hasNA)}
+            ${renderAbnormalBox(item, index)}
+          </article>
+        `;
+      }
+
+      function renderResultInput(item, index, hasNA) {
+        if (item.resultType === "数值录入") {
+          return `
+            <div class="field">
+              <label><span class="required">*</span>检查结果</label>
+              <input class="input" type="number" inputmode="decimal" data-index="${index}" data-field="inputValue" value="${escapeHtml(item.inputValue || "")}" placeholder="请输入数值" />
+            </div>
+            <div class="result-bar">
+              <button class="result-btn ${item.result === "异常" ? "active abnormal" : ""}" data-index="${index}" data-result="异常">异常</button>
+              <button class="result-btn ${item.result === "不适用" ? "active na" : ""}" data-index="${index}" data-result="不适用">不适用</button>
+              <button class="result-btn ${item.result === "正常" ? "active normal" : ""}" data-index="${index}" data-result="正常">正常</button>
+            </div>
+          `;
+        }
+        if (item.resultType === "文本说明") {
+          return `
+            <div class="field">
+              <label><span class="required">*</span>检查结果</label>
+              <textarea class="textarea" data-index="${index}" data-field="inputValue" placeholder="请输入检查说明">${escapeHtml(item.inputValue || "")}</textarea>
+            </div>
+            <div class="result-bar">
+              <button class="result-btn ${item.result === "异常" ? "active abnormal" : ""}" data-index="${index}" data-result="异常">异常</button>
+              <button class="result-btn ${item.result === "不适用" ? "active na" : ""}" data-index="${index}" data-result="不适用">不适用</button>
+              <button class="result-btn ${item.result === "正常" ? "active normal" : ""}" data-index="${index}" data-result="正常">正常</button>
+            </div>
+          `;
+        }
+        return `
+          <div class="result-bar" style="grid-template-columns: repeat(${hasNA ? 3 : 2}, minmax(0, 1fr))">
+            <button class="result-btn ${item.result === "异常" ? "active abnormal" : ""}" data-index="${index}" data-result="异常">异常</button>
+            ${hasNA ? `<button class="result-btn ${item.result === "不适用" ? "active na" : ""}" data-index="${index}" data-result="不适用">不适用</button>` : ""}
+            <button class="result-btn ${item.result === "正常" ? "active normal" : ""}" data-index="${index}" data-result="正常">正常</button>
+          </div>
+        `;
+      }
+
+      function renderAbnormalBox(item, index) {
+        if (item.result !== "异常") return "";
+        const photos = normalizePhotoList(item.photos);
+        const photoHtml = photos.length
+          ? `<div class="photos">${photos.map((photo) => `
+              <div class="photo-card">
+                <div class="photo-thumb" data-action="preview-photo" data-index="${index}" data-photo-id="${escapeHtml(photo.id)}">
+                  ${photo.url ? `<img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.name || "异常照片")}" />` : `<span class="photo-file">已选照片</span>`}
+                  <button class="photo-remove" type="button" data-action="remove-photo" data-index="${index}" data-photo-id="${escapeHtml(photo.id)}" aria-label="删除照片">×</button>
+                </div>
+                <div class="photo-name">${escapeHtml(photo.name || "照片")}</div>
+              </div>
+            `).join("")}</div>`
+          : "";
+        return `
+          <div class="field">
+            <label>${item.abnormalDescRequired === "是" ? '<span class="required">*</span>' : ""}异常说明</label>
+            <textarea class="textarea" data-index="${index}" data-field="abnormalDesc" placeholder="请填写异常现象">${escapeHtml(item.abnormalDesc || "")}</textarea>
+          </div>
+          <div class="field">
+            <label>整改要求</label>
+            <textarea class="textarea" data-index="${index}" data-field="handling" placeholder="可填写整改要求">${escapeHtml(item.handling || "")}</textarea>
+          </div>
+          <div class="field">
+            <div class="photo-head">
+              <label>${item.abnormalPhotoRequired === "是" ? '<span class="required">*</span>' : ""}异常照片</label>
+              <label class="btn photo-add-btn" title="添加照片">
+                添加照片
+                <input type="file" accept="image/*" capture="environment" multiple data-index="${index}" data-field="photoInput" hidden />
+              </label>
+            </div>
+            ${photoHtml}
+          </div>
+        `;
+      }
+
+      function normalizePhotoList(value) {
+        return (Array.isArray(value) ? value : [])
+          .map((item, index) => {
+            if (item && typeof item === "object") {
+              const name = String(item.name || item.fileName || `照片${index + 1}`).trim();
+              const url = String(item.url || item.previewUrl || item.dataUrl || "").trim();
+              const dataUrl = String(item.dataUrl || (/^data:image\//i.test(url) ? url : "")).trim();
+              return {
+                id: String(item.id || `${name}-${index}`).trim(),
+                name,
+                url,
+                dataUrl,
+              };
+            }
+            const name = String(item || "").trim();
+            if (!name) {
+              return null;
+            }
+            return {
+              id: `${name}-${index}`,
+              name,
+              url: "",
+              dataUrl: "",
+            };
+          })
+          .filter(Boolean);
+      }
+
+      async function addItemPhotos(index, fileList, inputEl) {
+        const item = state.selectedItems[index];
+        if (!item || !fileList || !fileList.length) {
+          return;
+        }
+
+        const files = Array.from(fileList).filter((file) => file && /^image\//i.test(file.type || ""));
+        if (!files.length) {
+          showToast("请选择图片文件");
+          if (inputEl) inputEl.value = "";
+          return;
+        }
+
+        try {
+          const nextPhotos = normalizePhotoList(item.photos);
+          for (const file of files) {
+            const dataUrl = await readFileAsDataUrl(file);
+            const previewUrl = await compressPhotoDataUrl(dataUrl);
+            nextPhotos.push({
+              id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+              name: file.name || `异常照片_${nextPhotos.length + 1}.jpg`,
+              url: previewUrl,
+              dataUrl: previewUrl,
+            });
+          }
+          item.photos = nextPhotos;
+          renderExecute();
+        } catch (error) {
+          showToast(`照片处理失败：${error.message || "请重试"}`);
+        } finally {
+          if (inputEl) inputEl.value = "";
+        }
+      }
+
+      function removeItemPhoto(index, photoId) {
+        const item = state.selectedItems[index];
+        if (!item || !photoId) {
+          return;
+        }
+        item.photos = normalizePhotoList(item.photos).filter((photo) => photo.id !== photoId);
+        renderExecute();
+      }
+
+      function openPhotoPreview(index, photoId) {
+        const item = state.selectedItems[index];
+        const photo = normalizePhotoList(item && item.photos).find((row) => row.id === photoId);
+        if (!photo || !photo.url) {
+          showToast("当前照片暂无可预览内容");
+          return;
+        }
+        refs.photoPreviewImage.src = photo.url;
+        refs.photoPreviewImage.alt = photo.name || "异常照片预览";
+        refs.photoPreviewModal.classList.remove("hidden");
+      }
+
+      function closePhotoPreview() {
+        refs.photoPreviewModal.classList.add("hidden");
+        refs.photoPreviewImage.removeAttribute("src");
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(new Error("图片读取失败，请重试"));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function compressPhotoDataUrl(dataUrl) {
+        const image = await loadImageFromDataUrl(dataUrl);
+        const width = Number(image.naturalWidth || image.width || 0);
+        const height = Number(image.naturalHeight || image.height || 0);
+        if (!width || !height) {
+          return dataUrl;
+        }
+
+        const maxSide = 900;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+
+        const ctx = canvas.getContext("2d", { alpha: false });
+        if (!ctx) {
+          return dataUrl;
+        }
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.82);
+      }
+
+      function loadImageFromDataUrl(dataUrl) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error("图片加载失败"));
+          image.src = dataUrl;
+        });
+      }
+
+      function updateProgress() {
+        const total = state.selectedItems.length;
+        const done = state.selectedItems.filter(isItemDone).length;
+        const abnormal = state.selectedItems.filter((item) => item.result === "异常").length;
+        refs.progressText.textContent = `${done} / ${total} 项`;
+        refs.progressBar.style.width = `${total ? Math.round((done / total) * 100) : 0}%`;
+        refs.abnormalCountTag.textContent = `${abnormal} 异常`;
+        refs.abnormalCountTag.className = `tag ${abnormal ? "danger" : "ok"}`;
+      }
+
+      function markAllNormal() {
+        state.selectedItems.forEach((item) => {
+          if (!item.result) item.result = "正常";
+        });
+        renderExecute();
+      }
+
+      async function submitInspection() {
+        const validation = validateInspection();
+        if (validation) {
+          showToast(validation);
+          return;
+        }
+        const inspector = selectedInspector();
+        const payload = {
+          taskId: state.selectedTask?.id || "",
+          templateId: state.selectedTemplate?.id || "",
+          templateName: state.selectedTemplate?.name || "",
+          target: state.target || "",
+          inspector: inspector.label,
+          inspectorId: inspector.id,
+          operatorUserId: state.currentUserId || inspector.id,
+          corpId: state.currentCorpId,
+          startTime: state.startTime,
+          endTime: nowDateTimeText(),
+          items: state.selectedItems.map((item) => ({
+            itemId: item.id,
+            seq: item.seq,
+            category: item.category,
+            item: item.item,
+            content: item.content,
+            standard: item.standard,
+            result: item.result,
+            inputValue: item.inputValue,
+            isAbnormal: item.result === "异常" ? "是" : "否",
+            abnormalDesc: item.abnormalDesc,
+            handling: item.handling,
+            photos: item.result === "异常" ? normalizePhotoList(item.photos)
+              .map((photo) => ({
+                name: photo.name,
+                dataUrl: photo.dataUrl || (/^data:image\//i.test(photo.url || "") ? photo.url : ""),
+              }))
+              .filter((photo) => photo.name || photo.dataUrl) : [],
+            ...(item.riskLevel ? { riskLevel: item.riskLevel } : {}),
+            deadlineDays: item.deadlineDays,
+            defaultDept: item.defaultDept,
+            defaultDeptId: item.defaultDeptId,
+          })),
+        };
+        refs.submitBtn.disabled = true;
+        try {
+          const resp = await requestApi("/safety-check/submit", "POST", payload);
+          state.summary = resp.data || {};
+          renderSummary();
+          switchView("summary");
+          await loadData();
+        } catch (error) {
+          showToast(`提交失败：${error.message}`);
+        } finally {
+          refs.submitBtn.disabled = false;
+        }
+      }
+
+      function validateInspection() {
+        for (let i = 0; i < state.selectedItems.length; i += 1) {
+          const item = state.selectedItems[i];
+          if (!isItemDone(item)) return `第 ${item.seq || i + 1} 项未填写`;
+          if (item.result === "异常" && item.abnormalDescRequired === "是" && !String(item.abnormalDesc || "").trim()) {
+            return `第 ${item.seq || i + 1} 项异常说明必填`;
+          }
+          if (item.result === "异常" && item.abnormalPhotoRequired === "是" && !normalizePhotoList(item.photos).length) {
+            return `第 ${item.seq || i + 1} 项异常照片必传`;
+          }
+        }
+        return "";
+      }
+
+      function isItemDone(item) {
+        if (!item.result) return false;
+        if ((item.resultType === "数值录入" || item.resultType === "文本说明") && !String(item.inputValue || "").trim()) {
+          return false;
+        }
+        return true;
+      }
+
+      function renderSummary() {
+        const data = state.summary || {};
+        const abnormalItems = state.selectedItems.filter((item) => item.result === "异常");
+        const flowCount = Array.isArray(data.flowIds || data.hazardIds) ? (data.flowIds || data.hazardIds).length : Number(data.flowStartCount || 0);
+        refs.summaryResultTag.textContent = data.result || "正常";
+        refs.summaryResultTag.className = "summary-badge";
+        refs.summaryText.textContent = `${state.selectedTemplate?.name || "安全检查"} · ${state.target || ""} · ${data.detailCount || state.selectedItems.length} 项 · ${data.abnormalCount || 0} 异常${flowCount ? ` · 已发起 ${flowCount} 条整改流程` : ""}`;
+        refs.summaryAbnormalList.innerHTML = abnormalItems.length ? abnormalItems.map((item) => `
+          <article class="card">
+            <h3>${escapeHtml(item.item || "异常项")}</h3>
+            <div class="meta">${escapeHtml(item.abnormalDesc || "未填写异常说明")}</div>
+            <span class="tag warn">已发起整改流程</span>
+          </article>
+        `).join("") : `<div class="empty">本次未发现异常</div>`;
+      }
+
+      function switchView(name) {
+        refs.homeView.classList.toggle("active", name === "home");
+        refs.executeView.classList.toggle("active", name === "execute");
+        refs.summaryView.classList.toggle("active", name === "summary");
+        refs.bottomBar.classList.toggle("hidden", name !== "execute");
+        if (name === "home") refs.title.textContent = "安全检查";
+        if (name === "summary") refs.title.textContent = "检查完成";
+      }
+
+      async function requestApi(path, method = "GET", body = null) {
+        const resp = await fetch(`${API_BASE}${path}`, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          ...(method === "GET" ? {} : { body: JSON.stringify(body || {}) }),
+        });
+        const text = await resp.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          data = { raw: text };
+        }
+        if (!resp.ok || data?.ok === false) {
+          throw new Error(data?.message || data?.detail || text || `HTTP ${resp.status}`);
+        }
+        return data || {};
+      }
+
+      function renderTaskTag(task) {
+        const overdue = task.overdue === "是";
+        return `<span class="tag ${overdue ? "danger" : "warn"}">${escapeHtml(overdue ? "逾期" : task.status || "待检查")}</span>`;
+      }
+
+      function shortDateTime(value) {
+        return String(value || "").replace("T", " ").slice(0, 16) || "-";
+      }
+
+      function formatChineseDate(date) {
+        const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 · ${weekdays[date.getDay()]}`;
+      }
+
+      function nowDateTimeText() {
+        const d = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      }
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => refs.toast.classList.remove("show"), 2200);
+      }
+    </script>
+  </body>
+</html>

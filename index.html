@@ -25,9 +25,17 @@
         box-sizing: border-box;
       }
 
+      html {
+        width: 100%;
+        min-height: 100%;
+        overflow: auto;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
+        min-height: 100dvh;
+        overflow: auto;
         font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
         color: var(--text);
         background: var(--bg);
@@ -39,9 +47,14 @@
         gap: 12px;
         padding: 12px;
         min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        max-width: 100%;
+        overflow: auto;
       }
 
       .panel {
+        min-width: 0;
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 6px;
@@ -51,6 +64,7 @@
       .left-panel {
         display: flex;
         flex-direction: column;
+        min-height: 0;
         overflow: hidden;
       }
 
@@ -92,21 +106,21 @@
       }
 
       .tree-wrap {
-        padding: 8px;
+        padding: 6px 8px;
         overflow: auto;
       }
 
       .tree-node {
-        margin: 2px 0;
+        margin: 0;
       }
 
       .tree-row {
-        min-height: 32px;
+        min-height: 26px;
         display: flex;
         align-items: center;
         gap: 4px;
         border-radius: 6px;
-        padding: 2px 8px 2px 4px;
+        padding: 1px 8px 1px 4px;
         position: relative;
       }
 
@@ -115,8 +129,8 @@
       }
 
       .tree-toggle {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         border: 0;
         border-radius: 4px;
         background: transparent;
@@ -138,7 +152,7 @@
         align-items: baseline;
         gap: 8px;
         font-size: 13px;
-        line-height: 1.5;
+        line-height: 1.35;
         padding: 0;
         cursor: pointer;
         text-align: left;
@@ -218,6 +232,8 @@
       .main-panel {
         display: grid;
         grid-template-rows: auto auto minmax(0, 1fr) auto;
+        min-width: 0;
+        min-height: 0;
         overflow: hidden;
       }
 
@@ -226,7 +242,7 @@
         border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 12px;
       }
 
@@ -245,7 +261,8 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        justify-content: flex-end;
+        justify-content: flex-start;
+        flex: 0 0 auto;
       }
 
       .btn {
@@ -282,11 +299,30 @@
       .filters {
         padding: 10px 12px;
         border-bottom: 1px solid var(--border);
-        display: grid;
-        grid-template-columns: minmax(220px, 1.4fr) 160px 180px auto;
+        display: flex;
         gap: 8px;
         align-items: center;
         background: #fff;
+      }
+
+      .filters #keywordInput {
+        flex: 0 1 280px;
+        width: 280px;
+        max-width: 32vw;
+        margin-left: auto;
+      }
+
+      .filters #statusFilter,
+      .filters #inspectionFilter,
+      .filters > .select-proxy {
+        flex: 0 0 160px;
+        width: 160px;
+      }
+
+      .filter-actions {
+        display: flex;
+        flex: 0 0 auto;
+        gap: 8px;
       }
 
       .control,
@@ -308,6 +344,357 @@
         box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
       }
 
+      .date-field {
+        position: relative;
+      }
+
+      .date-display-input {
+        padding-right: 36px;
+        font-variant-numeric: tabular-nums;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .date-trigger-button {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+        z-index: 3;
+      }
+
+      .date-field-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6f7d93;
+        pointer-events: none;
+      }
+
+      .date-field:focus-within .date-field-icon,
+      .date-field:hover .date-field-icon {
+        color: #2c79ea;
+      }
+
+      .date-field-icon svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .date-panel {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        width: 236px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 10px 20px rgba(18, 30, 48, 0.14);
+        padding: 8px;
+        z-index: 20;
+      }
+
+      .date-panel.hidden {
+        display: none;
+      }
+
+      .date-panel-head {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) 24px;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+      }
+
+      .date-panel-title {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .date-nav-btn {
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: #fff;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0;
+      }
+
+      .date-nav-btn:hover {
+        border-color: #89afe8;
+        color: var(--accent);
+        background: #f8fbff;
+      }
+
+      .date-weekdays,
+      .date-days {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 2px;
+      }
+
+      .date-weekdays {
+        margin-bottom: 4px;
+      }
+
+      .date-weekdays span {
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 22px;
+      }
+
+      .date-day-btn {
+        height: 28px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .date-day-btn:hover {
+        background: #f3f7ff;
+        border-color: #d5e3fb;
+      }
+
+      .date-day-btn.is-outside {
+        color: #a8b3c6;
+      }
+
+      .date-day-btn.is-today {
+        border-color: #b7cef8;
+        color: var(--accent);
+        background: #f6f9ff;
+      }
+
+      .date-day-btn.is-selected {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .date-panel-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 6px;
+      }
+
+      .date-panel-foot .text-btn {
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .native-select-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .select-proxy {
+        position: relative;
+      }
+
+      .select-proxy-button {
+        width: 100%;
+        min-height: 32px;
+        border: 1px solid #c9d3e2;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 30px 0 10px;
+        font: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .select-proxy.has-value .select-proxy-button {
+        padding-right: 42px;
+      }
+
+      .select-proxy-button::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #65758c;
+        border-bottom: 1px solid #65758c;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-button::after {
+        display: none;
+      }
+
+      .select-proxy-clear {
+        position: absolute;
+        right: 9px;
+        top: 50%;
+        z-index: 3;
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #cbd4e2;
+        color: #fff;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+
+      .select-proxy-clear::before,
+      .select-proxy-clear::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .select-proxy-clear::before {
+        transform: rotate(45deg);
+      }
+
+      .select-proxy-clear::after {
+        transform: rotate(-45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-clear {
+        display: inline-flex;
+      }
+
+      .select-proxy-clear:hover {
+        background: #b9c3d3;
+      }
+
+      .select-proxy-button span {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-button:focus,
+      .select-proxy.is-open .select-proxy-button {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .select-proxy-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 90;
+        max-height: 260px;
+        overflow: auto;
+        padding: 4px;
+        border: 1px solid #9fb2cb;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(27, 48, 78, 0.16);
+      }
+
+      .select-proxy.is-upward .select-proxy-panel {
+        top: auto;
+        bottom: calc(100% + 4px);
+      }
+
+      .select-proxy-panel.hidden {
+        display: none;
+      }
+
+      .select-proxy-list {
+        overflow: auto;
+      }
+
+      .select-proxy-option {
+        width: 100%;
+        min-height: 28px;
+        border: 0;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--text);
+        display: block;
+        padding: 5px 8px 5px 24px;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-option:hover,
+      .select-proxy-option.is-selected {
+        background: var(--accent-soft);
+        color: #195bb5;
+      }
+
+      .select-proxy-group {
+        padding: 7px 8px 3px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .select-proxy-option.is-grouped {
+        padding-left: 32px;
+      }
+
+      .select-proxy-option.is-grouped.is-selected::before {
+        left: 16px;
+      }
+
+      .select-proxy-option.is-selected::before {
+        content: "✓";
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
       .filter-actions {
         display: flex;
         justify-content: flex-end;
@@ -315,9 +702,80 @@
       }
 
       .table-wrap {
+        min-height: 0;
         overflow: auto;
         background: var(--panel-soft);
         padding: 0 10px 10px;
+      }
+
+      .content-split {
+        min-height: 0;
+        display: grid;
+        grid-template-rows: minmax(280px, 64%) minmax(132px, 1fr);
+        gap: 8px;
+        padding: 0 10px 10px;
+        overflow: hidden;
+        background: var(--panel-soft);
+      }
+
+      .content-split .table-wrap {
+        padding: 0;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
+      tbody tr.is-active {
+        background: #edf4ff;
+      }
+
+      .standard-usage-panel {
+        min-height: 0;
+        border: 1px solid var(--line-soft);
+        border-radius: 6px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .standard-usage-head {
+        min-height: 36px;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--line-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .standard-usage-head h3 {
+        margin: 0;
+        font-size: 14px;
+        color: #30445f;
+      }
+
+      .standard-usage-device {
+        min-width: 0;
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .standard-usage-body {
+        min-height: 0;
+        overflow: auto;
+      }
+
+      .standard-usage-body table {
+        min-width: 720px;
+      }
+
+      .standard-empty {
+        color: #7b8798;
+        font-size: 12px;
+        text-align: center;
+        padding: 26px 10px;
       }
 
       table {
@@ -438,9 +896,11 @@
         inset: 0;
         background: rgba(12, 22, 36, 0.36);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         padding: 16px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
         z-index: 20;
       }
 
@@ -449,11 +909,24 @@
       }
 
       .modal {
-        width: min(920px, 100%);
+        width: min(920px, calc(100vw - 32px));
+        max-height: calc(100vh - 32px);
+        max-height: calc(100dvh - 32px);
+        min-height: 0;
         background: #fff;
         border-radius: 6px;
         border: 1px solid #cfd8e6;
         box-shadow: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .modal > form {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       }
 
@@ -471,7 +944,12 @@
       }
 
       .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
         padding: 10px 12px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
 
       .form-grid {
@@ -549,10 +1027,14 @@
 
       .modal-foot {
         border-top: 1px solid var(--border);
+        background: #fff;
         padding: 8px 12px;
         display: flex;
         justify-content: flex-end;
         gap: 8px;
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
       }
 
       .stack {
@@ -562,15 +1044,16 @@
       }
 
       .qr-modal {
-        width: min(560px, 100%);
+        width: min(560px, calc(100vw - 32px));
       }
 
       .detail-modal {
-        width: min(820px, 100%);
+        width: min(820px, calc(100vw - 32px));
       }
 
       .category-modal {
-        width: min(560px, 100%);
+        width: min(560px, calc(100vw - 32px));
+        min-height: 360px;
       }
 
       .detail-qr-wrap {
@@ -589,6 +1072,10 @@
         flex-direction: column;
         gap: 10px;
         align-self: center;
+      }
+
+      .detail-qr-section {
+        display: none;
       }
 
       .qr-preview {
@@ -636,35 +1123,89 @@
 
       .toast {
         position: fixed;
-        right: 18px;
-        bottom: 18px;
+        left: 50%;
+        top: 18px;
         background: rgba(20, 34, 54, 0.92);
         color: #fff;
         font-size: 12px;
         padding: 8px 11px;
         border-radius: 5px;
-        z-index: 30;
+        z-index: 60;
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateX(-50%) translateY(-8px);
         pointer-events: none;
         transition: opacity 0.2s ease, transform 0.2s ease;
       }
 
       .toast.show {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
       }
 
       @media (max-width: 1200px) {
         .filters {
-          grid-template-columns: minmax(220px, 1.4fr) 140px 160px auto;
+          flex-wrap: wrap;
+        }
+
+        .filters #keywordInput {
+          flex: 1 1 260px;
+          width: auto;
+          max-width: none;
+          margin-left: 0;
+        }
+      }
+
+      @media (max-width: 1320px) {
+        .ledger-layout {
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
+
+        .main-head {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .head-actions {
+          justify-content: flex-start;
+        }
+      }
+
+      @media (max-height: 720px) {
+        .modal-mask {
+          padding: 8px;
+        }
+
+        .modal {
+          width: min(920px, calc(100vw - 16px));
+          max-height: calc(100vh - 16px);
+          max-height: calc(100dvh - 16px);
+        }
+
+        .qr-modal {
+          width: min(560px, calc(100vw - 16px));
+        }
+
+        .detail-modal {
+          width: min(820px, calc(100vw - 16px));
+        }
+
+        .category-modal {
+          width: min(560px, calc(100vw - 16px));
+        }
+
+        .modal-body {
+          padding: 8px;
+        }
+
+        .section-card {
+          margin-bottom: 8px;
+          padding: 8px;
         }
       }
 
       @media (max-width: 980px) {
         .ledger-layout {
-          grid-template-columns: 1fr;
-          grid-template-rows: 320px minmax(0, 1fr);
+          grid-template-columns: 200px minmax(0, 1fr);
         }
 
         .left-panel {
@@ -681,11 +1222,10 @@
         }
 
         .filters {
-          grid-template-columns: 1fr 1fr;
+          flex-wrap: wrap;
         }
 
         .filter-actions {
-          grid-column: span 2;
           justify-content: flex-start;
         }
 
@@ -704,6 +1244,7 @@
 
       @media (max-width: 640px) {
         .ledger-layout {
+          grid-template-columns: 180px minmax(0, 1fr);
           padding: 10px;
           gap: 10px;
         }
@@ -715,11 +1256,21 @@
         }
 
         .filters {
-          grid-template-columns: 1fr;
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .filters #keywordInput,
+        .filters #statusFilter,
+        .filters #inspectionFilter,
+        .filters > .select-proxy {
+          width: 100%;
+          max-width: none;
+          flex: 0 0 auto;
         }
 
         .filter-actions {
-          grid-column: span 1;
+          justify-content: flex-start;
         }
       }
     </style>
@@ -739,16 +1290,16 @@
           <div class="head-title">
             <h1>设备台账</h1>
           </div>
-          <div class="head-actions">
-            <button id="addDeviceBtn" class="btn primary">新增</button>
-            <button id="batchPrintQrBtn" class="btn">批量打印二维码</button>
-            <button id="importBtn" class="btn">导入</button>
-            <button id="exportBtn" class="btn">导出</button>
-            <input id="importFile" type="file" accept=".csv" hidden />
-          </div>
         </div>
 
         <div class="filters">
+          <div class="head-actions">
+            <button id="addDeviceBtn" class="btn primary">新增</button>
+            <button id="importBtn" class="btn">导入</button>
+            <button id="exportBtn" class="btn">导出</button>
+            <button id="batchPrintQrBtn" class="btn">批量打印</button>
+            <input id="importFile" type="file" accept=".csv" hidden />
+          </div>
           <input id="keywordInput" class="input" type="text" placeholder="搜索编号/名称/型号/位置/责任人" />
           <select id="statusFilter" class="control">
             <option value="">设备状态（全部）</option>
@@ -763,32 +1314,43 @@
             <option value="未点检">未点检</option>
           </select>
           <div class="filter-actions">
-            <button id="searchBtn" class="btn">筛选</button>
+            <button id="searchBtn" class="btn">搜索</button>
             <button id="resetBtn" class="btn">重置</button>
           </div>
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 44px">
-                  <input id="checkAll" type="checkbox" />
-                </th>
-                <th>设备编号</th>
-                <th>设备名称</th>
-                <th>分类</th>
-                <th>型号</th>
-                <th>状态</th>
-                <th>位置</th>
-                <th>责任人</th>
-                <th>上次检验</th>
-                <th>点检状态</th>
-                <th style="width: 150px">操作</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-          </table>
+        <div class="content-split">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 44px">
+                    <input id="checkAll" type="checkbox" />
+                  </th>
+                  <th>设备编号</th>
+                  <th>设备名称</th>
+                  <th>分类</th>
+                  <th>型号</th>
+                  <th>状态</th>
+                  <th>位置</th>
+                  <th>责任人</th>
+                  <th>点检状态</th>
+                  <th style="width: 150px">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+
+          <section class="standard-usage-panel">
+            <div class="standard-usage-head">
+              <h3>使用标准</h3>
+              <div id="standardUsageDeviceText" class="standard-usage-device">点击上方设备查看关联标准</div>
+            </div>
+            <div id="standardUsageBody" class="standard-usage-body">
+              <div class="standard-empty">点击上方设备后，自动带出该设备关联的点检标准</div>
+            </div>
+          </section>
         </div>
 
         <div class="table-foot">
@@ -873,11 +1435,52 @@
                   <label for="workshopInput">所属车间</label>
                   <select id="workshopInput" class="control" name="workshop">
                     <option value="">请选择所属车间</option>
-                    <option value="一期">一期</option>
-                    <option value="二期">二期</option>
-                    <option value="三期">三期</option>
-                    <option value="公共区域">公共区域</option>
                   </select>
+                </div>
+                <div class="field">
+                  <label for="purchaseDateDisplayInput">入厂日期</label>
+                  <div id="purchaseDateField" class="date-field">
+                    <input id="purchaseDateDisplayInput" class="input date-display-input" type="text" placeholder="YYYY-MM-DD" readonly />
+                    <button id="purchaseDateTrigger" class="date-trigger-button" type="button" aria-label="选择入厂日期"></button>
+                    <input id="purchaseDateInput" name="purchaseDate" type="hidden" />
+                    <span class="date-field-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="17" rx="2"></rect>
+                        <path d="M8 2v4M16 2v4M3 10h18"></path>
+                      </svg>
+                    </span>
+                    <div id="purchaseDatePanel" class="date-panel hidden">
+                      <div class="date-panel-head">
+                        <button id="purchaseDatePrevBtn" class="date-nav-btn" type="button" aria-label="上一个月">‹</button>
+                        <div id="purchaseDateMonthLabel" class="date-panel-title"></div>
+                        <button id="purchaseDateNextBtn" class="date-nav-btn" type="button" aria-label="下一个月">›</button>
+                      </div>
+                      <div class="date-weekdays">
+                        <span>一</span>
+                        <span>二</span>
+                        <span>三</span>
+                        <span>四</span>
+                        <span>五</span>
+                        <span>六</span>
+                        <span>日</span>
+                      </div>
+                      <div id="purchaseDateDays" class="date-days"></div>
+                      <div class="date-panel-foot">
+                        <button id="purchaseDateClearBtn" class="text-btn" type="button">清空</button>
+                        <button id="purchaseDateTodayBtn" class="text-btn" type="button">今天</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="assetCategoryInput">资产类别</label>
+                  <select id="assetCategoryInput" class="control" name="assetCategory">
+                    <option value="">请选择资产类别</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="vendorInput">设备厂家</label>
+                  <input id="vendorInput" class="input" name="vendor" placeholder="请输入设备厂家" />
                 </div>
                 <div class="field">
                   <label for="statusInput">状态</label>
@@ -885,56 +1488,6 @@
                     <option value="启用">启用</option>
                     <option value="停用">停用</option>
                   </select>
-                </div>
-                <div class="field">
-                  <label for="assetCategoryInput">资产类别</label>
-                  <select id="assetCategoryInput" class="control" name="assetCategory">
-                    <option value="">请选择资产类别</option>
-                    <option value="固定资产">固定资产</option>
-                    <option value="低值易耗">低值易耗</option>
-                    <option value="备品备件">备品备件</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="vendorInput">设备厂家</label>
-                  <input id="vendorInput" class="input" name="vendor" placeholder="请输入设备厂家" />
-                </div>
-              </div>
-            </section>
-
-            <section class="section-card">
-              <h4>检验与时间</h4>
-              <div class="form-grid">
-                <div class="field">
-                  <label for="inspectCycleDaysInput">检验周期(天)</label>
-                  <input
-                    id="inspectCycleDaysInput"
-                    class="input"
-                    name="inspectCycleDays"
-                    type="number"
-                    min="0"
-                    step="1"
-                    placeholder="请输入检验周期"
-                  />
-                </div>
-                <div class="field">
-                  <label for="lastCheckDateInput">上次检验日期</label>
-                  <input id="lastCheckDateInput" class="input" name="lastCheckDate" type="date" />
-                </div>
-                <div class="field">
-                  <label for="nextCheckDateInput">下次检验日期</label>
-                  <input
-                    id="nextCheckDateInput"
-                    class="input readonly"
-                    name="nextCheckDate"
-                    type="date"
-                    readonly
-                    placeholder="按检验周期自动计算"
-                  />
-                </div>
-                <div class="field">
-                  <label for="purchaseDateInput">入厂日期</label>
-                  <input id="purchaseDateInput" class="input" name="purchaseDate" type="date" />
                 </div>
               </div>
             </section>
@@ -963,10 +1516,6 @@
                   <label for="areaInput">区域</label>
                   <select id="areaInput" class="control" name="area">
                     <option value="">请选择区域</option>
-                    <option value="北区">北区</option>
-                    <option value="南区">南区</option>
-                    <option value="东区">东区</option>
-                    <option value="西区">西区</option>
                   </select>
                 </div>
               </div>
@@ -999,7 +1548,7 @@
               </div>
             </section>
 
-            <p class="note">带 * 为必填项。设备编号为百数云自动生成字段。</p>
+            <p class="note">带 * 为必填项。</p>
           </div>
           <div class="modal-foot">
             <button type="button" id="cancelDeviceBtn" class="btn">取消</button>
@@ -1153,12 +1702,12 @@
                 <input id="detailInspectionInput" class="input readonly" type="text" readonly />
               </div>
               <div class="field">
-                <label for="detailLastCheckInput">上次检验</label>
-                <input id="detailLastCheckInput" class="input readonly" type="text" readonly />
+                <label for="detailPurchaseDateInput">入厂日期</label>
+                <input id="detailPurchaseDateInput" class="input readonly" type="text" readonly />
               </div>
               <div class="field">
-                <label for="detailNextCheckInput">下次检验</label>
-                <input id="detailNextCheckInput" class="input readonly" type="text" readonly />
+                <label for="detailLastCheckInput">上次检验</label>
+                <input id="detailLastCheckInput" class="input readonly" type="text" readonly />
               </div>
               <div class="field full">
                 <label for="detailRemarkInput">备注</label>
@@ -1167,7 +1716,7 @@
             </div>
           </section>
 
-          <section class="section-card">
+          <section class="section-card detail-qr-section">
             <h4>二维码信息</h4>
             <div class="detail-qr-wrap">
               <div class="qr-preview">
@@ -1261,11 +1810,48 @@
         name: "_widget_1775561402111",
       };
 
+      const SITE_FIELD_ALIASES = {
+        code: "_widget_1776300861592",
+        area: "_widget_1776754790282",
+        name: "_widget_1776300861606",
+        owner: "_widget_1776300861656",
+      };
+
+      const ASSET_CATEGORY_FIELD_ALIASES = {
+        code: "_widget_1775630020038",
+        name: "_widget_1775630020052",
+      };
+
+      const STANDARD_FIELD_ALIASES = {
+        code: "_widget_1775876696506",
+        name: "_widget_1775876696520",
+        category: "_widget_1775876696570",
+        status: "_widget_1775876697472",
+        version: "_widget_1776078594892",
+        effectiveDate: "_widget_1776078594911",
+        expiryDate: "_widget_1776078594976",
+        activeRuleId: "_widget_1776078595077",
+      };
+
+      const STANDARD_RELATION_FIELD_ALIASES = {
+        standardId: "_widget_1776932400951",
+        standardCode: "_widget_1776932400932",
+        ruleId: "_widget_1776932401006",
+        objectType: "_widget_1776932401079",
+        objectId: "_widget_1776932401107",
+        objectCode: "_widget_1776932401126",
+        status: "_widget_1776932401145",
+      };
+
       const DEFAULT_API_CONFIG = {
         baseUrl: resolveApiBaseUrl(),
-        appId: "5a94c4d1642bd8a84c772356",
+        appId: "59b376f42fee5822c6ac906a",
         entryId: "38104b6c9d74ce86a7c395b6",
         typeEntryId: "d8c14b36b0713145a9f338b6",
+        siteEntryId: "099e47809199d1d8214a984f",
+        assetCategoryEntryId: "5d974506a19e6d12ef5e8b58",
+        standardEntryId: "37204bb798aefcc5156f493e",
+        relationEntryId: "f9fd4c8daab08083af9096a7",
         authToken: "",
         extraHeaders: "{}",
         listPaths: "data,data_search,data_list,data_query,data_find",
@@ -1280,6 +1866,12 @@
       };
 
       const LOCAL_SEED_DEVICES = [];
+      const DEFAULT_ASSET_CATEGORY_OPTIONS = ["固定资产", "低值易耗", "备品备件"].map((name) => ({
+        id: `local-asset-${name}`,
+        code: "",
+        name,
+        rawRecord: null,
+      }));
 
       const categoryRoot = deepClone(DEFAULT_CATEGORY_TREE);
       const devices = deepClone(LOCAL_SEED_DEVICES);
@@ -1298,6 +1890,12 @@
         cloudLoadedAt: "",
         cloudLastError: "",
         publicBaseUrl: "",
+        sites: [],
+        assetCategories: deepClone(DEFAULT_ASSET_CATEGORY_OPTIONS),
+        standards: [],
+        standardRelations: [],
+        selectedStandardDeviceId: "",
+        purchaseDatePanelMonth: null,
       };
 
       const refs = {
@@ -1306,6 +1904,8 @@
         tableBody: document.getElementById("tableBody"),
         summaryText: document.getElementById("summaryText"),
         apiStatusText: document.getElementById("apiStatusText"),
+        standardUsageDeviceText: document.getElementById("standardUsageDeviceText"),
+        standardUsageBody: document.getElementById("standardUsageBody"),
         keywordInput: document.getElementById("keywordInput"),
         statusFilter: document.getElementById("statusFilter"),
         inspectionFilter: document.getElementById("inspectionFilter"),
@@ -1339,10 +1939,17 @@
         statusInput: document.getElementById("statusInput"),
         assetCategoryInput: document.getElementById("assetCategoryInput"),
         vendorInput: document.getElementById("vendorInput"),
-        inspectCycleDaysInput: document.getElementById("inspectCycleDaysInput"),
-        lastCheckDateInput: document.getElementById("lastCheckDateInput"),
-        nextCheckDateInput: document.getElementById("nextCheckDateInput"),
+        purchaseDateField: document.getElementById("purchaseDateField"),
+        purchaseDateDisplayInput: document.getElementById("purchaseDateDisplayInput"),
+        purchaseDateTrigger: document.getElementById("purchaseDateTrigger"),
         purchaseDateInput: document.getElementById("purchaseDateInput"),
+        purchaseDatePanel: document.getElementById("purchaseDatePanel"),
+        purchaseDateMonthLabel: document.getElementById("purchaseDateMonthLabel"),
+        purchaseDateDays: document.getElementById("purchaseDateDays"),
+        purchaseDatePrevBtn: document.getElementById("purchaseDatePrevBtn"),
+        purchaseDateNextBtn: document.getElementById("purchaseDateNextBtn"),
+        purchaseDateTodayBtn: document.getElementById("purchaseDateTodayBtn"),
+        purchaseDateClearBtn: document.getElementById("purchaseDateClearBtn"),
         registerCodeInput: document.getElementById("registerCodeInput"),
         volumeInput: document.getElementById("volumeInput"),
         lineTypeInput: document.getElementById("lineTypeInput"),
@@ -1387,8 +1994,8 @@
         detailLocationInput: document.getElementById("detailLocationInput"),
         detailKeeperInput: document.getElementById("detailKeeperInput"),
         detailInspectionInput: document.getElementById("detailInspectionInput"),
+        detailPurchaseDateInput: document.getElementById("detailPurchaseDateInput"),
         detailLastCheckInput: document.getElementById("detailLastCheckInput"),
-        detailNextCheckInput: document.getElementById("detailNextCheckInput"),
         detailRemarkInput: document.getElementById("detailRemarkInput"),
         detailQrImage: document.getElementById("detailQrImage"),
         detailQrCodeNoInput: document.getElementById("detailQrCodeNoInput"),
@@ -1536,8 +2143,85 @@
         };
       }
 
+      function getSiteEntryOptions() {
+        return {
+          appId: state.apiConfig.appId,
+          entryId: state.apiConfig.siteEntryId || DEFAULT_API_CONFIG.siteEntryId,
+        };
+      }
+
+      function getAssetCategoryEntryOptions() {
+        return {
+          appId: state.apiConfig.appId,
+          entryId: state.apiConfig.assetCategoryEntryId || DEFAULT_API_CONFIG.assetCategoryEntryId,
+        };
+      }
+
+      function getStandardEntryOptions() {
+        return {
+          appId: state.apiConfig.appId,
+          entryId: state.apiConfig.standardEntryId || DEFAULT_API_CONFIG.standardEntryId,
+        };
+      }
+
+      function getRelationEntryOptions() {
+        return {
+          appId: state.apiConfig.appId,
+          entryId: state.apiConfig.relationEntryId || DEFAULT_API_CONFIG.relationEntryId,
+        };
+      }
+
       function normalizeCategoryGroupName(value) {
         return toDisplayText(value) || "未分类";
+      }
+
+      function mapSiteRecord(record) {
+        const name = toDisplayText(getAliasRawValue(record, SITE_FIELD_ALIASES.name));
+        return {
+          id: extractRecordId(record) || name,
+          code: toDisplayText(getAliasRawValue(record, SITE_FIELD_ALIASES.code)),
+          area: toDisplayText(getAliasRawValue(record, SITE_FIELD_ALIASES.area)) || "未配置区域",
+          name,
+          owner: toDisplayText(getAliasRawValue(record, SITE_FIELD_ALIASES.owner)),
+          rawRecord: record,
+        };
+      }
+
+      function mapAssetCategoryRecord(record) {
+        const name = toDisplayText(getAliasRawValue(record, ASSET_CATEGORY_FIELD_ALIASES.name));
+        return {
+          id: extractRecordId(record) || name,
+          code: toDisplayText(getAliasRawValue(record, ASSET_CATEGORY_FIELD_ALIASES.code)),
+          name,
+          rawRecord: record,
+        };
+      }
+
+      function mapSiteRecords(records) {
+        return records
+          .map((record) => mapSiteRecord(record))
+          .filter((site) => site.name)
+          .sort((a, b) => {
+            const areaDiff = compareText(a.area, b.area);
+            return areaDiff || compareText(a.name, b.name);
+          });
+      }
+
+      function mapAssetCategoryRecords(records) {
+        const unique = new Map();
+        records
+          .map((record) => mapAssetCategoryRecord(record))
+          .filter((item) => item.name)
+          .forEach((item) => {
+            if (!unique.has(item.name)) {
+              unique.set(item.name, item);
+            }
+          });
+
+        return Array.from(unique.values()).sort((a, b) => {
+          const codeDiff = compareText(a.code, b.code);
+          return codeDiff || compareText(a.name, b.name);
+        });
       }
 
       function mapDeviceTypeRecord(record) {
@@ -1681,6 +2365,130 @@
             showToast(`设备类型同步失败：${error.message}`);
           }
         }
+      }
+
+      async function syncSiteLibrary({ silent = false } = {}) {
+        if (!state.apiConfig.enableCloud) {
+          return;
+        }
+        const entryOptions = getSiteEntryOptions();
+        if (!entryOptions.entryId) {
+          if (!silent) {
+            showToast("未配置场地管理底表 entryId");
+          }
+          return;
+        }
+
+        try {
+          const records = await fetchEntryRecords(entryOptions);
+          state.sites = mapSiteRecords(records);
+          renderWorkshopOptions();
+          renderAreaOptions();
+        } catch (error) {
+          console.warn("sync site library failed:", error);
+          if (!silent) {
+            showToast(`场地数据同步失败：${error.message}`);
+          }
+        }
+      }
+
+      async function syncAssetCategoryLibrary({ silent = false } = {}) {
+        if (!state.apiConfig.enableCloud) {
+          renderAssetCategoryOptions();
+          return;
+        }
+        const entryOptions = getAssetCategoryEntryOptions();
+        if (!entryOptions.entryId) {
+          renderAssetCategoryOptions();
+          if (!silent) {
+            showToast("未配置资产类别底表 entryId");
+          }
+          return;
+        }
+
+        try {
+          const records = await fetchEntryRecords(entryOptions);
+          const mapped = mapAssetCategoryRecords(records);
+          state.assetCategories = mapped.length ? mapped : deepClone(DEFAULT_ASSET_CATEGORY_OPTIONS);
+          renderAssetCategoryOptions();
+        } catch (error) {
+          console.warn("sync asset category library failed:", error);
+          state.assetCategories = deepClone(DEFAULT_ASSET_CATEGORY_OPTIONS);
+          renderAssetCategoryOptions();
+          if (!silent) {
+            showToast(`资产类别同步失败：${error.message}`);
+          }
+        }
+      }
+
+      async function syncStandardUsageLibrary({ silent = false } = {}) {
+        if (!state.apiConfig.enableCloud) {
+          state.standards = [];
+          state.standardRelations = [];
+          renderStandardUsageList();
+          return;
+        }
+
+        try {
+          const [standardRecords, relationRecords] = await Promise.all([
+            fetchEntryRecords(getStandardEntryOptions()),
+            fetchEntryRecords(getRelationEntryOptions()),
+          ]);
+          state.standards = standardRecords
+            .map((record) => mapStandardRecord(record))
+            .filter((item) => item.cloudId && (item.code || item.name));
+          state.standardRelations = relationRecords
+            .map((record) => mapStandardRelationRecord(record))
+            .filter((item) => item.standardId && (item.objectId || item.objectCode));
+          renderStandardUsageList();
+        } catch (error) {
+          console.warn("sync standard usage failed:", error);
+          state.standards = [];
+          state.standardRelations = [];
+          renderStandardUsageList();
+          if (!silent) {
+            showToast(`使用标准同步失败：${error.message}`);
+          }
+        }
+      }
+
+      function mapStandardRecord(record) {
+        const cloudId = extractRecordId(record);
+        return {
+          id: cloudId || `std-${Math.random().toString(36).slice(2, 8)}`,
+          cloudId,
+          code: toDisplayText(getAliasRawValue(record, STANDARD_FIELD_ALIASES.code)),
+          name: toDisplayText(getAliasRawValue(record, STANDARD_FIELD_ALIASES.name)),
+          ruleName: toDisplayText(getAliasRawValue(record, STANDARD_FIELD_ALIASES.category)),
+          status: normalizeStatusLabel(toDisplayText(getAliasRawValue(record, STANDARD_FIELD_ALIASES.status))),
+          version: toDisplayText(getAliasRawValue(record, STANDARD_FIELD_ALIASES.version)),
+          effectiveDate: normalizeDateInput(getAliasRawValue(record, STANDARD_FIELD_ALIASES.effectiveDate)),
+          expiryDate: normalizeDateInput(getAliasRawValue(record, STANDARD_FIELD_ALIASES.expiryDate)),
+          activeRuleId: toDisplayText(getAliasRawValue(record, STANDARD_FIELD_ALIASES.activeRuleId)),
+        };
+      }
+
+      function mapStandardRelationRecord(record) {
+        const cloudId = extractRecordId(record);
+        return {
+          id: cloudId || `rel-${Math.random().toString(36).slice(2, 8)}`,
+          cloudId,
+          standardId: toDisplayText(getAliasRawValue(record, STANDARD_RELATION_FIELD_ALIASES.standardId)),
+          standardCode: toDisplayText(getAliasRawValue(record, STANDARD_RELATION_FIELD_ALIASES.standardCode)),
+          ruleId: toDisplayText(getAliasRawValue(record, STANDARD_RELATION_FIELD_ALIASES.ruleId)),
+          objectType: normalizeRelationObjectType(getAliasRawValue(record, STANDARD_RELATION_FIELD_ALIASES.objectType)),
+          objectId: toDisplayText(getAliasRawValue(record, STANDARD_RELATION_FIELD_ALIASES.objectId)),
+          objectCode: toDisplayText(getAliasRawValue(record, STANDARD_RELATION_FIELD_ALIASES.objectCode)),
+          status: normalizeStatusLabel(toDisplayText(getAliasRawValue(record, STANDARD_RELATION_FIELD_ALIASES.status)) || "启用"),
+        };
+      }
+
+      function normalizeRelationObjectType(value) {
+        const text = toDisplayText(value);
+        if (text.includes("危化")) {
+          return text.includes("库") ? "危化品库" : "危化品";
+        }
+        return "设备";
       }
 
       function rebuildCategoryMap() {
@@ -1893,6 +2701,131 @@
         refs.checkAll.indeterminate = selectedCount > 0 && selectedCount < filtered.length;
       }
 
+      function selectDeviceForStandards(deviceId) {
+        if (!deviceId || state.selectedStandardDeviceId === deviceId) {
+          return;
+        }
+        state.selectedStandardDeviceId = deviceId;
+        renderTable();
+      }
+
+      function isActiveRelationStatus(status) {
+        return normalizeStatusLabel(status) === "启用";
+      }
+
+      function findStandardByRelation(relation) {
+        return (
+          state.standards.find((item) => relation.standardId && String(item.cloudId || item.id) === String(relation.standardId)) ||
+          state.standards.find((item) => relation.standardCode && String(item.code || "") === String(relation.standardCode)) ||
+          null
+        );
+      }
+
+      function getDeviceStandardRows(device) {
+        if (!device) {
+          return [];
+        }
+        const candidates = new Set(
+          [device.id, device.cloudId, device.code]
+            .map((item) => String(item || "").trim())
+            .filter(Boolean)
+        );
+        const rows = state.standardRelations
+          .filter((relation) => {
+            if (!isActiveRelationStatus(relation.status) || normalizeRelationObjectType(relation.objectType) !== "设备") {
+              return false;
+            }
+            const objectId = String(relation.objectId || "").trim();
+            const objectCode = String(relation.objectCode || "").trim();
+            return (objectId && candidates.has(objectId)) || (objectCode && candidates.has(objectCode));
+          })
+          .map((relation) => {
+            const standard = findStandardByRelation(relation) || {};
+            return {
+              standardId: relation.standardId,
+              code: standard.code || relation.standardCode || "-",
+              name: standard.name || "-",
+              ruleName: standard.ruleName || relation.ruleId || "-",
+              version: standard.version || "-",
+              status: standard.status || relation.status || "-",
+              effectiveDate: standard.effectiveDate || "",
+              expiryDate: standard.expiryDate || "",
+            };
+          });
+
+        if (!rows.length && (device.inspectStandardId || device.inspectStandardCode)) {
+          const standard =
+            state.standards.find((item) => device.inspectStandardId && String(item.cloudId || item.id) === String(device.inspectStandardId)) ||
+            state.standards.find((item) => device.inspectStandardCode && String(item.code || "") === String(device.inspectStandardCode)) ||
+            null;
+          rows.push({
+            standardId: device.inspectStandardId || "",
+            code: standard?.code || device.inspectStandardCode || "-",
+            name: standard?.name || "-",
+            ruleName: standard?.ruleName || "-",
+            version: standard?.version || "-",
+            status: standard?.status || "-",
+            effectiveDate: standard?.effectiveDate || "",
+            expiryDate: standard?.expiryDate || "",
+          });
+        }
+
+        const unique = new Map();
+        rows.forEach((row) => {
+          const key = [row.standardId, row.code, row.name].join("|");
+          if (!unique.has(key)) {
+            unique.set(key, row);
+          }
+        });
+        return Array.from(unique.values());
+      }
+
+      function renderStandardUsageList() {
+        const device = devices.find((item) => item.id === state.selectedStandardDeviceId);
+        if (!device) {
+          state.selectedStandardDeviceId = "";
+          refs.standardUsageDeviceText.textContent = "点击上方设备查看关联标准";
+          refs.standardUsageBody.innerHTML = '<div class="standard-empty">点击上方设备后，自动带出该设备关联的点检标准</div>';
+          return;
+        }
+
+        refs.standardUsageDeviceText.textContent = `${device.name || "未命名设备"} · ${device.code || "-"}`;
+        const rows = getDeviceStandardRows(device);
+        if (!rows.length) {
+          refs.standardUsageBody.innerHTML = '<div class="standard-empty">该设备暂无关联点检标准</div>';
+          return;
+        }
+
+        refs.standardUsageBody.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>标准编号</th>
+                <th>标准名称</th>
+                <th>执行规则</th>
+                <th>版本</th>
+                <th>状态</th>
+                <th>生效日期</th>
+                <th>失效日期</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row) => `
+                <tr>
+                  <td>${escapeHtml(row.code || "-")}</td>
+                  <td>${escapeHtml(row.name || "-")}</td>
+                  <td>${escapeHtml(row.ruleName || "-")}</td>
+                  <td>${escapeHtml(row.version || "-")}</td>
+                  <td>${escapeHtml(row.status || "-")}</td>
+                  <td>${escapeHtml(row.effectiveDate || "-")}</td>
+                  <td>${escapeHtml(row.expiryDate || "-")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
       function renderTable() {
         const filtered = filterDevices();
         refs.tableBody.innerHTML = "";
@@ -1904,14 +2837,20 @@
           }
         });
 
+        if (state.selectedStandardDeviceId && !devices.some((item) => item.id === state.selectedStandardDeviceId)) {
+          state.selectedStandardDeviceId = "";
+        }
+
         if (!filtered.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = '<td colspan="11" style="text-align:center;color:#7b8798;padding:28px 0">暂无设备数据</td>';
+          tr.innerHTML = '<td colspan="10" style="text-align:center;color:#7b8798;padding:28px 0">暂无设备数据</td>';
           refs.tableBody.appendChild(tr);
         }
 
         filtered.forEach((device) => {
           const tr = document.createElement("tr");
+          tr.dataset.rowId = device.id;
+          tr.className = device.id === state.selectedStandardDeviceId ? "is-active" : "";
           const inspection = getDeviceInspectionStatus(device);
           tr.innerHTML = `
             <td><input type="checkbox" data-id="${device.id}" ${state.selectedDeviceIds.has(device.id) ? "checked" : ""}></td>
@@ -1922,7 +2861,6 @@
             <td><span class="badge status-${escapeHtml(device.status)}">${escapeHtml(device.status)}</span></td>
             <td>${escapeHtml(device.location || "-")}</td>
             <td>${escapeHtml(device.keeper || "-")}</td>
-            <td>${escapeHtml(device.lastCheckDate || "-")}</td>
             <td><span class="badge insp-${escapeHtml(inspection)}">${escapeHtml(inspection)}</span></td>
             <td>
               <div class="table-actions">
@@ -1938,6 +2876,7 @@
         const selectedVisible = filtered.reduce((sum, item) => (state.selectedDeviceIds.has(item.id) ? sum + 1 : sum), 0);
         refs.summaryText.textContent = `共 ${devices.length} 台设备，当前筛选 ${filtered.length} 台，已选择 ${selectedVisible} 台`;
         syncCheckAll(filtered);
+        renderStandardUsageList();
       }
 
       function openDeviceModal(mode, target) {
@@ -1946,6 +2885,10 @@
 
         refs.deviceForm.reset();
         populateCategoryGroupSelect();
+        renderWorkshopOptions(mode === "edit" ? target.workshop || "" : "");
+        renderAreaOptions(mode === "edit" ? target.area || "" : "");
+        renderAssetCategoryOptions(mode === "edit" ? target.assetCategory || "" : "");
+        syncPurchaseDateField();
 
         if (mode === "edit") {
           const categoryMeta = resolveGroupAndTypeFromCategoryId(target.categoryId);
@@ -1959,10 +2902,8 @@
           refs.statusInput.value = normalizeStatusLabel(target.status);
           refs.assetCategoryInput.value = target.assetCategory || "";
           refs.vendorInput.value = target.vendor || "";
-          refs.inspectCycleDaysInput.value = target.inspectCycleDays || "";
-          refs.lastCheckDateInput.value = target.lastCheckDate || "";
-          refs.nextCheckDateInput.value = target.nextCheckDate || "";
           refs.purchaseDateInput.value = target.purchaseDate || "";
+          syncPurchaseDateField();
           refs.registerCodeInput.value = target.registerCode || "";
           refs.volumeInput.value = target.volume || "";
           refs.lineTypeInput.value = target.lineType || "";
@@ -1977,14 +2918,16 @@
           populateDeviceTypeSelect(preferred.typeName || "");
           refs.codeDisplayInput.value = "自动生成";
           refs.statusInput.value = "启用";
+          syncPurchaseDateField();
         }
 
         updateDeviceExtraSection(refs.categoryGroupInput.value);
-        autoCalcNextCheckDate();
+        refreshSelectProxies(refs.deviceForm);
         refs.deviceModal.classList.remove("hidden");
       }
 
       function closeDeviceModal() {
+        closePurchaseDatePanel();
         refs.deviceModal.classList.add("hidden");
       }
 
@@ -2033,27 +2976,244 @@
         refs.deviceTypeInput.value = children[0]?.name || "";
       }
 
+      function getSiteByName(name) {
+        const text = String(name || "").trim();
+        if (!text) return null;
+        return state.sites.find((site) => site.name === text || site.code === text) || null;
+      }
+
+      function getUniqueSiteAreas() {
+        return Array.from(new Set(state.sites.map((site) => site.area).filter(Boolean))).sort(compareText);
+      }
+
+      function renderWorkshopOptions(selectedValue = refs.workshopInput.value) {
+        const selected = String(selectedValue || "").trim();
+        const options = ['<option value="">请选择所属车间</option>'];
+        const grouped = new Map();
+
+        state.sites.forEach((site) => {
+          const area = site.area || "未配置区域";
+          if (!grouped.has(area)) {
+            grouped.set(area, []);
+          }
+          grouped.get(area).push(site);
+        });
+
+        Array.from(grouped.keys()).sort(compareText).forEach((area) => {
+          options.push(`<optgroup label="${escapeHtml(area)}">`);
+          grouped.get(area).sort((a, b) => compareText(a.name, b.name)).forEach((site) => {
+            const label = site.code ? `${site.name}（${site.code}）` : site.name;
+            options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(label)}</option>`);
+          });
+          options.push("</optgroup>");
+        });
+
+        if (selected && !state.sites.some((site) => site.name === selected)) {
+          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+        }
+
+        refs.workshopInput.innerHTML = options.join("");
+        refs.workshopInput.value = selected;
+      }
+
+      function renderAssetCategoryOptions(selectedValue = refs.assetCategoryInput?.value) {
+        const selected = String(selectedValue || "").trim();
+        const categories = Array.isArray(state.assetCategories) && state.assetCategories.length ? state.assetCategories : DEFAULT_ASSET_CATEGORY_OPTIONS;
+        const options = ['<option value="">请选择资产类别</option>'];
+
+        categories.forEach((item) => {
+          options.push(`<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`);
+        });
+
+        if (selected && !categories.some((item) => item.name === selected)) {
+          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+        }
+
+        refs.assetCategoryInput.innerHTML = options.join("");
+        refs.assetCategoryInput.value = selected;
+        refreshSelectProxy(refs.assetCategoryInput);
+      }
+
+      function renderAreaOptions(selectedValue = refs.areaInput.value) {
+        const selected = String(selectedValue || "").trim();
+        const areas = getUniqueSiteAreas();
+        const options = ['<option value="">请选择区域</option>'];
+
+        areas.forEach((area) => {
+          options.push(`<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`);
+        });
+        if (selected && !areas.includes(selected)) {
+          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+        }
+
+        refs.areaInput.innerHTML = options.join("");
+        refs.areaInput.value = selected;
+      }
+
+      function fillAreaByWorkshop() {
+        const site = getSiteByName(refs.workshopInput.value);
+        const area = site?.area || "";
+        renderAreaOptions(area);
+      }
+
+      function parsePickerDateValue(value) {
+        const match = String(value || "").trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!match) {
+          return null;
+        }
+        const year = Number(match[1]);
+        const month = Number(match[2]) - 1;
+        const day = Number(match[3]);
+        const date = new Date(year, month, day);
+        if (
+          Number.isNaN(date.getTime()) ||
+          date.getFullYear() !== year ||
+          date.getMonth() !== month ||
+          date.getDate() !== day
+        ) {
+          return null;
+        }
+        return date;
+      }
+
+      function shiftDate(date, days) {
+        const next = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        next.setDate(next.getDate() + days);
+        return next;
+      }
+
+      function getPurchaseDateSelected() {
+        return parsePickerDateValue(refs.purchaseDateInput.value);
+      }
+
+      function setPurchaseDateValue(value) {
+        refs.purchaseDateInput.value = normalizeDateInput(value) || "";
+        syncPurchaseDateField();
+      }
+
+      function bindDateField(fieldWrapper, displayInput, valueInput, triggerButton) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(valueInput instanceof HTMLInputElement) ||
+          !(triggerButton instanceof HTMLButtonElement)
+        ) {
+          return;
+        }
+
+        const triggerOpen = (event) => {
+          if (event) {
+            event.preventDefault();
+          }
+          openPurchaseDatePanel();
+        };
+
+        triggerButton.addEventListener("click", triggerOpen);
+        triggerButton.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+            event.preventDefault();
+            openPurchaseDatePanel();
+          }
+        });
+
+        displayInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+            event.preventDefault();
+            openPurchaseDatePanel();
+          }
+        });
+
+        syncDateFieldDisplay(fieldWrapper, displayInput, valueInput);
+      }
+
+      function syncDateFieldDisplay(fieldWrapper, displayInput, valueInput) {
+        if (
+          !(fieldWrapper instanceof HTMLElement) ||
+          !(displayInput instanceof HTMLInputElement) ||
+          !(valueInput instanceof HTMLInputElement)
+        ) {
+          return;
+        }
+        displayInput.value = normalizeDateInput(valueInput.value) || "";
+        fieldWrapper.classList.toggle("has-value", Boolean(displayInput.value));
+      }
+
+      function syncPurchaseDateField() {
+        syncDateFieldDisplay(refs.purchaseDateField, refs.purchaseDateDisplayInput, refs.purchaseDateInput);
+      }
+
+      function openPurchaseDatePanel() {
+        if (!(refs.purchaseDatePanel instanceof HTMLElement) || !(refs.purchaseDateField instanceof HTMLElement)) {
+          return;
+        }
+        const selected = getPurchaseDateSelected();
+        const base = selected || new Date();
+        state.purchaseDatePanelMonth = new Date(base.getFullYear(), base.getMonth(), 1);
+        renderPurchaseDatePanel();
+        refs.purchaseDatePanel.classList.remove("hidden");
+        refs.purchaseDateField.classList.add("is-open");
+      }
+
+      function closePurchaseDatePanel() {
+        if (refs.purchaseDatePanel instanceof HTMLElement) {
+          refs.purchaseDatePanel.classList.add("hidden");
+        }
+        refs.purchaseDateField?.classList.remove("is-open");
+      }
+
+      function renderPurchaseDatePanel() {
+        if (
+          !(refs.purchaseDateMonthLabel instanceof HTMLElement) ||
+          !(refs.purchaseDateDays instanceof HTMLElement)
+        ) {
+          return;
+        }
+
+        const monthBase = state.purchaseDatePanelMonth instanceof Date && !Number.isNaN(state.purchaseDatePanelMonth.getTime())
+          ? state.purchaseDatePanelMonth
+          : new Date();
+        const currentMonth = new Date(monthBase.getFullYear(), monthBase.getMonth(), 1);
+        const firstWeekday = (currentMonth.getDay() + 6) % 7;
+        const gridStart = shiftDate(currentMonth, -firstWeekday);
+        const monthLastDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        const lastWeekday = (monthLastDate.getDay() + 6) % 7;
+        const visibleCount = firstWeekday + monthLastDate.getDate() + (6 - lastWeekday);
+        const totalCells = visibleCount <= 35 ? 35 : 42;
+        const selectedText = refs.purchaseDateInput.value || "";
+        const todayText = formatDateTag(new Date());
+
+        refs.purchaseDateMonthLabel.textContent = `${currentMonth.getFullYear()}年${String(currentMonth.getMonth() + 1).padStart(2, "0")}月`;
+        refs.purchaseDateDays.innerHTML = "";
+
+        for (let index = 0; index < totalCells; index += 1) {
+          const date = shiftDate(gridStart, index);
+          const dateText = formatDateTag(date);
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "date-day-btn";
+          if (date.getMonth() !== currentMonth.getMonth()) {
+            button.classList.add("is-outside");
+          }
+          if (dateText === todayText) {
+            button.classList.add("is-today");
+          }
+          if (dateText === selectedText) {
+            button.classList.add("is-selected");
+          }
+          button.textContent = String(date.getDate());
+          button.addEventListener("click", (event) => {
+            event.preventDefault();
+            setPurchaseDateValue(dateText);
+            closePurchaseDatePanel();
+          });
+          refs.purchaseDateDays.appendChild(button);
+        }
+      }
+
       function updateDeviceExtraSection(groupName) {
         const isSpecial = groupName === "特种设备";
         refs.specialSection.classList.toggle("hidden-block", !isSpecial);
         refs.normalSection.classList.toggle("hidden-block", isSpecial);
-      }
-
-      function autoCalcNextCheckDate() {
-        const days = Number(refs.inspectCycleDaysInput.value);
-        const baseDate = refs.lastCheckDateInput.value;
-        if (!Number.isFinite(days) || days <= 0 || !baseDate) {
-          if (!refs.nextCheckDateInput.value) {
-            refs.nextCheckDateInput.value = "";
-          }
-          return;
-        }
-        const date = new Date(`${baseDate}T00:00:00`);
-        if (Number.isNaN(date.getTime())) {
-          return;
-        }
-        date.setDate(date.getDate() + days);
-        refs.nextCheckDateInput.value = formatDateTag(date);
       }
 
       function ensureCategoryIdByGroupAndType(groupName, typeName) {
@@ -2213,8 +3373,8 @@
         setReadonlyFieldValue(refs.detailLocationInput, device.location);
         setReadonlyFieldValue(refs.detailKeeperInput, device.keeper);
         setReadonlyFieldValue(refs.detailInspectionInput, inspection);
+        setReadonlyFieldValue(refs.detailPurchaseDateInput, device.purchaseDate);
         setReadonlyFieldValue(refs.detailLastCheckInput, device.lastCheckDate);
-        setReadonlyFieldValue(refs.detailNextCheckInput, device.nextCheckDate);
         setReadonlyFieldValue(refs.detailRemarkInput, device.remark);
         setReadonlyFieldValue(refs.detailQrCodeNoInput, qr.qrCodeNo);
         setReadonlyFieldValue(refs.detailQrContentInput, qr.qrContent);
@@ -2375,14 +3535,22 @@
           .map((device) => {
             const qr = ensureDeviceQrFields(device);
             Object.assign(device, qr);
-            const imageUrl = qr.qrImageUrlText || buildQrImageUrl(qr.qrContent || device.code);
-            const title = [toDisplayText(device.code), toDisplayText(device.name)].filter(Boolean).join(" ");
+            const imageUrl = qr.qrImageUrlText || buildQrImageUrl(qr.qrContent || device.code, 360);
             return `
-              <article class="card">
-                <h2>${escapeHtml(title || "设备二维码")}</h2>
-                <img class="qr-image" src="${escapeHtml(imageUrl)}" alt="二维码" />
-                <p><span>扫码码值：</span>${escapeHtml(qr.qrContent || "-")}</p>
-                <p><span>二维码编号：</span>${escapeHtml(qr.qrCodeNo || "-")}</p>
+              <article class="label-card">
+                <div class="label-qr">
+                  <img class="qr-image" src="${escapeHtml(imageUrl)}" alt="二维码" />
+                </div>
+                <div class="label-info">
+                  <h2>${escapeHtml(device.name || "未命名设备")}</h2>
+                  <p class="label-sub">设备编号：${escapeHtml(device.code || "-")}</p>
+                  <dl>
+                    <div><dt>扫码码值</dt><dd>${escapeHtml(qr.qrContent || "-")}</dd></div>
+                    <div><dt>二维码编号</dt><dd>${escapeHtml(qr.qrCodeNo || "-")}</dd></div>
+                    <div><dt>设备类型</dt><dd>${escapeHtml(device.deviceType || findCategoryLeafName(device.categoryId) || "-")}</dd></div>
+                    <div><dt>打印时间</dt><dd>${escapeHtml(`${formatDateTag(new Date())} ${new Date().toTimeString().slice(0, 8)}`)}</dd></div>
+                  </dl>
+                </div>
               </article>
             `;
           })
@@ -2396,8 +3564,8 @@
               <title>设备二维码批量打印</title>
               <style>
                 @page {
-                  size: A4 portrait;
-                  margin: 8mm;
+                  size: 70mm 35mm;
+                  margin: 0;
                 }
                 * {
                   box-sizing: border-box;
@@ -2406,68 +3574,149 @@
                   margin: 0;
                   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
                   color: #1f2a3a;
+                  background: #f3f6fb;
                 }
-                .print-head {
-                  padding: 10px 6px 12px;
-                  border-bottom: 1px solid #d7deea;
-                  margin-bottom: 10px;
-                }
-                .print-head h1 {
-                  margin: 0;
-                  font-size: 20px;
-                }
-                .print-head p {
-                  margin: 6px 0 0;
-                  color: #6f7d93;
-                  font-size: 13px;
-                }
-                .card-grid {
-                  display: grid;
-                  grid-template-columns: repeat(3, minmax(0, 1fr));
-                  gap: 10px;
-                }
-                .card {
-                  border: 1px solid #d7deea;
-                  border-radius: 6px;
+                .toolbar {
                   padding: 10px;
+                  border-bottom: 1px solid #d7deea;
+                  background: #fff;
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 12px;
+                }
+                .toolbar h1 {
+                  margin: 0;
+                  font-size: 16px;
+                }
+                .toolbar p {
+                  margin: 2px 0 0;
+                  color: #6f7d93;
+                  font-size: 12px;
+                }
+                .toolbar button {
+                  border: 1px solid #2c79ea;
+                  background: #2c79ea;
+                  color: #fff;
+                  border-radius: 4px;
+                  height: 32px;
+                  padding: 0 14px;
+                  cursor: pointer;
+                }
+                .label-list {
+                  display: grid;
+                  gap: 8px;
+                  padding: 10px;
+                }
+                .label-card {
+                  width: 70mm;
+                  height: 35mm;
+                  padding: 1.8mm 2.2mm;
+                  background: #fff;
+                  border: 1px solid #d9d9d9;
+                  display: grid;
+                  grid-template-columns: 22.5mm minmax(0, 1fr);
+                  gap: 2.8mm;
+                  align-items: center;
                   break-inside: avoid;
                   page-break-inside: avoid;
                 }
-                .card h2 {
-                  margin: 0 0 8px;
-                  font-size: 14px;
-                  line-height: 1.4;
+                .label-qr {
+                  width: 22.5mm;
+                  height: 22.5mm;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
                 }
                 .qr-image {
-                  width: 150px;
-                  height: 150px;
+                  width: 20.5mm;
+                  height: 20.5mm;
                   display: block;
-                  margin: 0 auto 8px;
                   object-fit: contain;
                 }
-                .card p {
-                  margin: 4px 0;
-                  font-size: 12px;
-                  line-height: 1.45;
+                .label-info {
+                  min-width: 0;
+                  height: 22.5mm;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: flex-start;
+                  padding-top: 0;
+                }
+                .label-info h2 {
+                  margin: 0;
+                  font-size: 10pt;
+                  line-height: 1.05;
+                  color: #111827;
                   word-break: break-all;
                 }
-                .card p span {
-                  color: #6f7d93;
+                .label-sub {
+                  margin: 0.65mm 0 0;
+                  padding-bottom: 0.85mm;
+                  border-bottom: 1px solid #c9ced6;
+                  font-size: 6.2pt;
+                  line-height: 1.12;
+                  color: #4b5563;
+                  word-break: break-all;
+                }
+                dl {
+                  margin: auto 0 0;
+                  display: grid;
+                  gap: 0.42mm;
+                }
+                dl div {
+                  display: grid;
+                  grid-template-columns: 12.2mm minmax(0, 1fr);
+                  gap: 1.2mm;
+                  align-items: start;
+                }
+                dt,
+                dd {
+                  margin: 0;
+                  font-size: 5.9pt;
+                  line-height: 1.12;
+                }
+                dt {
+                  color: #7b8493;
+                }
+                dd {
+                  color: #111827;
+                  font-weight: 700;
+                  min-width: 0;
+                  word-break: break-all;
                 }
                 @media print {
-                  .card-grid {
-                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                  body {
+                    background: #fff;
+                  }
+                  .toolbar {
+                    display: none;
+                  }
+                  .label-list {
+                    display: block;
+                    padding: 0;
+                  }
+                  .label-card {
+                    margin: 0;
+                    border: 0;
+                    page-break-after: always;
+                    break-after: page;
+                  }
+                  .label-card:last-child {
+                    page-break-after: auto;
+                    break-after: auto;
                   }
                 }
               </style>
             </head>
             <body>
-              <header class="print-head">
-                <h1>设备二维码批量打印</h1>
-                <p>打印数量：${printItems.length} 台</p>
+              <header class="toolbar">
+                <div>
+                  <h1>设备二维码标签打印</h1>
+                  <p>标签尺寸 70mm × 35mm，打印数量：${printItems.length} 台</p>
+                </div>
                 <button onclick="window.print()">打印</button>
               </header>
-              <main class="card-grid">${cardsHtml}</main>
+              <main class="label-list">${cardsHtml}</main>
             </body>
           </html>
         `;
@@ -2752,6 +4001,7 @@
         const selectedGroupId = findGroupCategoryId(state.selectedCategoryId);
         refs.categoryTypeForm.reset();
         fillCategoryGroupOptions(selectedGroupId);
+        refreshSelectProxies(refs.categoryTypeForm);
         refs.categoryTypeModal.classList.remove("hidden");
         setTimeout(() => refs.categoryTypeNameInput.focus(), 0);
       }
@@ -2859,7 +4109,7 @@
           return;
         }
 
-        const headers = ["设备编号", "设备名称", "分类", "状态", "型号", "位置", "责任人", "入厂日期", "上次检验日期", "点检状态", "备注"];
+        const headers = ["设备编号", "设备名称", "分类", "状态", "型号", "位置", "责任人", "入厂日期", "点检状态", "备注"];
 
         const lines = [
           headers.join(","),
@@ -2873,7 +4123,6 @@
               item.location,
               item.keeper,
               item.purchaseDate,
-              item.lastCheckDate,
               getDeviceInspectionStatus(item),
               item.remark,
             ]
@@ -3102,8 +4351,6 @@
           return;
         }
         const categoryId = ensureCategoryIdByGroupAndType(categoryGroup, deviceType);
-        const inspectCycleDaysRaw = String(form.get("inspectCycleDays") || "").trim();
-        const inspectCycleDaysNum = Number(inspectCycleDaysRaw);
         const code = target?.code || generateLocalDeviceCode();
 
         const payload = {
@@ -3118,11 +4365,10 @@
           workshop: String(form.get("workshop") || "").trim(),
           assetCategory: String(form.get("assetCategory") || "").trim(),
           vendor: String(form.get("vendor") || "").trim(),
-          inspectCycleDays:
-            inspectCycleDaysRaw === "" || !Number.isFinite(inspectCycleDaysNum) ? "" : String(Math.max(0, inspectCycleDaysNum)),
           purchaseDate: String(form.get("purchaseDate") || "").trim(),
-          lastCheckDate: String(form.get("lastCheckDate") || "").trim(),
-          nextCheckDate: String(form.get("nextCheckDate") || "").trim(),
+          inspectCycleDays: target?.inspectCycleDays || "",
+          lastCheckDate: target?.lastCheckDate || "",
+          nextCheckDate: target?.nextCheckDate || "",
           registerCode: String(form.get("registerCode") || "").trim(),
           volume: String(form.get("volume") || "").trim(),
           lineType: String(form.get("lineType") || "").trim(),
@@ -3196,6 +4442,13 @@
 
         const action = target.dataset.action;
         const id = target.dataset.id;
+        if (!action) {
+          const row = target.closest("tr[data-row-id]");
+          if (row && !(target instanceof HTMLInputElement)) {
+            selectDeviceForStandards(row.dataset.rowId || "");
+          }
+          return;
+        }
         if (!action || !id) {
           return;
         }
@@ -3591,7 +4844,16 @@
         if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
           return false;
         }
-        const aliases = [FIELD_ALIASES.code, FIELD_ALIASES.name, FIELD_ALIASES.category, FIELD_ALIASES.status];
+        const aliases = [
+          FIELD_ALIASES.code,
+          FIELD_ALIASES.name,
+          FIELD_ALIASES.category,
+          FIELD_ALIASES.status,
+          DEVICE_TYPE_FIELD_ALIASES.code,
+          DEVICE_TYPE_FIELD_ALIASES.name,
+          SITE_FIELD_ALIASES.code,
+          SITE_FIELD_ALIASES.name,
+        ];
         return aliases.some((alias) => Object.prototype.hasOwnProperty.call(obj, alias));
       }
 
@@ -3791,6 +5053,8 @@
           purchaseDate: normalizeDateInput(getAliasRawValue(record, FIELD_ALIASES.inFactoryDate)),
           lastCheckDate,
           inspectionStatus: normalizeInspectionStatus(getAliasRawValue(record, FIELD_ALIASES.inspectionStatus), lastCheckDate),
+          inspectStandardId: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.inspectStandardId)),
+          inspectStandardCode: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.inspectStandardCode)),
           remark: toDisplayText(getAliasRawValue(record, FIELD_ALIASES.remark)),
           qrCodeNo: qr.qrCodeNo,
           qrContent: qr.qrContent,
@@ -3814,11 +5078,9 @@
           [FIELD_ALIASES.usageLocation]: payload.location || "",
           [FIELD_ALIASES.storageLocation]: payload.location || "",
           [FIELD_ALIASES.area]: payload.area || "",
-          [FIELD_ALIASES.inspectCycleDays]: payload.inspectCycleDays || "",
           [FIELD_ALIASES.maintenanceCompany]: payload.keeper || "",
           [FIELD_ALIASES.inFactoryDate]: formatDateTimeForApi(payload.purchaseDate),
           [FIELD_ALIASES.lastInspectDate]: formatDateTimeForApi(payload.lastCheckDate),
-          [FIELD_ALIASES.nextInspectDate]: formatDateTimeForApi(payload.nextCheckDate),
           [FIELD_ALIASES.registerCode]: payload.registerCode || "",
           [FIELD_ALIASES.volume]: payload.volume || "",
           [FIELD_ALIASES.lineType]: payload.lineType || "",
@@ -3955,7 +5217,19 @@
         try {
           await syncTypeLibrary({ silent });
         } finally {
-          await syncCloudDevices({ silent });
+          try {
+            await syncSiteLibrary({ silent: true });
+          } finally {
+            try {
+              await syncAssetCategoryLibrary({ silent: true });
+            } finally {
+              try {
+                await syncStandardUsageLibrary({ silent: true });
+              } finally {
+                await syncCloudDevices({ silent });
+              }
+            }
+          }
         }
       }
 
@@ -3973,6 +5247,7 @@
         refs.keywordInput.value = "";
         refs.statusFilter.value = "";
         refs.inspectionFilter.value = "";
+        refreshSelectProxies(document);
         renderTable();
       });
 
@@ -4028,6 +5303,16 @@
       });
 
       document.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
+        if (!target.closest("#purchaseDateField")) {
+          closePurchaseDatePanel();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
         if (!state.openTreeDeleteNodeId) {
           return;
         }
@@ -4046,8 +5331,7 @@
         updateDeviceExtraSection(refs.categoryGroupInput.value);
       });
 
-      refs.inspectCycleDaysInput.addEventListener("input", autoCalcNextCheckDate);
-      refs.lastCheckDateInput.addEventListener("change", autoCalcNextCheckDate);
+      refs.workshopInput.addEventListener("change", fillAreaByWorkshop);
 
       refs.addDeviceBtn.addEventListener("click", () => {
         openDeviceModal("add", null);
@@ -4068,6 +5352,191 @@
       refs.addCategoryBtn.addEventListener("click", openCategoryTypeModal);
       refs.closeCategoryTypeModal.addEventListener("click", closeCategoryTypeModal);
       refs.cancelCategoryTypeBtn.addEventListener("click", closeCategoryTypeModal);
+
+      bindSelectProxyShell();
+      renderAssetCategoryOptions();
+      enhanceSelectProxies(document);
+
+      function bindSelectProxyShell() {
+        if (window.__selectProxyShellBound) return;
+        window.__selectProxyShellBound = true;
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement) || !event.target.closest(".select-proxy")) {
+            closeSelectProxies();
+          }
+        });
+        new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node instanceof HTMLElement) {
+                enhanceSelectProxies(node);
+              }
+            });
+          });
+        }).observe(document.body, { childList: true, subtree: true });
+      }
+
+      function enhanceSelectProxies(scope = document) {
+        if (!scope) return;
+        const selector = "select.control:not(.native-hidden), select.select:not(.native-hidden)";
+        if (scope instanceof HTMLSelectElement && scope.matches(selector)) {
+          enhanceSelectProxy(scope);
+        }
+        scope.querySelectorAll?.(selector).forEach((select) => enhanceSelectProxy(select));
+      }
+
+      function enhanceSelectProxy(select) {
+        if (select.classList.contains("native-select-hidden")) {
+          refreshSelectProxy(select);
+          return;
+        }
+        const next = select.nextElementSibling;
+        if (next && next.classList.contains("select-proxy")) {
+          next.remove();
+        }
+        select.classList.add("native-select-hidden");
+
+        const proxy = document.createElement("div");
+        proxy.className = "select-proxy";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "select-proxy-button";
+        const text = document.createElement("span");
+        button.appendChild(text);
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "select-proxy-clear";
+        clear.setAttribute("aria-label", "清空选择");
+        const panel = document.createElement("div");
+        panel.className = "select-proxy-panel hidden";
+        const list = document.createElement("div");
+        list.className = "select-proxy-list";
+        panel.appendChild(list);
+        proxy.appendChild(button);
+        proxy.appendChild(clear);
+        proxy.appendChild(panel);
+        select.insertAdjacentElement("afterend", proxy);
+
+        const render = () => renderSelectProxy(select, proxy, text, list);
+        clear.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (select.disabled) return;
+          const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+          if (!hasEmptyOption) return;
+          select.value = "";
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          closeSelectProxies();
+        });
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const willOpen = panel.classList.contains("hidden");
+          closeSelectProxies();
+          render();
+          if (willOpen) {
+            proxy.classList.add("is-open");
+            panel.classList.remove("hidden");
+            positionSelectProxyPanel(proxy, panel);
+          }
+        });
+        select.addEventListener("change", render);
+        new MutationObserver(render).observe(select, { childList: true, subtree: true });
+        render();
+      }
+
+      function renderSelectProxy(select, proxy, text, list) {
+        const selected = select.selectedOptions && select.selectedOptions[0];
+        text.textContent = selected?.textContent || "请选择";
+        const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+        proxy.classList.toggle("has-value", Boolean(select.value) && hasEmptyOption && !select.disabled);
+        list.innerHTML = "";
+        const appendOption = (option, grouped = false) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = `select-proxy-option${grouped ? " is-grouped" : ""}${option.value === select.value ? " is-selected" : ""}`;
+          item.textContent = option.textContent || "请选择";
+          item.disabled = option.disabled;
+          item.addEventListener("click", () => {
+            select.value = option.value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            closeSelectProxies();
+          });
+          list.appendChild(item);
+        };
+        Array.from(select.children).forEach((child) => {
+          if (child instanceof HTMLOptGroupElement) {
+            const group = document.createElement("div");
+            group.className = "select-proxy-group";
+            group.textContent = child.label || "";
+            list.appendChild(group);
+            Array.from(child.children).forEach((option) => {
+              if (option instanceof HTMLOptionElement) {
+                appendOption(option, true);
+              }
+            });
+            return;
+          }
+          if (child instanceof HTMLOptionElement) {
+            appendOption(child, false);
+          }
+        });
+        proxy.classList.toggle("is-disabled", select.disabled);
+      }
+
+      function refreshSelectProxy(select) {
+        const proxy = select?.nextElementSibling;
+        if (!proxy || !proxy.classList.contains("select-proxy")) return;
+        const text = proxy.querySelector(".select-proxy-button span");
+        const list = proxy.querySelector(".select-proxy-list");
+        if (text && list) {
+          renderSelectProxy(select, proxy, text, list);
+        }
+      }
+
+      function refreshSelectProxies(scope = document) {
+        if (!scope) return;
+        scope.querySelectorAll("select.native-select-hidden").forEach(refreshSelectProxy);
+      }
+
+      function closeSelectProxies() {
+        document.querySelectorAll(".select-proxy.is-open").forEach((proxy) => {
+          proxy.classList.remove("is-open", "is-upward");
+        });
+        document.querySelectorAll(".select-proxy-panel:not(.hidden)").forEach((panel) => {
+          panel.classList.add("hidden");
+          panel.style.maxHeight = "";
+        });
+      }
+
+      function positionSelectProxyPanel(proxy, panel) {
+        proxy.classList.remove("is-upward");
+        panel.style.maxHeight = "";
+
+        const proxyRect = proxy.getBoundingClientRect();
+        const modalBody = proxy.closest(".modal-body");
+        const boundaryRect = modalBody ? modalBody.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+        const gap = 8;
+        const spaceBelow = boundaryRect.bottom - proxyRect.bottom - gap;
+        const spaceAbove = proxyRect.top - boundaryRect.top - gap;
+        const wantedHeight = Math.min(panel.scrollHeight || 260, 260);
+        const minUsefulHeight = Math.min(wantedHeight, 120);
+        const openUpward = spaceBelow < minUsefulHeight && spaceAbove > spaceBelow;
+        const availableHeight = openUpward ? spaceAbove : spaceBelow;
+
+        if (openUpward) {
+          proxy.classList.add("is-upward");
+        }
+        panel.style.maxHeight = `${Math.max(96, Math.min(260, Math.floor(availableHeight)))}px`;
+      }
+
+      window.addEventListener("resize", () => {
+        document.querySelectorAll(".select-proxy.is-open").forEach((proxy) => {
+          const panel = proxy.querySelector(".select-proxy-panel:not(.hidden)");
+          if (panel) {
+            positionSelectProxyPanel(proxy, panel);
+          }
+        });
+      });
       refs.categoryTypeModal.addEventListener("click", (event) => {
         if (event.target === refs.categoryTypeModal) {
           closeCategoryTypeModal();
@@ -4084,6 +5553,29 @@
       });
       refs.deviceForm.addEventListener("submit", (event) => {
         void saveDeviceFromForm(event);
+      });
+      bindDateField(refs.purchaseDateField, refs.purchaseDateDisplayInput, refs.purchaseDateInput, refs.purchaseDateTrigger);
+      refs.purchaseDatePrevBtn?.addEventListener("click", () => {
+        const base = state.purchaseDatePanelMonth instanceof Date && !Number.isNaN(state.purchaseDatePanelMonth.getTime())
+          ? state.purchaseDatePanelMonth
+          : new Date();
+        state.purchaseDatePanelMonth = new Date(base.getFullYear(), base.getMonth() - 1, 1);
+        renderPurchaseDatePanel();
+      });
+      refs.purchaseDateNextBtn?.addEventListener("click", () => {
+        const base = state.purchaseDatePanelMonth instanceof Date && !Number.isNaN(state.purchaseDatePanelMonth.getTime())
+          ? state.purchaseDatePanelMonth
+          : new Date();
+        state.purchaseDatePanelMonth = new Date(base.getFullYear(), base.getMonth() + 1, 1);
+        renderPurchaseDatePanel();
+      });
+      refs.purchaseDateTodayBtn?.addEventListener("click", () => {
+        setPurchaseDateValue(formatDateTag(new Date()));
+        closePurchaseDatePanel();
+      });
+      refs.purchaseDateClearBtn?.addEventListener("click", () => {
+        setPurchaseDateValue("");
+        closePurchaseDatePanel();
       });
 
       refs.closeApiModal.addEventListener("click", closeApiModal);

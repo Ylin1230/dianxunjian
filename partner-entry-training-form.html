@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>相关方入场培训填报</title>
     <style>
       :root {
@@ -25,6 +25,7 @@
         background: linear-gradient(180deg, #f6f9ff 0%, var(--bg) 100%);
         color: var(--text);
         font: 14px/1.5 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+        touch-action: manipulation;
       }
 
       .page {
@@ -50,6 +51,11 @@
         margin: 6px 0 0;
         color: var(--minor);
         font-size: 13px;
+      }
+
+      .page-title-block,
+      .title-field {
+        display: none;
       }
 
       .warn {
@@ -128,12 +134,187 @@
         resize: vertical;
       }
 
+      #contentInput {
+        min-height: 340px;
+      }
+
       .input:focus,
       .select:focus,
       .textarea:focus {
         outline: none;
         border-color: #89afe8;
         box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .input:disabled,
+      .select:disabled,
+      .textarea:disabled {
+        background: #f4f7fb;
+        color: #7b879a;
+        cursor: not-allowed;
+      }
+
+      .native-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .combo {
+        position: relative;
+      }
+
+      .combo-button {
+        width: 100%;
+        height: 36px;
+        border: 1px solid #cad3e1;
+        border-radius: 6px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 34px 0 10px;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .combo-button::after {
+        content: "";
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #6f7d93;
+        border-bottom: 1px solid #6f7d93;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .combo-button.is-placeholder {
+        color: #8a97ad;
+      }
+
+      .combo.has-value .combo-button {
+        padding-right: 42px;
+      }
+
+      .combo.has-value .combo-button::after {
+        display: none;
+      }
+
+      .combo-clear {
+        position: absolute;
+        right: 9px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 3;
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        border: 0;
+        border-radius: 50%;
+        background: #cbd4e2;
+        color: #fff;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .combo-clear::before,
+      .combo-clear::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .combo-clear::before {
+        transform: rotate(45deg);
+      }
+
+      .combo-clear::after {
+        transform: rotate(-45deg);
+      }
+
+      .combo.has-value .combo-clear {
+        display: inline-flex;
+      }
+
+      .combo-clear:hover {
+        background: #b9c3d3;
+      }
+
+      .combo-button:focus,
+      .combo.is-open .combo-button {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .combo-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 40;
+        border: 1px solid #9fb2cb;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 12px 28px rgba(27, 48, 78, 0.18);
+        overflow: hidden;
+      }
+
+      .combo-panel.hidden {
+        display: none;
+      }
+
+      .combo-search-wrap {
+        padding: 8px;
+        border-bottom: 1px solid #e5edf8;
+        background: #f8fbff;
+      }
+
+      .combo-search {
+        height: 34px;
+      }
+
+      .combo-list {
+        max-height: 260px;
+        overflow: auto;
+        padding: 4px;
+      }
+
+      .combo-option {
+        width: 100%;
+        min-height: 34px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--text);
+        display: block;
+        padding: 7px 8px;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .combo-option:hover,
+      .combo-option.is-selected {
+        background: #edf4ff;
+        color: #1c5eb8;
+      }
+
+      .combo-empty {
+        padding: 12px;
+        color: #7b8798;
+        font-size: 13px;
+        text-align: center;
       }
 
       .date-field {
@@ -160,6 +341,18 @@
       .date-field:focus-within .date-field-icon,
       .date-field:hover .date-field-icon {
         color: #2c79ea;
+      }
+
+      .date-field.is-disabled .date-display-input,
+      .date-display-input:disabled {
+        background: #f4f7fb;
+        color: #526176;
+        cursor: not-allowed;
+        -webkit-text-fill-color: #526176;
+      }
+
+      .date-field.is-disabled .date-field-icon {
+        color: #9aa7ba;
       }
 
       .date-field-icon svg {
@@ -198,9 +391,8 @@
       .participant-toolbar {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         gap: 10px;
-        padding: 10px 12px;
+        padding: 8px 10px;
         border-bottom: 1px solid #e4ecf7;
         background: #f7faff;
       }
@@ -208,6 +400,36 @@
       .participant-toolbar strong {
         font-size: 13px;
         color: #30445f;
+        line-height: 1.4;
+      }
+
+      .participant-add-btn {
+        flex: 0 0 auto;
+        min-width: 108px;
+        height: 32px;
+        min-height: 32px;
+        border-radius: 999px;
+        padding: 0 14px 0 12px;
+        font-size: 13px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .participant-add-btn::before {
+        content: "+";
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid currentColor;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        flex: 0 0 auto;
       }
 
       .participant-list {
@@ -215,12 +437,20 @@
         flex-direction: column;
       }
 
+      .participant-foot {
+        display: flex;
+        justify-content: flex-start;
+        padding: 10px;
+        border-top: 1px solid #e4ecf7;
+        background: #fff;
+      }
+
       .participant-row {
         display: grid;
-        grid-template-columns: 56px minmax(0, 1fr) 120px 156px 68px;
-        gap: 10px;
+        grid-template-columns: 44px minmax(0, 1fr) 112px 148px 32px;
+        gap: 8px;
         align-items: center;
-        padding: 10px 12px;
+        padding: 8px 10px;
         border-top: 1px solid #e9eff8;
       }
 
@@ -239,6 +469,71 @@
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
+      }
+
+      .participant-sign-btn {
+        height: 34px;
+        min-height: 34px;
+        border-radius: 6px;
+        padding: 0 12px;
+      }
+
+      .sign-thumb-btn {
+        border: 1px solid #d7e2f2;
+        border-radius: 7px;
+        background: #fff;
+        padding: 2px;
+        width: 76px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .sign-preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .participant-delete {
+        position: relative;
+        width: 28px;
+        height: 28px;
+        min-height: 28px;
+        border-radius: 50%;
+        border: 1px solid #d2dceb;
+        background: #fff;
+        color: #5f718a;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        justify-self: center;
+        align-self: center;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      .participant-delete::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 10px;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+        transform: translate(-50%, -50%);
+      }
+
+      .participant-delete:hover {
+        border-color: #efb9b9;
+        color: var(--danger);
+        background: #fff8f8;
       }
 
       .sign-state {
@@ -264,6 +559,11 @@
         color: #7d8ca4;
         font-size: 12px;
         text-align: center;
+      }
+
+      .participant-count-field .input {
+        width: 100%;
+        max-width: none;
       }
 
       .modal-mask {
@@ -383,6 +683,10 @@
         color: #5e6f87;
       }
 
+      #statusBar {
+        display: none;
+      }
+
       .status.error {
         color: var(--danger);
       }
@@ -472,6 +776,7 @@
       }
 
       .notice-countdown {
+        display: none;
         color: #6f7d93;
         font-size: 13px;
       }
@@ -514,8 +819,22 @@
       }
 
       @media (max-width: 720px) {
+        .modal-mask {
+          align-items: flex-start;
+          padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+          overflow: hidden;
+        }
+
         .page {
           padding: 10px;
+        }
+
+        .input,
+        .select,
+        .textarea,
+        .combo-button,
+        .combo-option {
+          font-size: 16px;
         }
 
         .grid {
@@ -526,26 +845,206 @@
           grid-column: span 1;
         }
 
+        #contentInput {
+          min-height: 390px;
+        }
+
         .actions {
           justify-content: stretch;
         }
 
         .btn {
           flex: 1;
+          min-height: 44px;
+          font-size: 16px;
+        }
+
+        .participant-toolbar {
+          padding: 8px 10px;
+        }
+
+        .participant-toolbar strong {
+          font-size: 13px;
+        }
+
+        .participant-foot {
+          padding: 10px;
+        }
+
+        .participant-add-btn {
+          flex: 0 0 auto;
+          min-width: 104px;
+          min-height: 32px;
+          height: 32px;
+          padding: 0 12px 0 10px;
+          font-size: 13px;
         }
 
         .participant-row {
-          grid-template-columns: 46px minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1fr) 124px 30px;
+          gap: 8px;
+          padding: 8px 10px;
+          align-items: center;
         }
 
-        .participant-sign-cell,
+        .participant-seq,
         .participant-row .participant-time,
-        .participant-row .participant-delete {
-          grid-column: 2;
+        .participant-sign-cell .sign-state,
+        .participant-sign-cell .sign-preview-link {
+          display: none;
+        }
+
+        .participant-sign-cell {
+          grid-column: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          justify-content: center;
+        }
+
+        .participant-sign-cell .btn {
+          height: 32px;
+          min-height: 32px;
+          border-radius: 7px;
+          width: 100%;
+          padding: 0 8px;
+          font-size: 14px;
+          white-space: nowrap;
+        }
+
+        .participant-sign-cell .sign-thumb-btn {
+          width: 100%;
+          height: 44px;
+        }
+
+        .participant-row > .input {
+          height: 40px;
+          min-height: 40px;
+          font-size: 15px;
         }
 
         .participant-row .participant-delete {
-          justify-self: start;
+          display: inline-grid;
+          width: 28px;
+          height: 28px;
+          min-height: 28px;
+          align-self: center;
+          justify-self: center;
+          flex: none;
+        }
+
+        .combo-panel {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: calc(100% + 4px);
+          max-height: min(46vh, 320px);
+          border-radius: 10px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        @supports (height: 100svh) {
+          .combo-panel {
+            max-height: min(46svh, 320px);
+          }
+        }
+
+        .combo-search-wrap {
+          padding: 10px;
+        }
+
+        .combo-search {
+          font-size: 16px;
+        }
+
+        .combo-list {
+          max-height: min(34vh, 240px);
+          flex: 1;
+          min-height: 120px;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .combo-option {
+          min-height: 42px;
+          padding: 9px 10px;
+        }
+
+        .notice-modal {
+          width: 100%;
+          height: auto;
+          max-height: calc(100vh - 20px);
+          border-radius: 14px;
+        }
+
+        @supports (height: 100svh) {
+          .notice-modal {
+            max-height: calc(100svh - 20px);
+          }
+        }
+
+        .notice-head {
+          flex: 0 0 auto;
+          padding: 12px 14px 8px;
+        }
+
+        .notice-head h2 {
+          font-size: 17px;
+        }
+
+        .notice-head p {
+          font-size: 12px;
+        }
+
+        .notice-body {
+          flex: 1 1 auto;
+          min-height: 0;
+          max-height: calc(100vh - 176px);
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 10px 12px;
+        }
+
+        @supports (height: 100svh) {
+          .notice-body {
+            max-height: calc(100svh - 176px);
+          }
+        }
+
+        .notice-content {
+          height: auto;
+          max-height: none;
+          overflow: visible;
+          padding: 10px 12px;
+        }
+
+        .notice-list {
+          gap: 10px;
+          padding-left: 20px;
+        }
+
+        .notice-foot {
+          flex: 0 0 auto;
+          flex-direction: column;
+          align-items: stretch;
+          padding: 10px 12px max(14px, env(safe-area-inset-bottom));
+          background: #fff;
+        }
+
+        .notice-foot .btn {
+          width: 100%;
+          min-height: 50px;
+          font-size: 16px;
+          font-weight: 700;
+        }
+
+        .sign-modal {
+          height: calc(100dvh - 20px);
+          max-height: none;
+        }
+
+        .sign-canvas {
+          height: 260px;
         }
 
         .notice-foot {
@@ -554,36 +1053,34 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="compact-date-picker.css" />
   </head>
   <body>
     <div class="page">
-      <section class="hero">
+      <section class="hero page-title-block">
         <h1>相关方入场培训填报</h1>
-        <p>请按实际情况填写，提交后将同步写入“相关方安全教育培训记录”底表。</p>
         <div id="accessWarn" class="warn" style="display:none;"></div>
       </section>
 
       <section id="formSection" class="panel">
         <div class="panel-head">培训信息</div>
         <div class="panel-body">
-          <form id="trainingForm">
+          <form id="trainingForm" novalidate>
             <div class="grid">
-              <div class="field">
-                <label for="titleInput"><span class="required">*</span> 标题</label>
-                <input id="titleInput" class="input" type="text" placeholder="例如：外委施工入场安全培训" required />
-              </div>
+              <input id="titleInput" type="hidden" value="相关方入场安全培训" />
 
               <div class="field">
                 <label for="trainingDateDisplayInput"><span class="required">*</span> 培训日期</label>
-                <div id="trainingDateField" class="date-field">
+                <div id="trainingDateField" class="date-field is-disabled">
                   <input
                     id="trainingDateDisplayInput"
                     class="input date-display-input"
                     type="text"
                     placeholder="YYYY-MM-DD"
                     readonly
+                    disabled
                   />
-                  <input id="trainingDateInput" class="date-native-input" type="date" tabindex="-1" aria-hidden="true" required />
+                  <input id="trainingDateInput" type="hidden" required />
                   <span class="date-field-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24">
                       <rect x="3" y="4" width="18" height="18" rx="2"></rect>
@@ -594,55 +1091,45 @@
               </div>
 
               <div class="field">
-                <label for="companySelect"><span class="required">*</span> 施工单位</label>
-                <input id="companyKeywordInput" class="input" type="text" placeholder="输入单位名称或编号搜索" autocomplete="off" />
-                <select id="companySelect" class="select" required></select>
-                <div class="tip">可先输入单位名称或编号搜索，再从下拉中选择；数据来源：百数云“相关方单位”底表。</div>
+                <label for="companyComboButton"><span class="required">*</span> 施工单位</label>
+                <div id="companyCombo" class="combo">
+                  <button id="companyComboButton" class="combo-button is-placeholder" type="button">
+                    <span id="companyComboText">请选择施工单位</span>
+                  </button>
+                  <button id="companyClearBtn" class="combo-clear" type="button" aria-label="清空施工单位"></button>
+                  <div id="companyComboPanel" class="combo-panel hidden">
+                    <div class="combo-search-wrap">
+                      <input id="companyKeywordInput" class="input combo-search" type="text" placeholder="输入单位名称或编号搜索" autocomplete="off" />
+                    </div>
+                    <div id="companyOptionList" class="combo-list"></div>
+                  </div>
+                </div>
+                <select id="companySelect" class="select native-hidden" tabindex="-1" aria-hidden="true"></select>
               </div>
 
               <div class="field">
-                <label for="attendeeCountInput"><span class="required">*</span> 培训人数</label>
-                <input id="attendeeCountInput" class="input" type="number" min="1" step="1" required readonly />
-              </div>
-
-              <div class="field full">
-                <label for="projectInput"><span class="required">*</span> 施工项目</label>
-                <input id="projectInput" class="input" type="text" placeholder="例如：氧枪平台检修" required />
-              </div>
-
-              <div class="field">
-                <label for="lecturerSelect">授课人（可选）</label>
+                <label for="lecturerSelect">授课人</label>
                 <select id="lecturerSelect" class="select"></select>
-              </div>
-
-              <div class="field">
-                <label for="sampledSelect">是否抽取</label>
-                <select id="sampledSelect" class="select">
-                  <option value="否">否</option>
-                  <option value="是">是</option>
-                </select>
               </div>
 
               <div class="field full">
                 <label>参加培训人员签字</label>
                 <div class="participant-panel">
-                  <div class="participant-toolbar">
-                    <strong>逐行录入参训人员，签字可后续补录</strong>
-                    <button id="addParticipantBtn" type="button" class="btn">新增人员</button>
-                  </div>
                   <div id="participantList" class="participant-list"></div>
+                  <div class="participant-foot">
+                    <button id="addParticipantBtn" type="button" class="btn participant-add-btn">新增一项</button>
+                  </div>
                 </div>
-                <div class="tip">每位参训人员单独录入姓名即可提交；如已完成签字，会自动写入子表的“签字 / 签字时间”。</div>
+              </div>
+
+              <div class="field full participant-count-field">
+                <label for="attendeeCountInput">培训人数</label>
+                <input id="attendeeCountInput" class="input" type="text" placeholder="根据参训人员自动统计" disabled />
               </div>
 
               <div class="field full">
                 <label for="contentInput">培训内容</label>
                 <textarea id="contentInput" class="textarea"></textarea>
-              </div>
-
-              <div class="field full">
-                <label for="effectInput">培训效果验证</label>
-                <textarea id="effectInput" class="textarea"></textarea>
               </div>
             </div>
 
@@ -652,7 +1139,7 @@
             </div>
           </form>
 
-          <div id="statusBar" class="status">准备就绪</div>
+          <div id="statusBar" class="status"></div>
           <div id="successBox" class="success">
             <h3>提交成功</h3>
             <p id="successText">培训记录已写入底表。</p>
@@ -731,10 +1218,11 @@
       </div>
     </div>
 
+    <script src="compact-date-picker.js"></script>
     <script>
       const API_CONFIG = {
         baseUrl: resolveApiBaseUrl(),
-        appId: "5a94c4d1642bd8a84c772356",
+        appId: "59b376f42fee5822c6ac906a",
         partnerEntryId: "e909400e8837d7f8cc75482b",
         trainingEntryId: "c40d44a99118a61bd17f9325",
       };
@@ -754,11 +1242,8 @@
         trainingDate: "_widget_1775706019459",
         company: "_widget_1775706019483",
         attendeeCount: "_widget_1775706019502",
-        project: "_widget_1775706019523",
         lecturer: "_widget_1775706019542",
         content: "_widget_1775706019574",
-        effect: "_widget_1775706019591",
-        sampled: "_widget_1775706019878",
         participantSubform: "_widget_1776499479462",
       };
 
@@ -767,6 +1252,22 @@
         sign: "_widget_1776499479592",
         signTime: "_widget_1776499479597",
       };
+
+      const DEFAULT_TRAINING_CONTENT = [
+        "1.安全文明施工十项规定",
+        "2.劳保用品穿戴规定",
+        "3.厂内车辆管理规定",
+        "4.危险作业管理规定",
+        "5.危险化学品管理规定",
+        "6.定时定点吸烟管理规定",
+        "7.特种设备及特种作业人员管理规定",
+        "8.现场“5S”管理规定",
+        "9.假期安全管理规定",
+        "10.物资出入门管理规定",
+        "11.事故报告及调查处理规定",
+        "12.环境保护管理要求",
+        "13.其它相关要求",
+      ].join("\n");
 
       const state = {
         loading: false,
@@ -788,6 +1289,8 @@
           lastX: 0,
           lastY: 0,
         },
+        companyDropdownOpen: false,
+        companySearchFocusUntil: 0,
       };
 
       const refs = {
@@ -809,16 +1312,19 @@
         trainingDateDisplayInput: document.getElementById("trainingDateDisplayInput"),
         trainingDateInput: document.getElementById("trainingDateInput"),
 
+        companyCombo: document.getElementById("companyCombo"),
+        companyComboButton: document.getElementById("companyComboButton"),
+        companyComboText: document.getElementById("companyComboText"),
+        companyComboPanel: document.getElementById("companyComboPanel"),
         companyKeywordInput: document.getElementById("companyKeywordInput"),
+        companyOptionList: document.getElementById("companyOptionList"),
+        companyClearBtn: document.getElementById("companyClearBtn"),
         companySelect: document.getElementById("companySelect"),
         attendeeCountInput: document.getElementById("attendeeCountInput"),
-        projectInput: document.getElementById("projectInput"),
         lecturerSelect: document.getElementById("lecturerSelect"),
-        sampledSelect: document.getElementById("sampledSelect"),
         addParticipantBtn: document.getElementById("addParticipantBtn"),
         participantList: document.getElementById("participantList"),
         contentInput: document.getElementById("contentInput"),
-        effectInput: document.getElementById("effectInput"),
 
         statusBar: document.getElementById("statusBar"),
         successBox: document.getElementById("successBox"),
@@ -835,7 +1341,7 @@
       init();
 
       async function init() {
-        bindDateField(refs.trainingDateField, refs.trainingDateDisplayInput, refs.trainingDateInput);
+        preventMobileZoomGestures();
         bindEvents();
         applyAccessWarning();
         if (state.scanContext.submitted) {
@@ -860,27 +1366,74 @@
           setStatus("已重置");
         });
 
-        refs.companyKeywordInput.addEventListener("input", () => {
-          const rows = filterPartnerUnits(refs.companyKeywordInput.value);
-          const selectedId = rows.some((item) => item.id === refs.companySelect.value) ? String(refs.companySelect.value || "").trim() : "";
-          renderCompanyOptions({ selectedId });
+        refs.companyComboButton.addEventListener("click", () => {
+          toggleCompanyDropdown();
         });
 
-        refs.companyKeywordInput.addEventListener("change", () => {
-          applyCompanyKeywordSelection();
+        refs.companyClearBtn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          clearCompanySelection();
+        });
+
+        refs.companyKeywordInput.addEventListener("input", () => {
+          renderCompanyOptions({ selectedId: String(refs.companySelect.value || "").trim(), keepKeyword: true });
+        });
+
+        refs.companyKeywordInput.addEventListener("focus", () => {
+          state.companySearchFocusUntil = Date.now() + 800;
+          if (!state.companyDropdownOpen) {
+            openCompanyDropdown({ keepKeyword: true });
+          }
         });
 
         refs.companyKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeCompanyDropdown();
+            refs.companyComboButton.focus();
+            return;
+          }
           if (event.key !== "Enter") {
             return;
           }
           event.preventDefault();
-          applyCompanyKeywordSelection({ preferFirst: true });
+          applyCompanyKeywordSelection({ preferFirst: true, closeAfterSelect: true });
         });
 
-        refs.companySelect.addEventListener("change", () => {
-          syncCompanyKeywordFromSelection();
+        refs.companyOptionList.addEventListener("click", (event) => {
+          const option = event.target instanceof HTMLElement ? event.target.closest("[data-company-id]") : null;
+          if (!option) {
+            return;
+          }
+          selectCompanyById(option.dataset.companyId || "", { close: true });
         });
+
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof Node) || refs.companyCombo.contains(event.target)) {
+            return;
+          }
+          closeCompanyDropdown();
+        });
+
+        window.addEventListener(
+          "scroll",
+          (event) => {
+            if (!state.companyDropdownOpen) {
+              return;
+            }
+            const target = event.target;
+            const active = document.activeElement;
+            if (
+              (target instanceof Node && refs.companyCombo.contains(target)) ||
+              (active instanceof Node && refs.companyCombo.contains(active)) ||
+              Date.now() < state.companySearchFocusUntil
+            ) {
+              return;
+            }
+            closeCompanyDropdown();
+          },
+          true
+        );
 
         refs.noticeEnterBtn.addEventListener("click", () => {
           if (state.noticeSeconds > 0) {
@@ -964,6 +1517,37 @@
         bindSignatureCanvas();
       }
 
+      function preventMobileZoomGestures() {
+        let lastTouchEnd = 0;
+        document.addEventListener(
+          "touchmove",
+          (event) => {
+            if (event.touches && event.touches.length > 1) {
+              event.preventDefault();
+            }
+          },
+          { passive: false }
+        );
+        document.addEventListener(
+          "touchend",
+          (event) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+              event.preventDefault();
+            }
+            lastTouchEnd = now;
+          },
+          { passive: false }
+        );
+        document.addEventListener(
+          "gesturestart",
+          (event) => {
+            event.preventDefault();
+          },
+          { passive: false }
+        );
+      }
+
       function applyAccessWarning() {
         const host = window.location.host || "";
         const isLocal = isLocalOrPrivateWebHost(host);
@@ -977,24 +1561,19 @@
       }
 
       function resetFormValues() {
-        refs.titleInput.value = "";
-        refs.trainingDateInput.value = toDateInputValue(new Date());
-        syncDateFieldDisplay(refs.trainingDateField, refs.trainingDateDisplayInput, refs.trainingDateInput);
+        refs.titleInput.value = "相关方入场安全培训";
+        setAutoTrainingDate();
         refs.attendeeCountInput.value = "";
         refs.companyKeywordInput.value = "";
         refs.companySelect.value = "";
-        refs.projectInput.value = "";
         refs.lecturerSelect.value = "";
-        refs.sampledSelect.value = "否";
-        refs.contentInput.value = "";
-        refs.effectInput.value = "";
+        refs.contentInput.value = DEFAULT_TRAINING_CONTENT;
         setParticipants([createEmptyParticipant()]);
         closeSignatureModal();
       }
 
       async function loadRemoteOptions() {
         setLoading(true);
-        setStatus("正在加载施工单位和成员数据...");
 
         try {
           const [units, users] = await Promise.all([fetchPartnerUnits(), fetchContactsUsers()]);
@@ -1004,8 +1583,6 @@
           renderCompanyOptions();
           renderLecturerOptions();
           applyScanPrefill();
-
-          setStatus(`加载完成：施工单位 ${state.units.length} 条，成员 ${state.users.length} 条`);
         } catch (error) {
           setStatus(`加载失败：${error.message}`, true);
         } finally {
@@ -1013,21 +1590,106 @@
         }
       }
 
-      function renderCompanyOptions({ selectedId = String(refs.companySelect.value || "").trim() } = {}) {
-        const rows = filterPartnerUnits(refs.companyKeywordInput.value);
-        const options = ['<option value="">请选择施工单位</option>'];
-        rows.forEach((item) => {
-          options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`);
+      function renderCompanyOptions({ selectedId = String(refs.companySelect.value || "").trim(), keepKeyword = false } = {}) {
+        const allOptions = ['<option value="">请选择施工单位</option>'];
+        state.units.forEach((item) => {
+          allOptions.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`);
         });
-        if (!rows.length) {
-          options.push('<option value="" disabled>未找到匹配施工单位</option>');
+        refs.companySelect.innerHTML = allOptions.join("");
+        refs.companySelect.value = state.units.some((item) => item.id === selectedId) ? selectedId : "";
+
+        if (!keepKeyword && refs.companySelect.value) {
+          const selected = state.units.find((item) => item.id === refs.companySelect.value);
+          refs.companyKeywordInput.value = selected?.name || "";
         }
-        refs.companySelect.innerHTML = options.join("");
-        refs.companySelect.value = rows.some((item) => item.id === selectedId) ? selectedId : "";
+
+        renderCompanyOptionList();
+        updateCompanyComboDisplay();
+      }
+
+      function renderCompanyOptionList() {
+        const rows = filterPartnerUnits(refs.companyKeywordInput.value);
+        const selectedId = String(refs.companySelect.value || "").trim();
+        if (!rows.length) {
+          refs.companyOptionList.innerHTML = '<div class="combo-empty">未找到匹配施工单位</div>';
+          return;
+        }
+
+        refs.companyOptionList.innerHTML = rows
+          .map((item) => {
+            return `
+              <button
+                type="button"
+                class="combo-option${item.id === selectedId ? " is-selected" : ""}"
+                data-company-id="${escapeHtml(item.id)}"
+              >${escapeHtml(item.name)}</button>`;
+          })
+          .join("");
+      }
+
+      function updateCompanyComboDisplay() {
+        const selected = state.units.find((item) => item.id === String(refs.companySelect.value || "").trim());
+        refs.companyComboText.textContent = selected?.name || "请选择施工单位";
+        refs.companyComboButton.classList.toggle("is-placeholder", !selected);
+        refs.companyCombo.classList.toggle("has-value", Boolean(selected));
+      }
+
+      function openCompanyDropdown({ keepKeyword = false } = {}) {
+        state.companyDropdownOpen = true;
+        refs.companyCombo.classList.add("is-open");
+        refs.companyComboPanel.classList.remove("hidden");
+        if (!keepKeyword) {
+          refs.companyKeywordInput.value = "";
+        }
+        renderCompanyOptionList();
+      }
+
+      function closeCompanyDropdown() {
+        state.companyDropdownOpen = false;
+        refs.companyCombo.classList.remove("is-open");
+        refs.companyComboPanel.classList.add("hidden");
+        const selected = state.units.find((item) => item.id === String(refs.companySelect.value || "").trim());
+        refs.companyKeywordInput.value = selected?.name || "";
+        renderCompanyOptionList();
+        updateCompanyComboDisplay();
+      }
+
+      function toggleCompanyDropdown() {
+        if (state.companyDropdownOpen) {
+          closeCompanyDropdown();
+        } else {
+          openCompanyDropdown();
+        }
+      }
+
+      function selectCompanyById(id, { close = false } = {}) {
+        const target = state.units.find((item) => item.id === String(id || "").trim());
+        if (!target) {
+          return;
+        }
+        refs.companySelect.value = target.id;
+        refs.companyKeywordInput.value = target.name;
+        renderCompanyOptions({ selectedId: target.id });
+        if (close) {
+          closeCompanyDropdown();
+        }
+      }
+
+      function clearCompanySelection() {
+        refs.companySelect.value = "";
+        refs.companyKeywordInput.value = "";
+        renderCompanyOptions({ selectedId: "", keepKeyword: true });
+        closeCompanyDropdown();
+      }
+
+      function setAutoTrainingDate() {
+        const today = toDateInputValue(new Date());
+        refs.trainingDateInput.value = today;
+        refs.trainingDateDisplayInput.value = today;
       }
 
       function renderLecturerOptions() {
-        const options = ['<option value="">请选择授课人（可选）</option>'];
+        const options = ['<option value="">请选择授课人</option>'];
         state.users.forEach((item) => {
           options.push(`<option value="${escapeHtml(item.userId)}">${escapeHtml(item.name)}</option>`);
         });
@@ -1109,16 +1771,16 @@
         event.preventDefault();
         refs.successBox.classList.remove("show");
 
-        const title = refs.titleInput.value.trim();
+        const title = refs.titleInput.value.trim() || "相关方入场安全培训";
         const trainingDate = refs.trainingDateInput.value.trim();
+        if (!refs.companySelect.value && refs.companyKeywordInput.value.trim()) {
+          applyCompanyKeywordSelection();
+        }
         const companyId = String(refs.companySelect.value || "").trim();
         const companyName = resolveUnitNameById(companyId);
-        const project = refs.projectInput.value.trim();
         const lecturerId = String(refs.lecturerSelect.value || "").trim();
-        const sampled = refs.sampledSelect.value === "是" ? "是" : "否";
         let participants = [];
         const content = refs.contentInput.value.trim();
-        const effect = refs.effectInput.value.trim();
 
         if (!title) {
           setStatus("请填写标题", true);
@@ -1145,20 +1807,13 @@
           setStatus("请至少录入 1 位参训人员", true);
           return;
         }
-        if (!project) {
-          setStatus("请填写施工项目", true);
-          return;
-        }
 
         const payload = {
           [TRAINING_FIELD.title]: title,
           [TRAINING_FIELD.trainingDate]: formatDateTimeForApi(trainingDate),
           [TRAINING_FIELD.company]: companyName,
           [TRAINING_FIELD.attendeeCount]: finalCount,
-          [TRAINING_FIELD.project]: project,
           [TRAINING_FIELD.content]: content,
-          [TRAINING_FIELD.effect]: effect,
-          [TRAINING_FIELD.sampled]: sampled,
           [TRAINING_FIELD.lecturer]: lecturerId || null,
           [TRAINING_FIELD.participantSubform]: buildParticipantSubformRows(participants),
         };
@@ -1208,11 +1863,11 @@
         });
       }
 
-      function applyCompanyKeywordSelection({ preferFirst = false } = {}) {
+      function applyCompanyKeywordSelection({ preferFirst = false, closeAfterSelect = false } = {}) {
         const keyword = refs.companyKeywordInput.value.trim();
         if (!keyword) {
           refs.companySelect.value = "";
-          renderCompanyOptions({ selectedId: "" });
+          renderCompanyOptions({ selectedId: "", keepKeyword: true });
           return;
         }
 
@@ -1221,24 +1876,24 @@
         const exactMatch = filtered.find((item) => {
           return normalizeCompareText(item.name) === compareKeyword || normalizeCompareText(item.code) === compareKeyword;
         });
-        const target = exactMatch || (preferFirst && filtered.length === 1 ? filtered[0] : null);
-        renderCompanyOptions({ selectedId: target?.id || String(refs.companySelect.value || "").trim() });
+        const target = exactMatch || (preferFirst && filtered.length ? filtered[0] : null);
 
         if (!target) {
           if (!filtered.some((item) => item.id === refs.companySelect.value)) {
             refs.companySelect.value = "";
           }
+          renderCompanyOptions({ selectedId: String(refs.companySelect.value || "").trim(), keepKeyword: true });
           return;
         }
 
-        refs.companyKeywordInput.value = target.name;
-        renderCompanyOptions({ selectedId: target.id });
+        selectCompanyById(target.id, { close: closeAfterSelect });
       }
 
       function syncCompanyKeywordFromSelection() {
         const id = String(refs.companySelect.value || "").trim();
         const unit = state.units.find((item) => item.id === id);
         if (!unit) {
+          updateCompanyComboDisplay();
           return;
         }
         refs.companyKeywordInput.value = unit.name;
@@ -1254,7 +1909,7 @@
           null;
 
         refs.companyKeywordInput.value = matched ? matched.name : name;
-        renderCompanyOptions({ selectedId: matched?.id || "" });
+        renderCompanyOptions({ selectedId: matched?.id || "", keepKeyword: true });
       }
 
       async function fetchPartnerUnits() {
@@ -1599,65 +2254,6 @@
         return result;
       }
 
-      function bindDateField(fieldWrapper, displayInput, nativeInput) {
-        if (
-          !(fieldWrapper instanceof HTMLElement) ||
-          !(displayInput instanceof HTMLInputElement) ||
-          !(nativeInput instanceof HTMLInputElement)
-        ) {
-          return;
-        }
-
-        fieldWrapper.addEventListener("click", () => {
-          openNativeDatePicker(nativeInput);
-          displayInput.focus();
-        });
-
-        displayInput.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
-            event.preventDefault();
-            openNativeDatePicker(nativeInput);
-          }
-        });
-
-        nativeInput.addEventListener("input", () => {
-          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
-        });
-
-        nativeInput.addEventListener("change", () => {
-          syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
-        });
-
-        syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput);
-      }
-
-      function syncDateFieldDisplay(fieldWrapper, displayInput, nativeInput) {
-        if (
-          !(fieldWrapper instanceof HTMLElement) ||
-          !(displayInput instanceof HTMLInputElement) ||
-          !(nativeInput instanceof HTMLInputElement)
-        ) {
-          return;
-        }
-        const normalized = normalizeDateInput(nativeInput.value);
-        displayInput.value = normalized || "";
-      }
-
-      function openNativeDatePicker(input) {
-        if (!(input instanceof HTMLInputElement)) {
-          return;
-        }
-        if (typeof input.showPicker === "function") {
-          try {
-            input.showPicker();
-            return;
-          } catch {
-            // Some browsers require direct user gestures. Fallback below.
-          }
-        }
-        input.focus();
-      }
-
       function parseScanContext() {
         try {
         const params = new URLSearchParams(window.location.search || "");
@@ -1853,13 +2449,14 @@
 
       function renderParticipantList() {
         if (!state.participants.length) {
-          refs.participantList.innerHTML = '<div class="participant-empty">暂无参训人员，请点击“新增人员”开始录入。</div>';
+          refs.participantList.innerHTML = '<div class="participant-empty">暂无参训人员，请点击“添加”开始录入。</div>';
           return;
         }
 
         refs.participantList.innerHTML = state.participants
           .map((item, index) => {
             const hasSign = Array.isArray(item.signFiles) && item.signFiles.length > 0;
+            const previewUrl = hasSign ? String(item.signPreviewUrl || "").trim() : "";
             const signTimeText = item.signTime ? formatDateTimeForDisplay(item.signTime) : "";
             return `
               <div class="participant-row" data-participant-index="${index}">
@@ -1872,7 +2469,8 @@
                   placeholder="请输入姓名"
                 />
                 <div class="participant-sign-cell">
-                  <button type="button" class="btn" data-action="sign">${hasSign ? "重签" : "点击签字"}</button>
+                  ${previewUrl ? `<button type="button" class="sign-thumb-btn" data-action="preview" aria-label="查看签字"><img class="sign-preview-img" src="${escapeHtml(previewUrl)}" alt="签字预览" /></button>` : ""}
+                  <button type="button" class="btn participant-sign-btn" data-action="sign">${hasSign ? "重签" : "点击签字"}</button>
                   <span class="sign-state${hasSign ? " done" : ""}">${hasSign ? "已签" : "未签"}</span>
                   ${hasSign ? '<button type="button" class="sign-preview-link" data-action="preview">预览</button>' : ""}
                   ${hasSign ? '<button type="button" class="sign-preview-link" data-action="delete-sign">清除</button>' : ""}
@@ -1884,7 +2482,7 @@
                   placeholder="签字后自动记录"
                   readonly
                 />
-                <button type="button" class="btn participant-delete" data-action="delete-row">删除</button>
+                <button type="button" class="participant-delete" data-action="delete-row" aria-label="删除参训人员"></button>
               </div>
             `;
           })
@@ -2467,6 +3065,7 @@
       function setStatus(message, isError = false) {
         refs.statusBar.textContent = message;
         refs.statusBar.classList.toggle("error", Boolean(isError));
+        refs.statusBar.style.display = isError && message ? "block" : "none";
       }
 
       function safeJsonParse(text) {

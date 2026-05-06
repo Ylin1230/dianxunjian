@@ -24,9 +24,17 @@
         box-sizing: border-box;
       }
 
+      html {
+        width: 100%;
+        min-height: 100%;
+        overflow: auto;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
+        min-height: 100dvh;
+        overflow: auto;
         font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
         color: var(--text);
         background: var(--bg);
@@ -45,9 +53,14 @@
         gap: 12px;
         padding: 12px;
         min-height: 100vh;
+        min-height: 100dvh;
+        width: 100%;
+        max-width: 100%;
+        overflow: auto;
       }
 
       .panel {
+        min-width: 0;
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 6px;
@@ -57,11 +70,12 @@
       .left-panel {
         display: flex;
         flex-direction: column;
+        min-height: 0;
         overflow: hidden;
       }
 
       .location-tree {
-        padding: 8px;
+        padding: 6px 8px;
         overflow: auto;
       }
 
@@ -75,7 +89,7 @@
 
       .tree-node {
         width: 100%;
-        min-height: 32px;
+        min-height: 26px;
         border: 0;
         border-radius: 6px;
         background: transparent;
@@ -83,11 +97,11 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        padding: 2px 8px 2px 4px;
+        padding: 1px 8px 1px 4px;
         text-align: left;
         cursor: pointer;
         font-size: 13px;
-        line-height: 1.5;
+        line-height: 1.35;
       }
 
       .tree-node:hover {
@@ -131,19 +145,19 @@
       }
 
       .tree-count {
-        margin-left: auto;
         color: var(--muted);
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 600;
+        flex: 0 0 auto;
       }
 
       .tree-row {
-        min-height: 32px;
+        min-height: 26px;
         display: flex;
         align-items: center;
         gap: 4px;
         border-radius: 6px;
-        padding: 2px 8px 2px 4px;
+        padding: 1px 8px 1px 4px;
         position: relative;
       }
 
@@ -160,8 +174,8 @@
       }
 
       .tree-toggle {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         border: 0;
         border-radius: 4px;
         background: transparent;
@@ -169,7 +183,7 @@
         color: var(--muted);
         font-size: 12px;
         padding: 0;
-        flex: 0 0 20px;
+        flex: 0 0 18px;
       }
 
       .tree-toggle:hover:not(:disabled) {
@@ -193,7 +207,7 @@
         gap: 8px;
         font-size: 13px;
         font-weight: 400;
-        line-height: 1.5;
+        line-height: 1.35;
         padding: 0;
         cursor: pointer;
         text-align: left;
@@ -257,15 +271,16 @@
 
       .kv strong {
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 400;
         white-space: pre-wrap;
       }
 
       .main-panel {
         display: grid;
         grid-template-rows: auto auto minmax(0, 1fr) auto;
+        min-width: 0;
+        min-height: 0;
         overflow: hidden;
-        min-height: calc(100vh - 24px);
       }
 
       .main-head {
@@ -273,7 +288,7 @@
         border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 12px;
       }
 
@@ -281,7 +296,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        justify-content: flex-end;
+        justify-content: flex-start;
       }
 
       .btn {
@@ -326,16 +341,30 @@
       }
 
       .filters {
-        display: grid;
-        grid-template-columns: minmax(220px, 1fr) 160px 160px auto;
+        display: flex;
         gap: 10px;
         padding: 10px 12px;
         border-bottom: 1px solid var(--border);
         background: #fbfcff;
+        align-items: center;
+      }
+
+      .filters #keywordInput {
+        flex: 0 1 280px;
+        width: 280px;
+        max-width: 32vw;
+        margin-left: auto;
+      }
+
+      .filters #statusFilter,
+      .filters > .select-proxy {
+        flex: 0 0 160px;
+        width: 160px;
       }
 
       .filter-actions {
         display: flex;
+        flex: 0 0 auto;
         gap: 8px;
       }
 
@@ -368,12 +397,377 @@
         box-shadow: 0 0 0 2px rgba(44, 121, 234, 0.12);
       }
 
+      .native-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .combo {
+        position: relative;
+      }
+
+      .combo-button {
+        width: 100%;
+        min-height: 32px;
+        border: 1px solid #c9d3e2;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 32px 0 10px;
+        font: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .combo.has-value .combo-button {
+        padding-right: 42px;
+      }
+
+      .combo-button::after {
+        content: "";
+        position: absolute;
+        right: 11px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #6f7d93;
+        border-bottom: 1px solid #6f7d93;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .combo.has-value .combo-button::after {
+        display: none;
+      }
+
+      .combo-clear {
+        position: absolute;
+        right: 9px;
+        top: 16px;
+        z-index: 3;
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #cbd4e2;
+        color: #fff;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+
+      .combo-clear::before,
+      .combo-clear::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .combo-clear::before {
+        transform: rotate(45deg);
+      }
+
+      .combo-clear::after {
+        transform: rotate(-45deg);
+      }
+
+      .combo.has-value .combo-clear {
+        display: inline-flex;
+      }
+
+      .combo-clear:hover {
+        background: #b9c3d3;
+      }
+
+      .combo-button.is-placeholder {
+        color: #7f8ca2;
+      }
+
+      .combo-button span {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .combo-button:focus,
+      .combo.is-open .combo-button {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(44, 121, 234, 0.12);
+      }
+
+      .combo-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 40;
+        border: 1px solid #9fb2cb;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(27, 48, 78, 0.16);
+        overflow: hidden;
+      }
+
+      .combo-panel.hidden {
+        display: none;
+      }
+
+      .combo-search-wrap {
+        padding: 8px;
+        border-bottom: 1px solid #e5edf8;
+        background: #f8fbff;
+      }
+
+      .combo-search {
+        min-height: 32px;
+      }
+
+      .combo-list {
+        max-height: 240px;
+        overflow: auto;
+        padding: 4px;
+      }
+
+      .combo-option {
+        width: 100%;
+        min-height: 32px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text);
+        display: block;
+        padding: 7px 8px 7px 24px;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+      }
+
+      .combo-option:hover,
+      .combo-option.is-selected {
+        background: var(--accent-soft);
+        color: #195bb5;
+      }
+
+      .combo-empty {
+        padding: 12px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .combo-option.is-selected::before {
+        content: "✓";
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .native-select-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .select-proxy {
+        position: relative;
+      }
+
+      .select-proxy-button {
+        width: 100%;
+        min-height: 32px;
+        border: 1px solid #c9d3e2;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 30px 0 10px;
+        font: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .select-proxy.has-value .select-proxy-button {
+        padding-right: 42px;
+      }
+
+      .select-proxy-button::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #65758c;
+        border-bottom: 1px solid #65758c;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-button::after {
+        display: none;
+      }
+
+      .select-proxy-clear {
+        position: absolute;
+        right: 9px;
+        top: 50%;
+        z-index: 3;
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #cbd4e2;
+        color: #fff;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+
+      .select-proxy-clear::before,
+      .select-proxy-clear::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .select-proxy-clear::before {
+        transform: rotate(45deg);
+      }
+
+      .select-proxy-clear::after {
+        transform: rotate(-45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-clear {
+        display: inline-flex;
+      }
+
+      .select-proxy-clear:hover {
+        background: #b9c3d3;
+      }
+
+      .select-proxy-button span {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-button:focus,
+      .select-proxy.is-open .select-proxy-button {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(44, 121, 234, 0.12);
+      }
+
+      .select-proxy-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 90;
+        max-height: 260px;
+        overflow: auto;
+        padding: 4px;
+        border: 1px solid #9fb2cb;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(27, 48, 78, 0.16);
+      }
+
+      .select-proxy-panel.hidden {
+        display: none;
+      }
+
+      .select-proxy-option {
+        width: 100%;
+        min-height: 28px;
+        border: 0;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--text);
+        display: block;
+        padding: 5px 8px 5px 24px;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-option:hover,
+      .select-proxy-option.is-selected {
+        background: var(--accent-soft);
+        color: #195bb5;
+      }
+
+      .select-proxy-group {
+        padding: 7px 8px 3px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      .select-proxy-option.is-grouped {
+        padding-left: 32px;
+      }
+
+      .select-proxy-option.is-grouped.is-selected::before {
+        left: 16px;
+      }
+
+      .select-proxy-option.is-selected::before {
+        content: "✓";
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--accent);
+        font-weight: 700;
+      }
+
       .readonly {
         background: #f5f7fb;
         color: var(--muted);
       }
 
       .table-wrap {
+        min-height: 0;
         overflow: auto;
       }
 
@@ -502,10 +896,12 @@
         inset: 0;
         z-index: 20;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         background: rgba(31, 42, 58, 0.35);
         padding: 20px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
       .modal-mask.hidden {
@@ -513,8 +909,10 @@
       }
 
       .modal {
-        width: min(1040px, 100%);
-        max-height: 92vh;
+        width: min(1040px, calc(100vw - 40px));
+        max-height: calc(100vh - 40px);
+        max-height: calc(100dvh - 40px);
+        min-height: 0;
         overflow: hidden;
         background: #fff;
         border: 1px solid var(--border);
@@ -525,7 +923,15 @@
       }
 
       .modal.detail-modal {
-        width: min(980px, 100%);
+        width: min(820px, calc(100vw - 40px));
+      }
+
+      .modal > form {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
 
       .modal-head,
@@ -541,7 +947,11 @@
       .modal-foot {
         border-top: 1px solid var(--border);
         border-bottom: 0;
+        background: #fff;
         justify-content: flex-end;
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
       }
 
       .modal-head h3 {
@@ -550,8 +960,12 @@
       }
 
       .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
         overflow: auto;
         padding: 12px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
 
       .section-card {
@@ -587,8 +1001,12 @@
 
       .detail-modal-grid {
         display: grid;
-        grid-template-columns: 280px minmax(0, 1fr);
+        grid-template-columns: 1fr;
         gap: 12px;
+      }
+
+      .detail-modal-grid .qr-card {
+        display: none;
       }
 
       .qr-card {
@@ -615,13 +1033,11 @@
       }
 
       .detail-fields {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        display: block;
       }
 
-      .detail-fields .kv {
-        min-height: 58px;
+      .detail-fields .section-card {
+        margin-bottom: 0;
       }
 
       .toast {
@@ -645,18 +1061,102 @@
         transform: translateX(-50%) translateY(0);
       }
 
+      @media (max-width: 1320px) {
+        .ledger-layout {
+          grid-template-columns: 220px minmax(0, 1fr);
+        }
+
+        .main-head {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .head-actions {
+          justify-content: flex-start;
+        }
+
+        .filters {
+          flex-wrap: wrap;
+        }
+
+        .filters #keywordInput {
+          flex: 1 1 260px;
+          width: auto;
+          max-width: none;
+          margin-left: 0;
+        }
+
+        .form-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-height: 720px) {
+        .modal-mask {
+          padding: 8px;
+        }
+
+        .modal {
+          width: min(1040px, calc(100vw - 16px));
+          max-height: calc(100vh - 16px);
+          max-height: calc(100dvh - 16px);
+        }
+
+        .modal.detail-modal {
+          width: min(820px, calc(100vw - 16px));
+        }
+
+        .modal-body {
+          padding: 8px;
+        }
+
+        .section-card {
+          margin-bottom: 8px;
+          padding: 8px;
+        }
+      }
+
       @media (max-width: 980px) {
         .ledger-layout {
-          grid-template-columns: 1fr;
+          grid-template-columns: 200px minmax(0, 1fr);
         }
 
         .detail-modal-grid {
           grid-template-columns: 1fr;
         }
 
-        .filters,
         .form-grid {
           grid-template-columns: 1fr;
+        }
+
+        .filters {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .filters #keywordInput,
+        .filters #statusFilter,
+        .filters > .select-proxy {
+          flex: 0 0 auto;
+          width: 100%;
+          max-width: none;
+          margin-left: 0;
+        }
+
+        .combo-panel {
+          position: fixed;
+          left: 12px;
+          right: 12px;
+          top: auto;
+          bottom: 12px;
+          max-height: min(70vh, 520px);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .combo-list {
+          max-height: none;
+          flex: 1;
         }
       }
     </style>
@@ -668,7 +1168,7 @@
           <div>
             <h2>危化品地点</h2>
           </div>
-          <button id="printCurrentLocationQrBtn" type="button" class="btn primary">打印码</button>
+          <button id="printCurrentLocationQrBtn" type="button" class="btn primary">打印</button>
         </div>
         <div id="locationTree" class="location-tree"></div>
       </aside>
@@ -676,29 +1176,23 @@
       <section class="panel main-panel">
         <div class="main-head">
           <h1>危化品台账</h1>
-          <div class="head-actions">
-            <button id="addBtn" class="btn primary">新增</button>
-            <button id="batchPrintQrBtn" class="btn">批量打印地点码</button>
-            <button id="importBtn" class="btn">导入</button>
-            <button id="exportBtn" class="btn">导出</button>
-            <input id="importFile" type="file" accept=".csv" hidden />
-          </div>
         </div>
 
         <div class="filters">
+            <div class="head-actions">
+              <button id="addBtn" class="btn primary">新增</button>
+              <button id="importBtn" class="btn">导入</button>
+              <button id="exportBtn" class="btn">导出</button>
+              <input id="importFile" type="file" accept=".csv" hidden />
+            </div>
             <input id="keywordInput" class="input" placeholder="危化品编号/名称/地点/责任人/事故类型" />
             <select id="statusFilter" class="control">
               <option value="">全部状态</option>
               <option value="启用">启用</option>
               <option value="停用">停用</option>
             </select>
-            <select id="includedFilter" class="control">
-              <option value="">全部点检</option>
-              <option value="是">纳入点检</option>
-              <option value="否">不纳入点检</option>
-            </select>
             <div class="filter-actions">
-              <button id="searchBtn" class="btn">筛选</button>
+              <button id="searchBtn" class="btn">搜索</button>
               <button id="resetBtn" class="btn">重置</button>
             </div>
           </div>
@@ -742,7 +1236,7 @@
               <div class="form-grid">
                 <div class="field">
                   <label for="codeInput">危化品编号</label>
-                  <input id="codeInput" class="input readonly" readonly placeholder="百数云自动生成" />
+                  <input id="codeInput" class="input readonly" readonly placeholder="自动生成" />
                 </div>
                 <div class="field">
                   <label for="nameInput">危化品名称</label>
@@ -763,24 +1257,57 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label for="standardInput">点检标准</label>
-                  <select id="standardInput" class="control">
+                  <label for="standardComboButton">点检标准</label>
+                  <div id="standardCombo" class="combo">
+                    <button id="standardComboButton" class="combo-button is-placeholder" type="button">
+                      <span id="standardComboText">请选择点检标准</span>
+                    </button>
+                    <button id="standardComboClear" class="combo-clear" type="button" aria-label="清空点检标准"></button>
+                    <div id="standardComboPanel" class="combo-panel hidden">
+                      <div class="combo-search-wrap">
+                        <input id="standardKeywordInput" class="input combo-search" type="text" placeholder="输入标准名称或编号搜索" autocomplete="off" />
+                      </div>
+                      <div id="standardOptionList" class="combo-list"></div>
+                    </div>
+                  </div>
+                  <select id="standardInput" class="control native-hidden" tabindex="-1" aria-hidden="true">
                     <option value="">请选择点检标准</option>
                   </select>
+                  <input id="qrInput" type="hidden" />
                 </div>
                 <div class="field">
-                  <label for="qrInput">二维码码值</label>
-                  <input id="qrInput" class="input" placeholder="留空则新增后自动写入编号或记录ID" />
-                </div>
-                <div class="field">
-                  <label for="ownerInput">责任人</label>
-                  <select id="ownerInput" class="control">
+                  <label for="ownerComboButton">责任人</label>
+                  <div id="ownerCombo" class="combo">
+                    <button id="ownerComboButton" class="combo-button is-placeholder" type="button">
+                      <span id="ownerComboText">请选择责任人</span>
+                    </button>
+                    <button id="ownerComboClear" class="combo-clear" type="button" aria-label="清空责任人"></button>
+                    <div id="ownerComboPanel" class="combo-panel hidden">
+                      <div class="combo-search-wrap">
+                        <input id="ownerKeywordInput" class="input combo-search" type="text" placeholder="输入姓名或账号搜索" autocomplete="off" />
+                      </div>
+                      <div id="ownerOptionList" class="combo-list"></div>
+                    </div>
+                  </div>
+                  <select id="ownerInput" class="control native-hidden" tabindex="-1" aria-hidden="true">
                     <option value="">请选择责任人</option>
                   </select>
                 </div>
                 <div class="field">
-                  <label for="accidentTypeInput">事故类型</label>
-                  <input id="accidentTypeInput" class="input" />
+                  <label for="accidentComboButton">事故类型</label>
+                  <div id="accidentCombo" class="combo">
+                    <button id="accidentComboButton" class="combo-button is-placeholder" type="button">
+                      <span id="accidentComboText">请选择事故类型</span>
+                    </button>
+                    <button id="accidentComboClear" class="combo-clear" type="button" aria-label="清空事故类型"></button>
+                    <div id="accidentComboPanel" class="combo-panel hidden">
+                      <div class="combo-search-wrap">
+                        <input id="accidentKeywordInput" class="input combo-search" type="text" placeholder="输入事故类型搜索" autocomplete="off" />
+                      </div>
+                      <div id="accidentOptionList" class="combo-list"></div>
+                    </div>
+                  </div>
+                  <select id="accidentTypeInput" class="control native-hidden" multiple tabindex="-1" aria-hidden="true"></select>
                 </div>
               </div>
             </section>
@@ -789,26 +1316,40 @@
               <h4>存放与用量</h4>
               <div class="form-grid">
                 <div class="field">
-                  <label for="usageLocationInput">使用地点</label>
-                  <input id="usageLocationInput" class="input" />
-                </div>
-                <div class="field">
                   <label for="storageLocationInput">存放位置</label>
                   <select id="storageLocationInput" class="control">
                     <option value="">请选择存放位置</option>
                   </select>
                 </div>
                 <div class="field">
+                  <label for="usageLocationInput">使用地点</label>
+                  <input id="usageLocationInput" class="input" />
+                </div>
+                <div class="field">
                   <label for="maxStorageInput">最大存放量</label>
-                  <input id="maxStorageInput" class="input" />
+                  <input id="maxStorageInput" class="input" inputmode="decimal" />
                 </div>
                 <div class="field">
                   <label for="usageAmountInput">使用量</label>
-                  <input id="usageAmountInput" class="input" />
+                  <input id="usageAmountInput" class="input" inputmode="decimal" />
                 </div>
                 <div class="field">
-                  <label for="packageFormInput">包装形式</label>
-                  <input id="packageFormInput" class="input" />
+                  <label for="packageComboButton">包装形式</label>
+                  <div id="packageCombo" class="combo">
+                    <button id="packageComboButton" class="combo-button is-placeholder" type="button">
+                      <span id="packageComboText">请选择包装形式</span>
+                    </button>
+                    <button id="packageComboClear" class="combo-clear" type="button" aria-label="清空包装形式"></button>
+                    <div id="packageComboPanel" class="combo-panel hidden">
+                      <div class="combo-search-wrap">
+                        <input id="packageKeywordInput" class="input combo-search" type="text" placeholder="输入包装形式搜索" autocomplete="off" />
+                      </div>
+                      <div id="packageOptionList" class="combo-list"></div>
+                    </div>
+                  </div>
+                  <select id="packageFormInput" class="control native-hidden" tabindex="-1" aria-hidden="true">
+                    <option value="">请选择包装形式</option>
+                  </select>
                 </div>
               </div>
             </section>
@@ -839,7 +1380,6 @@
       <div class="modal detail-modal">
         <div class="modal-head">
           <h3 id="detailModalTitle">危化品详情</h3>
-          <button id="closeDetailModalBtn" type="button" class="btn">关闭</button>
         </div>
         <div class="modal-body">
           <div class="detail-modal-grid">
@@ -847,7 +1387,7 @@
               <div class="qr-preview">
                 <img id="detailQrImage" alt="危化品地点二维码" />
               </div>
-              <div class="field">
+              <div class="field hidden">
                 <label for="detailQrCodeInput">库房二维码码值</label>
                 <input id="detailQrCodeInput" class="input readonly" readonly />
               </div>
@@ -864,7 +1404,6 @@
         </div>
         <div class="modal-foot">
           <button id="detailEditBtn" type="button" class="btn">编辑</button>
-          <button id="detailDeleteBtn" type="button" class="btn danger">删除</button>
           <button id="closeDetailFootBtn" type="button" class="btn primary">关闭</button>
         </div>
       </div>
@@ -875,10 +1414,12 @@
     <script>
       const API_CONFIG = {
         baseUrl: resolveApiBaseUrl(),
-        appId: "5a94c4d1642bd8a84c772356",
+        appId: "59b376f42fee5822c6ac906a",
         chemicalEntryId: "9739459da9671a832692915d",
         standardEntryId: "37204bb798aefcc5156f493e",
         siteEntryId: "099e47809199d1d8214a984f",
+        accidentTypeEntryId: "af2a404caf904f735e346de1",
+        packageFormEntryId: "8cb441a5862f5bef2e53040b",
       };
 
       const FIELD = {
@@ -915,33 +1456,38 @@
         owner: "_widget_1776300861656",
       };
 
+      const SIMPLE_OPTION_FIELD = {
+        code: "_widget_1777254956132",
+        name: "_widget_1777254956146",
+      };
+
       const state = {
         records: [],
         standards: [],
         sites: [],
+        accidentTypes: [],
+        packageForms: [],
         users: [],
         selectedId: "",
         selectedLocationKey: "__all__",
         detailRecordId: "",
         keyword: "",
         status: "",
-        included: "",
         loading: false,
         formMode: "add",
         publicBaseUrl: "",
         collapsedLocationKeys: new Set(),
+        openCombo: "",
       };
 
       const refs = {
         addBtn: document.getElementById("addBtn"),
-        batchPrintQrBtn: document.getElementById("batchPrintQrBtn"),
         printCurrentLocationQrBtn: document.getElementById("printCurrentLocationQrBtn"),
         importBtn: document.getElementById("importBtn"),
         exportBtn: document.getElementById("exportBtn"),
         importFile: document.getElementById("importFile"),
         keywordInput: document.getElementById("keywordInput"),
         statusFilter: document.getElementById("statusFilter"),
-        includedFilter: document.getElementById("includedFilter"),
         searchBtn: document.getElementById("searchBtn"),
         resetBtn: document.getElementById("resetBtn"),
         tableBody: document.getElementById("tableBody"),
@@ -957,15 +1503,43 @@
         nameInput: document.getElementById("nameInput"),
         statusInput: document.getElementById("statusInput"),
         includedInput: document.getElementById("includedInput"),
+        standardCombo: document.getElementById("standardCombo"),
+        standardComboButton: document.getElementById("standardComboButton"),
+        standardComboText: document.getElementById("standardComboText"),
+        standardComboClear: document.getElementById("standardComboClear"),
+        standardComboPanel: document.getElementById("standardComboPanel"),
+        standardKeywordInput: document.getElementById("standardKeywordInput"),
+        standardOptionList: document.getElementById("standardOptionList"),
         standardInput: document.getElementById("standardInput"),
         qrInput: document.getElementById("qrInput"),
         usageLocationInput: document.getElementById("usageLocationInput"),
         storageLocationInput: document.getElementById("storageLocationInput"),
+        ownerCombo: document.getElementById("ownerCombo"),
+        ownerComboButton: document.getElementById("ownerComboButton"),
+        ownerComboText: document.getElementById("ownerComboText"),
+        ownerComboClear: document.getElementById("ownerComboClear"),
+        ownerComboPanel: document.getElementById("ownerComboPanel"),
+        ownerKeywordInput: document.getElementById("ownerKeywordInput"),
+        ownerOptionList: document.getElementById("ownerOptionList"),
         ownerInput: document.getElementById("ownerInput"),
+        accidentCombo: document.getElementById("accidentCombo"),
+        accidentComboButton: document.getElementById("accidentComboButton"),
+        accidentComboText: document.getElementById("accidentComboText"),
+        accidentComboClear: document.getElementById("accidentComboClear"),
+        accidentComboPanel: document.getElementById("accidentComboPanel"),
+        accidentKeywordInput: document.getElementById("accidentKeywordInput"),
+        accidentOptionList: document.getElementById("accidentOptionList"),
+        accidentTypeInput: document.getElementById("accidentTypeInput"),
+        packageCombo: document.getElementById("packageCombo"),
+        packageComboButton: document.getElementById("packageComboButton"),
+        packageComboText: document.getElementById("packageComboText"),
+        packageComboClear: document.getElementById("packageComboClear"),
+        packageComboPanel: document.getElementById("packageComboPanel"),
+        packageKeywordInput: document.getElementById("packageKeywordInput"),
+        packageOptionList: document.getElementById("packageOptionList"),
+        packageFormInput: document.getElementById("packageFormInput"),
         maxStorageInput: document.getElementById("maxStorageInput"),
         usageAmountInput: document.getElementById("usageAmountInput"),
-        packageFormInput: document.getElementById("packageFormInput"),
-        accidentTypeInput: document.getElementById("accidentTypeInput"),
         hazardAnalysisInput: document.getElementById("hazardAnalysisInput"),
         remarkInput: document.getElementById("remarkInput"),
         detailModal: document.getElementById("detailModal"),
@@ -986,8 +1560,154 @@
 
       async function init() {
         bindEvents();
+        bindSelectProxyShell();
+        enhanceSelectProxies(document);
         await loadPublicBaseUrl();
         await refreshAll();
+      }
+
+      function bindSelectProxyShell() {
+        if (window.__selectProxyShellBound) return;
+        window.__selectProxyShellBound = true;
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement) || !event.target.closest(".select-proxy")) {
+            closeSelectProxies();
+          }
+        });
+        new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node instanceof HTMLElement) {
+                enhanceSelectProxies(node);
+              }
+            });
+          });
+        }).observe(document.body, { childList: true, subtree: true });
+      }
+
+      function enhanceSelectProxies(scope = document) {
+        if (!scope) return;
+        const selector = "select.control:not(.native-hidden)";
+        if (scope instanceof HTMLSelectElement && scope.matches(selector)) {
+          enhanceSelectProxy(scope);
+        }
+        scope.querySelectorAll?.(selector).forEach((select) => enhanceSelectProxy(select));
+      }
+
+      function enhanceSelectProxy(select) {
+        if (select.classList.contains("native-select-hidden")) {
+          refreshSelectProxy(select);
+          return;
+        }
+        const next = select.nextElementSibling;
+        if (next && next.classList.contains("select-proxy")) {
+          next.remove();
+        }
+        select.classList.add("native-select-hidden");
+
+        const proxy = document.createElement("div");
+        proxy.className = "select-proxy";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "select-proxy-button";
+        const text = document.createElement("span");
+        button.appendChild(text);
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "select-proxy-clear";
+        clear.setAttribute("aria-label", "清空选择");
+        const panel = document.createElement("div");
+        panel.className = "select-proxy-panel hidden";
+        const list = document.createElement("div");
+        panel.appendChild(list);
+        proxy.appendChild(button);
+        proxy.appendChild(clear);
+        proxy.appendChild(panel);
+        select.insertAdjacentElement("afterend", proxy);
+
+        const render = () => renderSelectProxy(select, proxy, text, list);
+        clear.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (select.disabled) return;
+          const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+          if (!hasEmptyOption) return;
+          select.value = "";
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          closeSelectProxies();
+        });
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const willOpen = panel.classList.contains("hidden");
+          closeSelectProxies();
+          render();
+          if (willOpen) {
+            proxy.classList.add("is-open");
+            panel.classList.remove("hidden");
+          }
+        });
+        select.addEventListener("change", render);
+        new MutationObserver(render).observe(select, { childList: true, subtree: true });
+        render();
+      }
+
+      function renderSelectProxy(select, proxy, text, list) {
+        const selected = select.selectedOptions && select.selectedOptions[0];
+        text.textContent = selected?.textContent || "请选择";
+        const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+        proxy.classList.toggle("has-value", Boolean(select.value) && hasEmptyOption && !select.disabled);
+        list.innerHTML = "";
+        const appendOption = (option, grouped = false) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = `select-proxy-option${grouped ? " is-grouped" : ""}${option.value === select.value ? " is-selected" : ""}`;
+          item.textContent = option.textContent || "请选择";
+          item.disabled = option.disabled;
+          item.addEventListener("click", () => {
+            select.value = option.value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            closeSelectProxies();
+          });
+          list.appendChild(item);
+        };
+        Array.from(select.children).forEach((child) => {
+          if (child instanceof HTMLOptGroupElement) {
+            const group = document.createElement("div");
+            group.className = "select-proxy-group";
+            group.textContent = child.label || "";
+            list.appendChild(group);
+            Array.from(child.children).forEach((option) => {
+              if (option instanceof HTMLOptionElement) {
+                appendOption(option, true);
+              }
+            });
+            return;
+          }
+          if (child instanceof HTMLOptionElement) {
+            appendOption(child, false);
+          }
+        });
+        proxy.classList.toggle("is-disabled", select.disabled);
+      }
+
+      function refreshSelectProxy(select) {
+        const proxy = select?.nextElementSibling;
+        if (!proxy || !proxy.classList.contains("select-proxy")) return;
+        const text = proxy.querySelector(".select-proxy-button span");
+        const list = proxy.querySelector(".select-proxy-panel > div");
+        if (text && list) {
+          renderSelectProxy(select, proxy, text, list);
+        }
+      }
+
+      function refreshSelectProxies(scope = document) {
+        if (!scope) return;
+        scope.querySelectorAll("select.native-select-hidden").forEach(refreshSelectProxy);
+      }
+
+      function closeSelectProxies() {
+        document.querySelectorAll(".select-proxy.is-open").forEach((proxy) => proxy.classList.remove("is-open"));
+        document.querySelectorAll(".select-proxy-panel:not(.hidden)").forEach((panel) => panel.classList.add("hidden"));
       }
 
       async function loadPublicBaseUrl() {
@@ -1002,7 +1722,6 @@
 
       function bindEvents() {
         refs.addBtn.addEventListener("click", () => openForm("add"));
-        refs.batchPrintQrBtn.addEventListener("click", () => batchPrintQrCodes());
         refs.printCurrentLocationQrBtn.addEventListener("click", () => printCurrentLocationQrCode());
         refs.importBtn.addEventListener("click", () => refs.importFile.click());
         refs.exportBtn.addEventListener("click", () => exportCsv());
@@ -1013,16 +1732,19 @@
         refs.searchBtn.addEventListener("click", () => {
           state.keyword = refs.keywordInput.value.trim();
           state.status = refs.statusFilter.value.trim();
-          state.included = refs.includedFilter.value.trim();
+          renderAll();
+        });
+        refs.statusFilter.addEventListener("change", () => {
+          state.keyword = refs.keywordInput.value.trim();
+          state.status = refs.statusFilter.value.trim();
           renderAll();
         });
         refs.resetBtn.addEventListener("click", () => {
           state.keyword = "";
           state.status = "";
-          state.included = "";
           refs.keywordInput.value = "";
           refs.statusFilter.value = "";
-          refs.includedFilter.value = "";
+          refreshSelectProxies(document);
           renderAll();
         });
         refs.keywordInput.addEventListener("keydown", (event) => {
@@ -1086,8 +1808,25 @@
           event.preventDefault();
           void saveForm();
         });
-        refs.closeDetailModalBtn.addEventListener("click", closeDetailModal);
-        refs.closeDetailFootBtn.addEventListener("click", closeDetailModal);
+        bindComboEvents("standard");
+        bindComboEvents("owner");
+        bindComboEvents("accident");
+        bindComboEvents("package");
+        refs.maxStorageInput.addEventListener("input", () => sanitizeNonNegativeInput(refs.maxStorageInput));
+        refs.usageAmountInput.addEventListener("input", () => sanitizeNonNegativeInput(refs.usageAmountInput));
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof Node)) return;
+          if (
+            !refs.standardCombo.contains(event.target) &&
+            !refs.ownerCombo.contains(event.target) &&
+            !refs.accidentCombo.contains(event.target) &&
+            !refs.packageCombo.contains(event.target)
+          ) {
+            closeCombo();
+          }
+        });
+        refs.closeDetailModalBtn?.addEventListener("click", closeDetailModal);
+        refs.closeDetailFootBtn?.addEventListener("click", closeDetailModal);
         refs.detailModal.addEventListener("click", (event) => {
           if (event.target === refs.detailModal) closeDetailModal();
         });
@@ -1101,7 +1840,7 @@
           closeDetailModal();
           openForm("edit", row.id);
         });
-        refs.detailDeleteBtn.addEventListener("click", () => {
+        refs.detailDeleteBtn?.addEventListener("click", () => {
           const row = getDetailRecord();
           if (row) void deleteRecord(row.id);
         });
@@ -1112,18 +1851,24 @@
         setLoading(true);
         setStatus("正在同步危化品台账...");
         try {
-          const [records, standards, sites, users] = await Promise.all([
+          const [records, standards, sites, users, accidentTypes, packageForms] = await Promise.all([
             fetchEntryRecords(API_CONFIG.chemicalEntryId),
             fetchEntryRecords(API_CONFIG.standardEntryId),
             fetchEntryRecords(API_CONFIG.siteEntryId),
             fetchContactsUsers().catch(() => []),
+            fetchEntryRecords(API_CONFIG.accidentTypeEntryId).catch(() => []),
+            fetchEntryRecords(API_CONFIG.packageFormEntryId).catch(() => []),
           ]);
           state.records = records.map(mapChemicalRecord).filter((item) => item.id && (item.code || item.name));
           state.standards = recordsToStandards(standards);
           state.sites = recordsToSites(sites);
           state.users = users;
+          state.accidentTypes = recordsToSimpleOptions(accidentTypes);
+          state.packageForms = recordsToSimpleOptions(packageForms);
           renderStandardOptions();
           renderOwnerOptions();
+          renderAccidentOptions();
+          renderPackageOptions();
           renderStorageLocationOptions();
           const validIds = new Set(state.records.map((item) => item.id));
           state.selectedId = previousId && validIds.has(previousId) ? previousId : state.records[0]?.id || "";
@@ -1173,22 +1918,412 @@
           });
       }
 
-      function renderStandardOptions() {
-        const options = ['<option value="">请选择点检标准</option>'];
-        state.standards
-          .filter((item) => item.applicableDeviceType === "危化品" || item.name.includes("危化"))
-          .forEach((item) => {
-            options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}${item.code ? `（${escapeHtml(item.code)}）` : ""}</option>`);
-          });
-        refs.standardInput.innerHTML = options.join("");
+      function recordsToSimpleOptions(records) {
+        const seen = new Set();
+        return records
+          .map((record) => {
+            const name = toDisplayText(getAliasRawValue(record, SIMPLE_OPTION_FIELD.name));
+            const code = toDisplayText(getAliasRawValue(record, SIMPLE_OPTION_FIELD.code));
+            return {
+              id: extractRecordId(record) || code || name,
+              code,
+              name,
+            };
+          })
+          .filter((item) => item.name)
+          .filter((item) => {
+            const key = normalizeCompareText(item.name);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "zh-Hans-CN"));
       }
 
-      function renderOwnerOptions() {
+      function getChemicalStandardOptions(keyword = "") {
+        const text = normalizeCompareText(keyword);
+        return state.standards
+          .filter((item) => item.applicableDeviceType === "危化品" || item.name.includes("危化"))
+          .filter((item) => {
+            if (!text) return true;
+            return [item.name, item.code, item.category].map(normalizeCompareText).join("|").includes(text);
+          });
+      }
+
+      function renderStandardOptions({ selectedId = String(refs.standardInput.value || "").trim(), keepKeyword = false } = {}) {
+        const options = ['<option value="">请选择点检标准</option>'];
+        getChemicalStandardOptions().forEach((item) => {
+          options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`);
+        });
+        refs.standardInput.innerHTML = options.join("");
+        refs.standardInput.value = getChemicalStandardOptions().some((item) => item.id === selectedId) ? selectedId : "";
+        if (!keepKeyword) {
+          refs.standardKeywordInput.value = refs.standardInput.value ? getStandardLabel(refs.standardInput.value) : "";
+        }
+        renderStandardOptionList();
+        updateComboDisplay("standard");
+      }
+
+      function renderStandardOptionList() {
+        const rows = getChemicalStandardOptions(refs.standardKeywordInput.value);
+        const selectedId = String(refs.standardInput.value || "").trim();
+        if (!rows.length) {
+          refs.standardOptionList.innerHTML = '<div class="combo-empty">未找到匹配点检标准</div>';
+          return;
+        }
+        refs.standardOptionList.innerHTML = rows
+          .map((item) => {
+            return `<button type="button" class="combo-option${item.id === selectedId ? " is-selected" : ""}" data-combo-value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</button>`;
+          })
+          .join("");
+      }
+
+      function getOwnerOptions(keyword = "") {
+        const text = normalizeCompareText(keyword);
+        return state.users.filter((user) => {
+          if (!text) return true;
+          return [user.name, user.userId, user.account, user.mobile].map(normalizeCompareText).join("|").includes(text);
+        });
+      }
+
+      function renderOwnerOptions({ selectedId = String(refs.ownerInput.value || "").trim(), keepKeyword = false } = {}) {
         const options = ['<option value="">请选择责任人</option>'];
-        state.users.forEach((user) => {
+        getOwnerOptions().forEach((user) => {
           options.push(`<option value="${escapeHtml(user.userId)}">${escapeHtml(user.name || user.userId)}</option>`);
         });
         refs.ownerInput.innerHTML = options.join("");
+        refs.ownerInput.value = getOwnerOptions().some((user) => user.userId === selectedId) ? selectedId : "";
+        if (!keepKeyword && refs.ownerInput.value) {
+          const user = state.users.find((item) => item.userId === refs.ownerInput.value);
+          refs.ownerKeywordInput.value = user?.name || "";
+        } else if (!keepKeyword) {
+          refs.ownerKeywordInput.value = "";
+        }
+        renderOwnerOptionList();
+        updateComboDisplay("owner");
+      }
+
+      function renderOwnerOptionList() {
+        const rows = getOwnerOptions(refs.ownerKeywordInput.value);
+        const selectedId = String(refs.ownerInput.value || "").trim();
+        if (!rows.length) {
+          refs.ownerOptionList.innerHTML = '<div class="combo-empty">未找到匹配责任人</div>';
+          return;
+        }
+        refs.ownerOptionList.innerHTML = rows
+          .map((user) => {
+            const label = user.name || user.userId;
+            return `<button type="button" class="combo-option${user.userId === selectedId ? " is-selected" : ""}" data-combo-value="${escapeHtml(user.userId)}">${escapeHtml(label)}</button>`;
+          })
+          .join("");
+      }
+
+      function getPackageOptions(keyword = "") {
+        const text = normalizeCompareText(keyword);
+        return state.packageForms.filter((item) => {
+          if (!text) return true;
+          return [item.name, item.code].map(normalizeCompareText).join("|").includes(text);
+        });
+      }
+
+      function renderPackageOptions({ selectedValue = String(refs.packageFormInput.value || "").trim(), keepKeyword = false } = {}) {
+        const options = ['<option value="">请选择包装形式</option>'];
+        getPackageOptions().forEach((item) => {
+          options.push(`<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`);
+        });
+        if (selectedValue && !getPackageOptions().some((item) => item.name === selectedValue)) {
+          options.push(`<option value="${escapeHtml(selectedValue)}">${escapeHtml(selectedValue)}（历史值）</option>`);
+        }
+        refs.packageFormInput.innerHTML = options.join("");
+        refs.packageFormInput.value = selectedValue || "";
+        if (!keepKeyword) {
+          refs.packageKeywordInput.value = refs.packageFormInput.value || "";
+        }
+        renderPackageOptionList();
+        updateComboDisplay("package");
+      }
+
+      function renderPackageOptionList() {
+        const rows = getPackageOptions(refs.packageKeywordInput.value);
+        const selectedValue = String(refs.packageFormInput.value || "").trim();
+        if (!rows.length) {
+          refs.packageOptionList.innerHTML = '<div class="combo-empty">未找到匹配包装形式</div>';
+          return;
+        }
+        refs.packageOptionList.innerHTML = rows
+          .map((item) => `<button type="button" class="combo-option${item.name === selectedValue ? " is-selected" : ""}" data-combo-value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>`)
+          .join("");
+      }
+
+      function getAccidentOptions(keyword = "") {
+        const text = normalizeCompareText(keyword);
+        return state.accidentTypes.filter((item) => {
+          if (!text) return true;
+          return [item.name, item.code].map(normalizeCompareText).join("|").includes(text);
+        });
+      }
+
+      function renderAccidentOptions({ selectedValues = getSelectedOptionValues(refs.accidentTypeInput), keepKeyword = false } = {}) {
+        const selected = normalizeMultiValue(selectedValues);
+        const options = getAccidentOptions().map((item) => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`);
+        selected.forEach((value) => {
+          if (value && !getAccidentOptions().some((item) => item.name === value)) {
+            options.push(`<option value="${escapeHtml(value)}">${escapeHtml(value)}（历史值）</option>`);
+          }
+        });
+        refs.accidentTypeInput.innerHTML = options.join("");
+        setSelectedOptionValues(refs.accidentTypeInput, selected);
+        if (!keepKeyword) {
+          refs.accidentKeywordInput.value = "";
+        }
+        renderAccidentOptionList();
+        updateComboDisplay("accident");
+      }
+
+      function renderAccidentOptionList() {
+        const rows = getAccidentOptions(refs.accidentKeywordInput.value);
+        const selected = new Set(getSelectedOptionValues(refs.accidentTypeInput));
+        if (!rows.length) {
+          refs.accidentOptionList.innerHTML = '<div class="combo-empty">未找到匹配事故类型</div>';
+          return;
+        }
+        refs.accidentOptionList.innerHTML = rows
+          .map((item) => `<button type="button" class="combo-option${selected.has(item.name) ? " is-selected" : ""}" data-combo-value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</button>`)
+          .join("");
+      }
+
+      function renderComboOptionList(type) {
+        if (type === "owner") {
+          renderOwnerOptionList();
+          return;
+        }
+        if (type === "standard") {
+          renderStandardOptionList();
+          return;
+        }
+        if (type === "package") {
+          renderPackageOptionList();
+          return;
+        }
+        renderAccidentOptionList();
+      }
+
+      function refreshComboOptions(type, options = {}) {
+        if (type === "owner") {
+          renderOwnerOptions({ selectedId: getComboRefs(type).select.value, ...options });
+          return;
+        }
+        if (type === "standard") {
+          renderStandardOptions({ selectedId: getComboRefs(type).select.value, ...options });
+          return;
+        }
+        if (type === "package") {
+          renderPackageOptions({ selectedValue: getComboRefs(type).select.value, ...options });
+          return;
+        }
+        renderAccidentOptions({ selectedValues: getSelectedOptionValues(getComboRefs(type).select), ...options });
+      }
+
+      function getComboRefs(type) {
+        if (type === "owner") {
+          return {
+              root: refs.ownerCombo,
+              button: refs.ownerComboButton,
+              text: refs.ownerComboText,
+              clear: refs.ownerComboClear,
+              panel: refs.ownerComboPanel,
+              keyword: refs.ownerKeywordInput,
+              list: refs.ownerOptionList,
+              select: refs.ownerInput,
+              placeholder: "请选择责任人",
+              multiple: false,
+            };
+        }
+        if (type === "package") {
+          return {
+            root: refs.packageCombo,
+            button: refs.packageComboButton,
+            text: refs.packageComboText,
+            clear: refs.packageComboClear,
+            panel: refs.packageComboPanel,
+            keyword: refs.packageKeywordInput,
+            list: refs.packageOptionList,
+            select: refs.packageFormInput,
+            placeholder: "请选择包装形式",
+            multiple: false,
+          };
+        }
+        if (type === "accident") {
+          return {
+            root: refs.accidentCombo,
+            button: refs.accidentComboButton,
+            text: refs.accidentComboText,
+            clear: refs.accidentComboClear,
+            panel: refs.accidentComboPanel,
+            keyword: refs.accidentKeywordInput,
+            list: refs.accidentOptionList,
+            select: refs.accidentTypeInput,
+            placeholder: "请选择事故类型",
+            multiple: true,
+          };
+        }
+        return {
+              root: refs.standardCombo,
+              button: refs.standardComboButton,
+              text: refs.standardComboText,
+              clear: refs.standardComboClear,
+              panel: refs.standardComboPanel,
+              keyword: refs.standardKeywordInput,
+              list: refs.standardOptionList,
+              select: refs.standardInput,
+              placeholder: "请选择点检标准",
+              multiple: false,
+            };
+      }
+
+      function bindComboEvents(type) {
+        const combo = getComboRefs(type);
+        combo.button.addEventListener("click", () => toggleCombo(type));
+        combo.clear.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          clearComboValue(type);
+        });
+        combo.keyword.addEventListener("input", () => {
+          refreshComboOptions(type, { keepKeyword: true });
+        });
+        combo.keyword.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeCombo();
+            combo.button.focus();
+            return;
+          }
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          const first = combo.list.querySelector("[data-combo-value]");
+          if (first) selectComboValue(type, first.dataset.comboValue || "", { close: !combo.multiple });
+        });
+        combo.list.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const option = event.target instanceof HTMLElement ? event.target.closest("[data-combo-value]") : null;
+          if (!option) return;
+          selectComboValue(type, option.dataset.comboValue || "", { close: !combo.multiple });
+        });
+      }
+
+      function clearComboValue(type) {
+        const combo = getComboRefs(type);
+        if (combo.multiple) {
+          setSelectedOptionValues(combo.select, []);
+          combo.keyword.value = "";
+          renderAccidentOptions({ selectedValues: [], keepKeyword: false });
+        } else {
+          combo.select.value = "";
+          combo.keyword.value = "";
+          if (type === "owner") {
+            renderOwnerOptions({ selectedId: "" });
+          } else if (type === "standard") {
+            renderStandardOptions({ selectedId: "" });
+          } else if (type === "package") {
+            renderPackageOptions({ selectedValue: "" });
+          }
+        }
+        updateComboDisplay(type);
+        closeCombo();
+        combo.button.focus();
+      }
+
+      function updateComboDisplay(type) {
+        const combo = getComboRefs(type);
+        let label = "";
+        if (combo.multiple) {
+          const values = getSelectedOptionValues(combo.select);
+          label = values.join("、");
+        } else if (type === "owner") {
+          const value = String(combo.select.value || "").trim();
+          const user = state.users.find((item) => item.userId === value);
+          label = user?.name || "";
+        } else if (type === "package") {
+          label = String(combo.select.value || "").trim();
+        } else {
+          const value = String(combo.select.value || "").trim();
+          label = value ? getStandardLabel(value) : "";
+        }
+        combo.text.textContent = label || combo.placeholder;
+        combo.button.classList.toggle("is-placeholder", !label);
+        combo.root.classList.toggle("has-value", Boolean(label));
+      }
+
+      function openCombo(type) {
+        closeCombo(type);
+        const combo = getComboRefs(type);
+        state.openCombo = type;
+        combo.root.classList.add("is-open");
+        combo.panel.classList.remove("hidden");
+        renderComboOptionList(type);
+        window.setTimeout(() => {
+          combo.keyword.focus();
+          combo.keyword.select();
+        }, 0);
+      }
+
+      function closeCombo(exceptType = "") {
+        ["standard", "owner", "accident", "package"].forEach((type) => {
+          if (type === exceptType) return;
+          const combo = getComboRefs(type);
+          combo.root.classList.remove("is-open");
+          combo.panel.classList.add("hidden");
+          if (type === "owner") {
+            const user = state.users.find((item) => item.userId === String(combo.select.value || "").trim());
+            combo.keyword.value = user?.name || "";
+          } else if (type === "standard") {
+            combo.keyword.value = getStandardLabel(combo.select.value);
+          } else if (type === "package") {
+            combo.keyword.value = String(combo.select.value || "").trim();
+          } else {
+            combo.keyword.value = "";
+          }
+          renderComboOptionList(type);
+          updateComboDisplay(type);
+        });
+        state.openCombo = exceptType || "";
+      }
+
+      function toggleCombo(type) {
+        if (state.openCombo === type) {
+          closeCombo();
+        } else {
+          openCombo(type);
+        }
+      }
+
+      function selectComboValue(type, value, { close = false } = {}) {
+        const combo = getComboRefs(type);
+        const nextValue = String(value || "").trim();
+        if (combo.multiple) {
+          toggleSelectedOptionValue(combo.select, nextValue);
+          combo.keyword.value = "";
+          renderAccidentOptions({ selectedValues: getSelectedOptionValues(combo.select), keepKeyword: true });
+        } else {
+          combo.select.value = nextValue;
+        }
+        if (type === "owner") {
+          const user = state.users.find((item) => item.userId === combo.select.value);
+          combo.keyword.value = user?.name || "";
+          renderOwnerOptions({ selectedId: combo.select.value });
+        } else if (type === "standard") {
+          combo.keyword.value = getStandardLabel(combo.select.value);
+          renderStandardOptions({ selectedId: combo.select.value });
+        } else if (type === "package") {
+          combo.keyword.value = combo.select.value || "";
+          renderPackageOptions({ selectedValue: combo.select.value });
+        }
+        updateComboDisplay(type);
+        if (close) {
+          closeCombo();
+          combo.button.focus();
+        }
       }
 
       function renderStorageLocationOptions(selectedValue = refs.storageLocationInput.value) {
@@ -1205,8 +2340,7 @@
         grouped.forEach((sites, area) => {
           options.push(`<optgroup label="${escapeHtml(area)}">`);
           sites.forEach((site) => {
-            const label = `${site.name}${site.code ? `（${site.code}）` : ""}`;
-            options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(label)}</option>`);
+            options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(site.name)}</option>`);
           });
           options.push("</optgroup>");
         });
@@ -1221,6 +2355,7 @@
 
       function mapChemicalRecord(record) {
         const ownerRaw = getAliasRawValue(record, FIELD.owner);
+        const accidentTypeRaw = getAliasRawValue(record, FIELD.accidentType);
         return {
           id: extractRecordId(record),
           code: toDisplayText(getAliasRawValue(record, FIELD.code)),
@@ -1232,7 +2367,8 @@
           maxStorage: toDisplayText(getAliasRawValue(record, FIELD.maxStorage)),
           usageAmount: toDisplayText(getAliasRawValue(record, FIELD.usageAmount)),
           packageForm: toDisplayText(getAliasRawValue(record, FIELD.packageForm)),
-          accidentType: toDisplayText(getAliasRawValue(record, FIELD.accidentType)),
+          accidentType: toDisplayText(accidentTypeRaw),
+          accidentTypeValues: normalizeMultiValue(accidentTypeRaw),
           owner: toDisplayText(ownerRaw),
           ownerId: extractComplexId(ownerRaw),
           standardId: toDisplayText(getAliasRawValue(record, FIELD.standardId)),
@@ -1449,7 +2585,6 @@
           ["状态", row.status],
           ["是否纳入点检", row.included],
           ["点检标准", getStandardLabel(row.standardId)],
-          ["库房二维码码值", qr.qrCode],
           ["使用地点", row.usageLocation],
           ["存放位置", row.storageLocation],
           ["最大存放量", row.maxStorage],
@@ -1460,11 +2595,35 @@
           ["主要危险有害性辨识分析", row.hazardAnalysis],
           ["备注", row.remark],
         ];
-        refs.detailFields.innerHTML = fields
-          .map(([label, value]) => `<div class="kv"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || "-")}</strong></div>`)
-          .join("");
+        refs.detailFields.innerHTML = `
+          <section class="section-card">
+            <h4>基本信息</h4>
+            <div class="form-grid">
+              ${fields.map(([label, value]) => renderDetailReadonlyField(label, value)).join("")}
+            </div>
+          </section>
+        `;
         refs.detailModal.classList.remove("hidden");
         renderAll();
+      }
+
+      function renderDetailReadonlyField(label, value) {
+        const text = String(value || "-");
+        const longField = ["使用地点", "主要危险有害性辨识分析", "备注"].includes(label);
+        if (longField) {
+          return `
+            <div class="field full">
+              <label>${escapeHtml(label)}</label>
+              <textarea class="input readonly" readonly style="min-height:72px">${escapeHtml(text)}</textarea>
+            </div>
+          `;
+        }
+        return `
+          <div class="field">
+            <label>${escapeHtml(label)}</label>
+            <input class="input readonly" type="text" readonly value="${escapeHtml(text)}" />
+          </div>
+        `;
       }
 
       function closeDetailModal() {
@@ -1480,7 +2639,6 @@
         const locationKey = state.selectedLocationKey || "__all__";
         return state.records.filter((row) => {
           if (state.status && normalizeStatus(row.status) !== state.status) return false;
-          if (state.included && normalizeYesNo(row.included) !== state.included) return false;
           if (locationKey !== "__all__") {
             const locationMeta = resolveStorageLocationMeta(row.storageLocation);
             if (locationKey.startsWith("area:")) {
@@ -1521,8 +2679,9 @@
         state.formMode = mode;
         refs.modalTitle.textContent = mode === "edit" ? "编辑危化品" : "新增危化品";
         refs.recordForm.reset();
-        renderStandardOptions();
-        renderOwnerOptions();
+        closeCombo();
+        refs.standardKeywordInput.value = "";
+        refs.ownerKeywordInput.value = "";
         renderStorageLocationOptions("");
         const row = mode === "edit" ? current : {
           code: "",
@@ -1538,6 +2697,7 @@
           usageAmount: "",
           packageForm: "",
           accidentType: "",
+          accidentTypeValues: [],
           hazardAnalysis: "",
           remark: "",
         };
@@ -1545,18 +2705,19 @@
         refs.nameInput.value = row.name || "";
         refs.statusInput.value = row.status || "启用";
         refs.includedInput.value = row.included || "是";
-        refs.standardInput.value = row.standardId || "";
+        renderStandardOptions({ selectedId: row.standardId || "" });
         refs.qrInput.value = row.qrCode || "";
         refs.usageLocationInput.value = row.usageLocation || "";
         renderStorageLocationOptions(row.storageLocation || "");
         refs.storageLocationInput.value = row.storageLocation || "";
-        refs.ownerInput.value = state.users.some((user) => user.userId === row.ownerId) ? row.ownerId : "";
+        renderOwnerOptions({ selectedId: state.users.some((user) => user.userId === row.ownerId) ? row.ownerId : "" });
         refs.maxStorageInput.value = row.maxStorage || "";
         refs.usageAmountInput.value = row.usageAmount || "";
-        refs.packageFormInput.value = row.packageForm || "";
-        refs.accidentTypeInput.value = row.accidentType || "";
+        renderPackageOptions({ selectedValue: row.packageForm || "" });
+        renderAccidentOptions({ selectedValues: row.accidentTypeValues?.length ? row.accidentTypeValues : normalizeMultiValue(row.accidentType) });
         refs.hazardAnalysisInput.value = row.hazardAnalysis || "";
         refs.remarkInput.value = row.remark || "";
+        refreshSelectProxies(refs.recordForm);
         refs.formModal.classList.remove("hidden");
       }
 
@@ -1614,10 +2775,10 @@
           [FIELD.qrCode]: refs.qrInput.value.trim(),
           [FIELD.usageLocation]: refs.usageLocationInput.value.trim(),
           [FIELD.storageLocation]: refs.storageLocationInput.value.trim(),
-          [FIELD.maxStorage]: refs.maxStorageInput.value.trim(),
-          [FIELD.usageAmount]: refs.usageAmountInput.value.trim(),
+          [FIELD.maxStorage]: sanitizeNonNegativeText(refs.maxStorageInput.value).trim(),
+          [FIELD.usageAmount]: sanitizeNonNegativeText(refs.usageAmountInput.value).trim(),
           [FIELD.packageForm]: refs.packageFormInput.value.trim(),
-          [FIELD.accidentType]: refs.accidentTypeInput.value.trim(),
+          [FIELD.accidentType]: getSelectedOptionValues(refs.accidentTypeInput),
           [FIELD.owner]: ownerId || null,
           [FIELD.hazardAnalysis]: refs.hazardAnalysisInput.value.trim(),
           [FIELD.remark]: refs.remarkInput.value.trim(),
@@ -1660,7 +2821,7 @@
         const id = String(standardId || "").trim();
         if (!id) return "";
         const standard = state.standards.find((item) => item.id === id);
-        return standard ? `${standard.name}${standard.code ? `（${standard.code}）` : ""}` : id;
+        return standard ? standard.name : id;
       }
 
       async function syncStandardsForStorageLocations(locations, explicitStandardId = "") {
@@ -1720,6 +2881,40 @@
           .split(/[、,，;；\n\r]+/)
           .map((item) => item.trim())
           .filter(Boolean);
+      }
+
+      function normalizeMultiValue(value) {
+        if (Array.isArray(value)) {
+          return value.map((item) => toDisplayText(item).trim()).filter(Boolean);
+        }
+        return toDisplayText(value)
+          .split(/[、,，;；\n\r]+/)
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function getSelectedOptionValues(select) {
+        return Array.from(select?.selectedOptions || [])
+          .map((option) => String(option.value || "").trim())
+          .filter(Boolean);
+      }
+
+      function setSelectedOptionValues(select, values) {
+        const selected = new Set(normalizeMultiValue(values));
+        Array.from(select?.options || []).forEach((option) => {
+          option.selected = selected.has(option.value);
+        });
+      }
+
+      function toggleSelectedOptionValue(select, value) {
+        if (!select || !value) return;
+        const values = new Set(getSelectedOptionValues(select));
+        if (values.has(value)) {
+          values.delete(value);
+        } else {
+          values.add(value);
+        }
+        setSelectedOptionValues(select, Array.from(values));
       }
 
       function ensureChemicalQr(row) {
@@ -1849,15 +3044,23 @@
               qrCode,
               reportLink: buildReportLink(qrCode),
             };
-            const imageUrl = buildQrImageUrl(qr.reportLink || qr.qrCode, 260);
+            const imageUrl = buildQrImageUrl(qr.reportLink || qr.qrCode, 360);
+            const printTime = formatPrintDateTime(new Date());
             return `
-              <section class="card">
-                <h2>${escapeHtml(row.name || "危化品地点")}</h2>
-                <img src="${escapeHtml(imageUrl)}" alt="二维码" />
-                <p><span>场地编码：</span>${escapeHtml(row.code || "-")}</p>
-                <p><span>所属区域：</span>${escapeHtml(row.area || "-")}</p>
-                <p><span>危化品数：</span>${escapeHtml(row.count ?? "-")}</p>
-                <p><span>扫码码值：</span>${escapeHtml(qr.qrCode || "-")}</p>
+              <section class="label-card">
+                <div class="label-qr">
+                  <img src="${escapeHtml(imageUrl)}" alt="二维码" />
+                </div>
+                <div class="label-info">
+                  <h2>${escapeHtml(row.name || "危化品地点")}</h2>
+                  <p class="label-sub">场地编码：${escapeHtml(row.code || "-")}</p>
+                  <dl>
+                    <div><dt>所属区域</dt><dd>${escapeHtml(row.area || "-")}</dd></div>
+                    <div><dt>危化品数</dt><dd>${escapeHtml(row.count ?? "-")}</dd></div>
+                    <div><dt>扫码码值</dt><dd>${escapeHtml(qr.qrCode || "-")}</dd></div>
+                    <div><dt>打印时间</dt><dd>${escapeHtml(printTime)}</dd></div>
+                  </dl>
+                </div>
               </section>
             `;
           })
@@ -1868,16 +3071,128 @@
               <meta charset="UTF-8" />
               <title>危化品地点二维码打印</title>
               <style>
-                body { margin: 0; padding: 18px; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; color: #1f2a3a; }
-                .head { margin-bottom: 14px; }
-                .head h1 { margin: 0 0 6px; font-size: 20px; }
-                .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-                .card { border: 1px solid #222; padding: 12px; break-inside: avoid; text-align: center; }
-                .card h2 { margin: 0 0 10px; font-size: 17px; }
-                .card img { width: 180px; height: 180px; object-fit: contain; }
-                .card p { margin: 6px 0 0; font-size: 12px; text-align: left; word-break: break-all; }
-                .card span { color: #64748b; }
-                @media print { body { padding: 8mm; } .head { display: none; } }
+                @page { size: 70mm 35mm; margin: 0; }
+                * { box-sizing: border-box; }
+                body {
+                  margin: 0;
+                  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+                  color: #1f2a3a;
+                  background: #f3f6fb;
+                }
+                .head {
+                  padding: 10px;
+                  border-bottom: 1px solid #d7deea;
+                  background: #fff;
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 12px;
+                }
+                .head h1 { margin: 0 0 4px; font-size: 16px; }
+                .head p { margin: 0; color: #6f7d93; font-size: 12px; }
+                .head button {
+                  border: 1px solid #2c79ea;
+                  background: #2c79ea;
+                  color: #fff;
+                  border-radius: 4px;
+                  height: 32px;
+                  padding: 0 14px;
+                  cursor: pointer;
+                }
+                .grid {
+                  display: grid;
+                  gap: 8px;
+                  padding: 10px;
+                }
+                .label-card {
+                  width: 70mm;
+                  height: 35mm;
+                  padding: 1.8mm 2.2mm;
+                  background: #fff;
+                  border: 1px solid #d9d9d9;
+                  display: grid;
+                  grid-template-columns: 22.5mm minmax(0, 1fr);
+                  gap: 2.8mm;
+                  align-items: center;
+                  break-inside: avoid;
+                  page-break-inside: avoid;
+                }
+                .label-qr {
+                  width: 22.5mm;
+                  height: 22.5mm;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+                .label-qr img {
+                  width: 20.5mm;
+                  height: 20.5mm;
+                  display: block;
+                  object-fit: contain;
+                }
+                .label-info {
+                  min-width: 0;
+                  height: 22.5mm;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: flex-start;
+                  padding-top: 0;
+                }
+                .label-info h2 {
+                  margin: 0;
+                  font-size: 10pt;
+                  line-height: 1.05;
+                  color: #111827;
+                  word-break: break-all;
+                }
+                .label-sub {
+                  margin: 0.65mm 0 0;
+                  padding-bottom: 0.85mm;
+                  border-bottom: 1px solid #c9ced6;
+                  color: #4b5563;
+                  font-size: 6.2pt;
+                  line-height: 1.12;
+                  word-break: break-all;
+                }
+                dl {
+                  margin: auto 0 0;
+                  display: grid;
+                  gap: 0.42mm;
+                }
+                dl div {
+                  display: grid;
+                  grid-template-columns: 12.2mm minmax(0, 1fr);
+                  gap: 1.2mm;
+                  align-items: start;
+                }
+                dt,
+                dd {
+                  margin: 0;
+                  font-size: 5.9pt;
+                  line-height: 1.12;
+                }
+                dt { color: #7b8493; }
+                dd {
+                  color: #111827;
+                  font-weight: 700;
+                  min-width: 0;
+                  word-break: break-all;
+                }
+                @media print {
+                  body { background: #fff; }
+                  .head { display: none; }
+                  .grid { display: block; padding: 0; }
+                  .label-card {
+                    margin: 0;
+                    border: 0;
+                    page-break-after: always;
+                    break-after: page;
+                  }
+                  .label-card:last-child {
+                    page-break-after: auto;
+                    break-after: auto;
+                  }
+                }
               </style>
             </head>
             <body>
@@ -1889,6 +3204,11 @@
               <main class="grid">${cards}</main>
             </body>
           </html>`;
+      }
+
+      function formatPrintDateTime(date) {
+        const pad = (value) => String(value).padStart(2, "0");
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
       }
 
       function exportCsv() {
@@ -1993,7 +3313,7 @@
           [FIELD.maxStorage]: source["最大存放量"] || "",
           [FIELD.usageAmount]: source["使用量"] || "",
           [FIELD.packageForm]: source["包装形式"] || "",
-          [FIELD.accidentType]: source["事故类型"] || "",
+          [FIELD.accidentType]: normalizeMultiValue(source["事故类型"] || ""),
           [FIELD.owner]: null,
           [FIELD.standardId]: resolveStandardId(source["点检标准ID"] || source["点检标准"] || ""),
           [FIELD.qrCode]: source["二维码"] || "",
@@ -2057,7 +3377,6 @@
 
       function renderActionDisabled() {
         refs.addBtn.disabled = state.loading;
-        refs.batchPrintQrBtn.disabled = state.loading;
         refs.printCurrentLocationQrBtn.disabled = state.loading;
         refs.importBtn.disabled = state.loading;
         refs.exportBtn.disabled = state.loading;
@@ -2143,6 +3462,18 @@
         return toDisplayText(value).replace(/\s+/g, "").toLowerCase();
       }
 
+      function sanitizeNonNegativeText(value) {
+        return String(value || "").replace(/[−－]/g, "-").replace(/^\s*-\s*/, "");
+      }
+
+      function sanitizeNonNegativeInput(input) {
+        if (!input) return;
+        const next = sanitizeNonNegativeText(input.value);
+        if (next !== input.value) {
+          input.value = next;
+        }
+      }
+
       async function fetchContactsUsers() {
         const result = await requestApi("/contacts/users");
         const rows = result?.data?.users || [];
@@ -2150,6 +3481,8 @@
           .map((row) => ({
             userId: toDisplayText(row.userId || row.uniqueId || row.id),
             name: toDisplayText(row.userName || row.user || row.name),
+            account: toDisplayText(row.account),
+            mobile: toDisplayText(row.mobile),
           }))
           .filter((row) => row.userId || row.name)
           .sort((a, b) => String(a.name || a.userId).localeCompare(String(b.name || b.userId), "zh-Hans-CN"));

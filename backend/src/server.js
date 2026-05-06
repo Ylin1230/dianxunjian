@@ -8,6 +8,7 @@ const crypto = require("crypto");
 const { registerRuleConfigRoutes } = require("./rule-config");
 const { registerInspectionReportRoutes } = require("./inspection-report");
 const { registerQrDecodeRoutes } = require("./qr-decode");
+const { registerSafetyCheckRoutes } = require("./safety-check");
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const config = {
   port: Number(process.env.PORT || 3001),
   baseUrl: stripTrailingSlash(process.env.BES_BASE_URL || "https://ahyg.online-office.net/openapi/v1"),
   publicBaseUrl: stripTrailingSlash(process.env.PUBLIC_BASE_URL || ""),
-  defaultAppId: String(process.env.BES_APP_ID || "5a94c4d1642bd8a84c772356").trim(),
+  defaultAppId: String(process.env.BES_APP_ID || "59b376f42fee5822c6ac906a").trim(),
   defaultEntryId: String(process.env.BES_ENTRY_ID || "38104b6c9d74ce86a7c395b6").trim(),
   memberAppId: String(process.env.BES_MEMBER_APP_ID || "5f673d49dd6c91aa61599674").trim(),
   memberEntryId: String(process.env.BES_MEMBER_ENTRY_ID || "b000000000000000000000001").trim(),
@@ -27,6 +28,17 @@ const config = {
   corsOrigin: String(process.env.CORS_ORIGIN || "*").trim(),
   debugProxy: String(process.env.DEBUG_PROXY || "0").trim() === "1",
   staticRoot: resolveStaticRoot(process.env.FRONTEND_ROOT),
+  taskStoreMode: normalizeTaskStoreMode(process.env.TASK_STORE_MODE || process.env.TASK_STORE || "bes"),
+  taskDb: {
+    client: String(process.env.DB_CLIENT || "mysql").trim().toLowerCase(),
+    host: String(process.env.DB_HOST || "").trim(),
+    port: Number(process.env.DB_PORT || 3306),
+    database: String(process.env.DB_NAME || process.env.DB_DATABASE || "").trim(),
+    user: String(process.env.DB_USER || "").trim(),
+    password: String(process.env.DB_PASSWORD || ""),
+    poolMax: Number(process.env.DB_POOL_MAX || 10),
+    taskTable: String(process.env.TASK_DB_TABLE || "inspection_task_base").trim(),
+  },
 };
 
 const allowAllOrigins = config.corsOrigin === "*";
@@ -58,6 +70,7 @@ app.set("trust proxy", true);
 registerRuleConfigRoutes(app, config);
 registerInspectionReportRoutes(app, config);
 registerQrDecodeRoutes(app, config);
+registerSafetyCheckRoutes(app, config);
 
 app.get("/api/health", (req, res) => {
   res.json({
@@ -66,6 +79,12 @@ app.get("/api/health", (req, res) => {
     baseUrl: config.baseUrl,
     defaultAppId: config.defaultAppId,
     defaultEntryId: config.defaultEntryId,
+    taskStoreMode: config.taskStoreMode,
+    taskDbConfigured: Boolean(config.taskDb.host && config.taskDb.database && config.taskDb.user),
+    taskDbClient: config.taskDb.client,
+    taskDbHost: maskHost(config.taskDb.host),
+    taskDbName: config.taskDb.database,
+    taskDbTable: config.taskDb.taskTable,
     hasApiKey: Boolean(config.apiKey),
     apiKeyMasked: maskSecret(config.apiKey),
     now: new Date().toISOString(),
@@ -344,6 +363,30 @@ app.get("/h5/partner-training-admin", (req, res) => {
   sendStaticHtml(res, config.staticRoot, "partner-entry-training.html");
 });
 
+app.get("/safety-check", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "safety-check-template.html");
+});
+
+app.get("/safety-check-template", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "safety-check-template.html");
+});
+
+app.get("/safety-check-task", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "safety-check-task.html");
+});
+
+app.get("/safety-check-record", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "safety-check-record.html");
+});
+
+app.get("/safety-check-hazard", (req, res) => {
+  res.status(410).type("text/plain; charset=utf-8").send("隐患整改已改为百数云流程处理，请在流程中心办理。");
+});
+
+app.get("/h5/safety-check", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "safety-check-mobile.html");
+});
+
 app.use(
   express.static(config.staticRoot, {
     index: false,
@@ -396,6 +439,26 @@ function maskSecret(secret) {
     return `${text.slice(0, 1)}***${text.slice(-1)}`;
   }
   return `${text.slice(0, 4)}***${text.slice(-4)}`;
+}
+
+function maskHost(host) {
+  const text = String(host || "").trim();
+  if (!text) {
+    return "";
+  }
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(text)) {
+    return text.replace(/\.\d{1,3}$/, ".*");
+  }
+  const parts = text.split(".");
+  if (parts.length <= 2) {
+    return text;
+  }
+  return `${parts[0]}.***.${parts.slice(-1)[0]}`;
+}
+
+function normalizeTaskStoreMode(value) {
+  const mode = String(value || "").trim().toLowerCase();
+  return ["bes", "dual", "db"].includes(mode) ? mode : "bes";
 }
 
 function buildUpstreamUrl(baseUrl, appId, entryId, action) {

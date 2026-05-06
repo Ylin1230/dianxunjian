@@ -6,16 +6,17 @@
     <title>点检报工</title>
     <style>
       :root {
-        --bg: #f2f5fb;
+        --bg: #edf3fb;
         --panel: #ffffff;
-        --line: #d9e1ee;
-        --text: #1f2a3a;
-        --minor: #6f7e95;
+        --line: #dce5f2;
+        --text: #1c2940;
+        --minor: #6d7d96;
         --primary: #2b77e7;
         --primary-deep: #1f5fc6;
         --danger: #d24a4a;
         --warn: #d27a1f;
         --ok: #1e9158;
+        --soft-shadow: 0 14px 34px rgba(42, 76, 130, 0.08);
       }
 
       * {
@@ -24,7 +25,9 @@
 
       body {
         margin: 0;
-        background: linear-gradient(180deg, #eef2f9 0%, #f7f9fd 100%);
+        background:
+          radial-gradient(circle at top, rgba(80, 142, 255, 0.12) 0%, rgba(80, 142, 255, 0) 34%),
+          linear-gradient(180deg, #eef3fb 0%, #f7faff 100%);
         color: var(--text);
         font: 14px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
       }
@@ -33,7 +36,7 @@
         max-width: 440px;
         min-height: 100vh;
         margin: 0 auto;
-        background: #f5f8fd;
+        background: linear-gradient(180deg, #f7faff 0%, #eef4fd 100%);
         border-left: 1px solid #dce5f2;
         border-right: 1px solid #dce5f2;
       }
@@ -42,13 +45,18 @@
         position: sticky;
         top: 0;
         z-index: 50;
-        height: 52px;
-        padding: 0 12px;
-        background: #fff;
-        border-bottom: 1px solid var(--line);
+        height: 56px;
+        padding: 0 14px;
+        background: rgba(255, 255, 255, 0.92);
+        border-bottom: 1px solid rgba(220, 229, 242, 0.9);
+        backdrop-filter: blur(10px);
         display: flex;
         align-items: center;
         justify-content: space-between;
+      }
+
+      body.execute-mode .topbar {
+        display: none;
       }
 
       .topbar-left,
@@ -63,8 +71,9 @@
       }
 
       .topbar-title {
-        font-size: 17px;
+        font-size: 18px;
         font-weight: 700;
+        letter-spacing: 0.02em;
       }
 
       .icon-btn,
@@ -90,7 +99,11 @@
       }
 
       .view {
-        padding: 12px;
+        padding: 10px;
+      }
+
+      #executeView {
+        padding-top: 0;
       }
 
       .hidden {
@@ -99,10 +112,11 @@
 
       .card {
         background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 12px;
+        border: 1px solid rgba(220, 229, 242, 0.92);
+        border-radius: 18px;
         overflow: hidden;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
+        box-shadow: var(--soft-shadow);
       }
 
       .card-head {
@@ -124,25 +138,70 @@
       }
 
       .overview {
-        padding: 12px;
+        position: relative;
+        padding: 16px;
+        border: 0;
+        background: linear-gradient(135deg, #2c72ee 0%, #194cc0 100%);
+        box-shadow: 0 18px 38px rgba(31, 95, 198, 0.24);
+      }
+
+      .overview::before {
+        content: "";
+        position: absolute;
+        right: -42px;
+        top: -56px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 68%);
       }
 
       .overview-main {
         display: flex;
         flex-direction: column;
-        gap: 6px;
-        margin-bottom: 12px;
+        gap: 8px;
+        margin-bottom: 14px;
+        position: relative;
+        z-index: 1;
       }
 
       .overview-main .date {
-        font-size: 22px;
+        font-size: 28px;
         font-weight: 700;
+        color: #ffffff;
+        line-height: 1.18;
+        letter-spacing: 0.01em;
       }
 
       .overview-grid {
-        display: none;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .overview-grid .metric {
+        border: 1px solid rgba(255, 255, 255, 0.72);
+        background: rgba(255, 255, 255, 0.94);
+        padding: 10px 8px;
+      }
+
+      .overview-grid .metric .n,
+      .overview-grid .metric .k {
+        color: #17345d;
+      }
+
+      .overview-grid .metric .n {
+        font-size: 22px;
+        line-height: 1.1;
+      }
+
+      .overview-grid .metric .k {
+        margin-top: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #607696;
       }
 
       .metric {
@@ -176,46 +235,42 @@
         color: #1f975d;
       }
 
+      .scan-card {
+        padding: 14px;
+      }
+
       .scan-banner {
-        background: linear-gradient(180deg, #fbfdff 0%, #f2f7ff 100%);
-        border: 1px solid #d7e4f7;
-        color: #2d4364;
-        border-radius: 12px;
-        padding: 12px;
+        color: #274160;
       }
 
       .scan-banner h3 {
-        margin: 0;
-        font-size: 17px;
-        color: #24466f;
-      }
-
-      .scan-banner p {
-        margin: 6px 0 10px;
-        font-size: 12px;
-        color: #637e9f;
+        margin: 0 0 12px;
+        font-size: 18px;
+        color: #1f3858;
+        letter-spacing: 0.01em;
       }
 
       .scan-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 76px 76px;
+        grid-template-columns: minmax(0, 1fr) 76px 92px;
         gap: 8px;
+        align-items: stretch;
       }
 
       .input,
       .select,
       .textarea {
         width: 100%;
-        border: 1px solid #cad6e8;
-        border-radius: 8px;
+        border: 1px solid #d7e0ef;
+        border-radius: 12px;
         background: #fff;
         color: #21324b;
       }
 
       .input,
       .select {
-        height: 38px;
-        padding: 0 10px;
+        height: 40px;
+        padding: 0 12px;
         font-size: 14px;
       }
 
@@ -234,26 +289,101 @@
         box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
       }
 
+      .status-select {
+        position: relative;
+        width: 100%;
+      }
+
+      .status-select-button {
+        width: 100%;
+        height: 40px;
+        border: 1px solid #d7e0ef;
+        border-radius: 12px;
+        background: #fff;
+        color: #21324b;
+        padding: 0 36px 0 12px;
+        font-size: 14px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .status-select-button::after {
+        content: "";
+        position: absolute;
+        right: 13px;
+        top: 50%;
+        width: 8px;
+        height: 8px;
+        border-right: 1.8px solid #6f819b;
+        border-bottom: 1.8px solid #6f819b;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .status-select-button.is-placeholder {
+        color: #7d8da5;
+      }
+
+      .status-select.is-open .status-select-button {
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .status-select-panel {
+        position: absolute;
+        z-index: 80;
+        left: 0;
+        right: 0;
+        top: calc(100% + 6px);
+        max-height: 188px;
+        overflow: auto;
+        border: 1px solid #cfd9ea;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 16px 34px rgba(36, 61, 99, 0.16);
+        padding: 4px;
+      }
+
+      .status-select-option {
+        width: 100%;
+        height: 34px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #21324b;
+        text-align: left;
+        padding: 0 10px;
+        font-size: 14px;
+      }
+
+      .status-select-option.is-selected,
+      .status-select-option:active {
+        background: #eef5ff;
+        color: #245fc8;
+      }
+
       .btn {
         border: 1px solid #b8c6dc;
         background: #fff;
         color: #30445f;
-        border-radius: 8px;
-        height: 38px;
+        border-radius: 12px;
+        height: 40px;
         font-size: 14px;
         padding: 0 12px;
         cursor: pointer;
+        font-weight: 600;
       }
 
       .btn.primary {
-        border-color: var(--primary);
-        background: var(--primary);
+        border-color: #2c73ee;
+        background: linear-gradient(135deg, #2c73ee 0%, #255fdb 100%);
         color: #fff;
+        box-shadow: 0 10px 20px rgba(43, 119, 231, 0.22);
       }
 
       .btn.soft {
-        background: #f1f6ff;
-        border-color: #b0c7ec;
+        background: #f7faff;
+        border-color: #c8d8f1;
         color: #2564c8;
       }
 
@@ -268,8 +398,18 @@
         cursor: not-allowed;
       }
 
+      .scan-row .input,
+      .scan-row .btn {
+        height: 44px;
+      }
+
       .task-group {
         margin-bottom: 14px;
+        background: var(--panel);
+        border: 1px solid rgba(220, 229, 242, 0.9);
+        border-radius: 18px;
+        padding: 14px;
+        box-shadow: var(--soft-shadow);
       }
 
       .task-group-head {
@@ -277,12 +417,14 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 10px;
       }
 
       .group-actions {
         display: inline-flex;
         gap: 8px;
         align-items: center;
+        flex-shrink: 0;
       }
 
       .member-bar {
@@ -290,25 +432,35 @@
         align-items: center;
         justify-content: space-between;
         gap: 8px;
-        margin: 6px 0 8px;
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #f7faff;
+        border: 1px solid #e3ebf7;
+      }
+
+      .member-bar .minor {
+        color: #5e7493;
       }
 
       .task-group-title {
-        font-size: 15px;
+        font-size: 18px;
         font-weight: 700;
+        color: #1d3656;
       }
 
       .task-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
       }
 
       .task-item {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 10px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        border: 1px solid #dbe5f2;
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: 0 10px 22px rgba(38, 65, 109, 0.05);
       }
 
       .task-item.clickable {
@@ -320,19 +472,26 @@
         background: #fff7f7;
       }
 
+      .task-item.done {
+        background: #f8fffb;
+        border-color: #ccebd8;
+      }
+
       .task-top {
         display: flex;
         justify-content: space-between;
         gap: 10px;
+        align-items: flex-start;
       }
 
       .task-name {
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 700;
+        color: #1f3553;
       }
 
       .task-meta {
-        margin-top: 4px;
+        margin-top: 6px;
         font-size: 12px;
         color: var(--minor);
       }
@@ -347,8 +506,8 @@
       .tag {
         display: inline-flex;
         align-items: center;
-        height: 22px;
-        padding: 0 8px;
+        height: 24px;
+        padding: 0 9px;
         border-radius: 999px;
         border: 1px solid #d6e1f2;
         background: #f5f8ff;
@@ -369,8 +528,9 @@
       }
 
       .task-action {
-        align-self: center;
-        min-width: 84px;
+        align-self: flex-start;
+        min-width: 72px;
+        padding-top: 2px;
       }
 
       .minor-link {
@@ -380,31 +540,54 @@
         font-size: 13px;
         padding: 0;
         cursor: pointer;
+        font-weight: 600;
+      }
+
+      .group-actions .minor {
+        color: #7b8ca3;
+        font-size: 12px;
       }
 
       .empty {
         border: 1px dashed #ccd8ea;
-        border-radius: 10px;
+        border-radius: 14px;
         background: #fbfdff;
         color: #8190a8;
         font-size: 12px;
         text-align: center;
-        padding: 12px;
+        padding: 14px 12px;
       }
 
       .execute-hero {
-        background: #ffffff;
-        border: 1px solid #d9e4f2;
-        border-radius: 12px;
-        padding: 14px;
-        margin-bottom: 12px;
-        color: #22334b;
+        position: sticky;
+        top: 0;
+        z-index: 35;
+        background: linear-gradient(135deg, #0b58c8 0%, #0648aa 100%);
+        border: 0;
+        border-bottom: 1px solid #074da9;
+        border-radius: 0;
+        padding: 12px 12px 10px;
+        margin: 0 -10px 10px;
+        color: #ffffff;
+        box-shadow: 0 8px 18px rgba(6, 72, 170, 0.24);
       }
 
       .execute-title {
-        font-size: 24px;
+        font-size: 21px;
         font-weight: 700;
-        color: #223a59;
+        color: #ffffff;
+        line-height: 1.25;
+      }
+
+      .execute-title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .execute-title-main {
+        min-width: 0;
       }
 
       .execute-sub {
@@ -427,31 +610,38 @@
         height: 24px;
         padding: 0 9px;
         font-size: 12px;
-        border: 1px solid #d6e4f8;
-        background: #f2f7ff;
-        color: #3b5d8d;
+        border: 1px solid rgba(255, 255, 255, 0.32);
+        background: rgba(255, 255, 255, 0.18);
+        color: #f5f9ff;
+      }
+
+      .progress-card {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: 0 6px 14px rgba(52, 89, 145, 0.08);
       }
 
       .progress-head {
-        margin-top: 10px;
         display: flex;
         justify-content: space-between;
         font-size: 12px;
-        color: #5b6f8f;
+        color: #536984;
       }
 
       .progress {
         margin-top: 6px;
-        height: 8px;
+        height: 7px;
         border-radius: 999px;
-        background: #e8eef8;
+        background: #e7eef9;
         overflow: hidden;
       }
 
       .progress > span {
         display: block;
         height: 100%;
-        background: #68a6ff;
+        background: #67a7ff;
         width: 0;
       }
 
@@ -462,33 +652,57 @@
       }
 
       .item-card {
+        position: relative;
         background: #fff;
-        border: 1px solid #d7e0ee;
-        border-radius: 12px;
-        padding: 10px;
+        border: 1px solid #d9e3f1;
+        border-left: 4px solid #b9cbe4;
+        border-radius: 10px;
+        padding: 9px 9px 9px 10px;
+        scroll-margin: 205px;
+        box-shadow: 0 6px 14px rgba(42, 76, 130, 0.06);
       }
 
       .item-card.abnormal {
         border-color: #f0c0c0;
-        background: #fff7f7;
+        border-left-color: #e96d6d;
+        background: #fff;
+        box-shadow: 0 6px 14px rgba(210, 74, 74, 0.06);
       }
 
       .item-card.done {
-        border-color: #c6e8d2;
-        background: #f8fffa;
+        border-color: #cdebd8;
+        border-left-color: #2fb36a;
+        background: #fff;
+        box-shadow: 0 6px 14px rgba(47, 179, 106, 0.06);
+      }
+
+      .item-card.missing,
+      .exec-card.missing,
+      .exec-reporter-row.missing {
+        border-color: #f0c766;
+        background: #fffbea;
+        box-shadow: 0 0 0 3px rgba(240, 199, 102, 0.22);
       }
 
       .item-head {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .item-title-row {
+        display: flex;
+        align-items: center;
+        min-width: 0;
         gap: 8px;
       }
 
       .item-no {
         display: inline-flex;
-        width: 28px;
-        height: 28px;
+        flex: 0 0 auto;
+        width: 26px;
+        height: 26px;
         border-radius: 8px;
         align-items: center;
         justify-content: center;
@@ -499,29 +713,20 @@
       }
 
       .item-name {
-        margin-top: 2px;
-        font-size: 16px;
+        min-width: 0;
+        font-size: 15px;
         font-weight: 700;
+        line-height: 1.35;
+        color: #223a59;
+        overflow-wrap: anywhere;
       }
 
-      .item-desc {
-        margin-top: 4px;
-        font-size: 12px;
-        color: #6f7f95;
-      }
-
-      .item-meta {
-        margin-top: 8px;
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-
-      .meta-chip {
+      .item-mode-tag {
         display: inline-flex;
         align-items: center;
-        min-height: 24px;
-        padding: 0 8px;
+        flex: 0 0 auto;
+        height: 24px;
+        padding: 0 9px;
         border-radius: 999px;
         font-size: 12px;
         border: 1px solid #d8e3f2;
@@ -554,7 +759,7 @@
       }
 
       .result-bar {
-        margin-top: 10px;
+        margin-top: 8px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
@@ -562,17 +767,17 @@
 
       .result-btn {
         border: 1px solid #cdd8ea;
-        border-radius: 8px;
+        border-radius: 10px;
         background: #fff;
         color: #355074;
-        height: 34px;
+        height: 32px;
         font-size: 13px;
         cursor: pointer;
       }
 
       .result-btn.active.normal {
-        border-color: #8bc8a4;
-        background: #e8f9ef;
+        border-color: #1e9b5f;
+        background: #fff;
         color: #1b8c54;
       }
 
@@ -605,13 +810,38 @@
         align-items: center;
       }
 
-      .input-action-row .input {
+      .input-action-row .input,
+      .input-action-row .select {
         flex: 1;
+        min-width: 0;
       }
 
       .input-action-row .btn {
         flex: 0 0 auto;
         min-width: 96px;
+      }
+
+      .reporter-select {
+        height: 32px;
+        border-radius: 999px;
+        padding: 0 26px 0 10px;
+        font-size: 13px;
+        background-color: rgba(255, 255, 255, 0.86);
+      }
+
+      .exec-reporter-row {
+        flex: 0 0 116px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .exec-reporter-label {
+        font-size: 12px;
+        color: #4a5f7e;
+        font-weight: 700;
       }
 
       .judge-hint {
@@ -667,30 +897,142 @@
       }
 
       .photos {
-        margin-top: 4px;
+        margin-top: 8px;
         display: flex;
-        gap: 6px;
+        gap: 8px;
         flex-wrap: wrap;
       }
 
-      .photo-chip {
-        border: 1px solid #e1d3d3;
+      .photo-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .photo-add-btn {
+        display: inline-flex;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #cbd8eb;
         background: #fff;
-        border-radius: 999px;
-        font-size: 12px;
-        color: #6a4f4f;
-        padding: 2px 8px;
+        color: #667994;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .photo-add-btn:active {
+        background: #f1f6fd;
+      }
+
+      .photo-thumb {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border: 1px solid #d9e3f1;
+        border-radius: 10px;
+        background: #fff;
+        overflow: visible;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .photo-thumb img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-radius: 9px;
+        object-fit: cover;
+      }
+
+      .photo-file {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        border-radius: 9px;
+        background: #f4f7fc;
+        color: #7a8aa2;
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .photo-remove {
+        position: absolute;
+        top: -7px;
+        right: -7px;
+        width: 18px;
+        height: 18px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(97, 111, 132, 0.92);
+        color: #fff;
+        font-size: 14px;
+        line-height: 18px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .photo-name {
+        max-width: 64px;
+        margin-top: 4px;
+        color: #7a8aa2;
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .photo-preview-body {
+        width: min(440px, calc(100vw - 24px));
+        max-height: min(82vh, calc(100vh - 32px - env(safe-area-inset-bottom)));
+      }
+
+      .photo-preview-wrap {
+        padding: 10px;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        background: #f7faff;
+      }
+
+      .photo-preview-wrap img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 12px;
+        border: 1px solid #d8e3f2;
+        background: #fff;
+      }
+
+      .exec-card {
+        margin-bottom: 12px;
+        border: 1px solid #d9e4f2;
+        border-radius: 14px;
+        background: #ffffff;
+        padding: 12px;
+        box-shadow: var(--soft-shadow);
+      }
+
+      .exec-card-title {
+        margin-bottom: 8px;
+        color: #223a59;
+        font-weight: 700;
+      }
+
+      .exec-remark-card {
+        margin-top: 12px;
       }
 
       .exec-foot {
-        position: sticky;
-        bottom: 0;
-        z-index: 40;
-        background: rgba(245, 248, 253, 0.95);
-        backdrop-filter: blur(6px);
-        border-top: 1px solid #dce5f2;
-        margin: 12px -12px 0;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        margin-top: 10px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
       }
 
       .exec-foot-row {
@@ -706,7 +1048,8 @@
         border-radius: 12px;
         padding: 16px;
         color: #fff;
-        background: linear-gradient(135deg, #10b56a 0%, #0b9458 100%);
+        background: linear-gradient(135deg, #2c72ee 0%, #194cc0 100%);
+        box-shadow: 0 18px 38px rgba(31, 95, 198, 0.22);
       }
 
       .summary-hero h2 {
@@ -769,11 +1112,15 @@
       .statusbar {
         margin-top: 8px;
         border: 1px dashed #ccd8ea;
-        border-radius: 10px;
+        border-radius: 14px;
         background: #fbfdff;
         color: #73849d;
         font-size: 12px;
-        padding: 8px 10px;
+        padding: 10px 12px;
+      }
+
+      .statusbar:empty {
+        display: none;
       }
 
       .statusbar.error {
@@ -808,18 +1155,19 @@
         inset: 0;
         z-index: 110;
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
+        padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
         background: rgba(16, 23, 34, 0.45);
       }
 
       .modal-body {
-        width: min(440px, 100%);
-        max-height: min(82vh, calc(100vh - 24px));
+        width: min(440px, calc(100vw - 24px));
+        max-height: min(78vh, calc(100vh - 32px - env(safe-area-inset-bottom)));
         background: #fff;
-        border-radius: 14px 14px 0 0;
+        border-radius: 16px;
         border: 1px solid #d7e0ee;
-        border-bottom: 0;
+        box-shadow: 0 18px 40px rgba(19, 41, 74, 0.18);
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -918,19 +1266,25 @@
         padding: 10px;
         flex: 1 1 auto;
         min-height: 0;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
         gap: 10px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
       }
 
-      .bind-actions {
+      .bind-select {
+        width: 100%;
+        height: 42px;
+      }
+
+      .bind-foot {
         display: flex;
-        gap: 8px;
-      }
-
-      .bind-actions .input {
-        flex: 1;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 2px;
       }
 
       .bind-current {
@@ -940,6 +1294,105 @@
         padding: 10px;
         font-size: 13px;
         color: #5f748f;
+      }
+
+      .bind-foot .btn {
+        min-width: 108px;
+      }
+
+      .scan-live-body {
+        width: min(440px, calc(100vw - 24px));
+      }
+
+      .scan-live-panel {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .scan-live-frame {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        border: 1px solid #d6e2f3;
+        background: radial-gradient(circle at top, #243950 0%, #162536 58%, #0f1b29 100%);
+        aspect-ratio: 1 / 1;
+        min-height: 268px;
+      }
+
+      .scan-live-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .scan-live-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .scan-live-box {
+        position: absolute;
+        inset: 15% 14%;
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.92);
+        box-shadow: 0 0 0 999px rgba(11, 21, 33, 0.38);
+      }
+
+      .scan-live-box::before,
+      .scan-live-box::after {
+        content: "";
+        position: absolute;
+        left: 12%;
+        right: 12%;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(65, 157, 255, 0) 0%, rgba(82, 176, 255, 0.94) 18%, rgba(82, 176, 255, 0.94) 82%, rgba(65, 157, 255, 0) 100%);
+      }
+
+      .scan-live-box::before {
+        top: 0;
+      }
+
+      .scan-live-box::after {
+        bottom: 0;
+      }
+
+      .scan-live-tip {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        max-width: calc(100% - 28px);
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(13, 24, 39, 0.58);
+        color: #f6f9ff;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .scan-live-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .scan-live-status {
+        margin: 0;
+        border: 1px dashed #d5e1f2;
+        border-radius: 10px;
+        background: #fbfdff;
+        color: #6c809b;
+        font-size: 12px;
+        line-height: 1.5;
+        padding: 9px 10px;
       }
 
       @media (min-width: 920px) {
@@ -956,12 +1409,43 @@
       }
 
       @media (max-width: 420px) {
+        .modal {
+          padding: 14px 10px calc(14px + env(safe-area-inset-bottom));
+        }
+
+        .modal-body {
+          width: calc(100vw - 20px);
+          max-height: min(72vh, calc(100vh - 28px - env(safe-area-inset-bottom)));
+          border-radius: 14px;
+        }
+
+        .modal-head {
+          padding: 10px 11px;
+        }
+
+        .bind-panel {
+          padding: 10px 11px 12px;
+        }
+
+        .scan-live-panel {
+          padding: 11px;
+        }
+
+        .scan-live-frame {
+          min-height: 248px;
+          border-radius: 14px;
+        }
+
         .scan-row {
           grid-template-columns: 1fr 1fr;
         }
 
         .scan-row .input {
           grid-column: 1 / -1;
+        }
+
+        .task-group-head {
+          align-items: flex-start;
         }
 
       }
@@ -983,28 +1467,22 @@
         <div class="card overview">
           <div class="overview-main">
             <div id="dashboardDate" class="date">--</div>
-            <div id="dashboardHint" class="minor">正在加载任务汇总...</div>
           </div>
           <div class="overview-grid">
-            <div class="metric pending">
-              <div id="pendingCount" class="n">0</div>
-              <div class="k">待执行</div>
-            </div>
-            <div class="metric done">
-              <div id="doneCount" class="n">0</div>
-              <div class="k">已完成</div>
+            <div class="metric">
+              <div id="todayReportCount" class="n">0</div>
+              <div class="k">当日报工量</div>
             </div>
             <div class="metric">
-              <div id="memberReportCount" class="n">0</div>
-              <div class="k">我的报工</div>
+              <div id="monthReportCount" class="n">0</div>
+              <div class="k">月度报工量</div>
             </div>
           </div>
         </div>
 
-        <div class="card" style="padding: 12px">
+        <div class="card scan-card">
           <div class="scan-banner">
             <h3>扫码快速开始</h3>
-            <p>优先使用钉钉/微信扫一扫设备或危化品库二维码，可直接进入报工；若当前容器不支持原生扫码，将自动切换为页面内拍照识别。</p>
             <div class="scan-row">
               <input id="scanInput" class="input" type="search" placeholder="扫码码值/设备编号/库房编码" />
               <button id="scanBtn" class="btn soft">查询</button>
@@ -1016,7 +1494,7 @@
 
         <div class="task-group">
           <div class="task-group-head">
-            <div class="task-group-title">🧑 我的最近报工</div>
+            <div class="task-group-title">我的最近报工</div>
             <div class="group-actions">
               <button id="memberBindBtn" class="minor-link" type="button">绑定执行人</button>
               <div id="memberRecentTotalText" class="minor">0 条</div>
@@ -1033,31 +1511,38 @@
 
       <section id="executeView" class="view hidden">
         <div class="execute-hero">
-          <div id="executeTitle" class="execute-title">设备名称</div>
-          <div id="executeChips" class="execute-chips"></div>
-          <div class="progress-head">
-            <span>检查进度</span>
-            <span id="progressText">0 / 0 项</span>
+          <div class="execute-title-row">
+            <div class="execute-title-main">
+              <div id="executeTitle" class="execute-title">设备名称</div>
+              <div id="executeChips" class="execute-chips"></div>
+            </div>
+            <div id="executeReporterCard" class="exec-reporter-row hidden">
+              <select id="reporterSelect" class="select reporter-select" aria-label="执行人">
+                <option value="">请选择执行人</option>
+              </select>
+              <input id="reporterInput" class="input hidden" type="text" placeholder="自动带出当前登录人" />
+            </div>
           </div>
-          <div class="progress"><span id="progressBar"></span></div>
+          <div class="progress-card">
+            <div class="progress-head">
+              <span>检查进度</span>
+              <span id="progressText">0 / 0 项</span>
+            </div>
+            <div class="progress"><span id="progressBar"></span></div>
+          </div>
         </div>
 
         <div id="executeEmpty" class="empty">正在加载点检明细...</div>
         <div id="executeItemList" class="item-list"></div>
 
-        <div id="executeFoot" class="exec-foot hidden">
-          <div class="field" style="margin-bottom:8px">
-            <label for="reportRemarkInput">备注（选填）</label>
+        <div id="executeRemarkCard" class="exec-card exec-remark-card hidden">
+          <div class="field">
+            <label for="reportRemarkInput">备注</label>
             <input id="reportRemarkInput" class="input" type="text" placeholder="可填写本次点检补充说明" />
           </div>
-          <div class="field" style="margin-bottom:8px">
-            <label for="reporterInput"><span class="required">*</span>报工人</label>
-            <div class="input-action-row">
-              <input id="reporterInput" class="input" type="text" placeholder="请输入或选择执行人" />
-              <button id="chooseReporterBtn" class="btn soft" type="button">选择执行人</button>
-            </div>
-            <div id="reporterHint" class="field-hint">未识别执行人时，可手动输入，也可从通讯录选择</div>
-          </div>
+        </div>
+
+        <div id="executeFoot" class="exec-foot hidden">
           <div class="exec-foot-row">
             <button id="nextPendingBtn" class="btn">下一项</button>
             <button id="submitTaskBtn" class="btn primary">提交汇总</button>
@@ -1132,14 +1617,44 @@
         </div>
         <div class="bind-panel">
           <div id="memberBindCurrent" class="bind-current">当前未绑定执行人</div>
-          <div class="bind-actions">
-            <input id="memberBindSearchInput" class="input" type="search" placeholder="输入姓名/账号/手机号搜索" />
-            <button id="memberBindSearchBtn" class="btn soft" type="button">搜索</button>
-          </div>
-          <div style="display:flex;justify-content:flex-end">
+          <select id="memberBindSelect" class="select bind-select">
+            <option value="">请选择执行人</option>
+          </select>
+          <div class="bind-foot">
             <button id="clearMemberBindBtn" class="minor-link" type="button">清除绑定</button>
+            <button id="confirmMemberBindBtn" class="btn primary" type="button">确认绑定</button>
           </div>
-          <div id="memberBindList" class="modal-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="liveScanModal" class="modal hidden">
+      <div class="modal-body scan-live-body">
+        <div class="modal-head">
+          <div class="card-title">实时扫码</div>
+          <button id="closeLiveScanBtn" class="text-btn">关闭</button>
+        </div>
+        <div class="scan-live-panel">
+          <div class="scan-live-frame">
+            <video id="liveScanVideo" class="scan-live-video" playsinline webkit-playsinline muted></video>
+            <div class="scan-live-overlay">
+              <div class="scan-live-box"></div>
+              <div class="scan-live-tip">请将二维码放入框内，识别后自动进入填写</div>
+            </div>
+          </div>
+          <p id="liveScanStatus" class="scan-live-status">正在准备摄像头...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="photoPreviewModal" class="modal hidden">
+      <div class="modal-body photo-preview-body">
+        <div class="modal-head">
+          <div class="card-title">照片预览</div>
+          <button id="closePhotoPreviewBtn" class="text-btn">关闭</button>
+        </div>
+        <div class="photo-preview-wrap">
+          <img id="photoPreviewImage" alt="异常照片预览" />
         </div>
       </div>
     </div>
@@ -1152,6 +1667,7 @@
       const TASK_DRAFT_PREFIX = "inspection_report_task_draft_v2:";
       const MEMBER_BIND_KEY = "inspection_bound_member_v1";
       let dingTalkJsapiPromise = null;
+      let liveScanFrameCanvas = null;
 
       const state = {
         loading: false,
@@ -1168,12 +1684,26 @@
         boundMember: null,
         currentMemberSource: "",
         memberRecentReports: [],
+        memberReportStats: {
+          dailyCount: 0,
+          monthlyCount: 0,
+        },
+        memberBindCandidates: [],
+        reporterSelectCandidates: [],
         selectedTask: null,
         selectedItems: [],
         reportStartAt: "",
         scanValue: "",
         scanDevice: null,
         scanTaskCandidates: [],
+        liveScanActive: false,
+        liveScanMode: "",
+        liveScanSessionId: 0,
+        liveScanStream: null,
+        liveScanFrameBusy: false,
+        liveScanFrameTimer: 0,
+        liveScanRafId: 0,
+        liveScanDetector: null,
         lastSummary: null,
         selectedRecentReport: null,
       };
@@ -1193,10 +1723,8 @@
         executeView: document.getElementById("executeView"),
         summaryView: document.getElementById("summaryView"),
         dashboardDate: document.getElementById("dashboardDate"),
-        dashboardHint: document.getElementById("dashboardHint"),
-        pendingCount: document.getElementById("pendingCount"),
-        doneCount: document.getElementById("doneCount"),
-        memberReportCount: document.getElementById("memberReportCount"),
+        todayReportCount: document.getElementById("todayReportCount"),
+        monthReportCount: document.getElementById("monthReportCount"),
         memberRecentTotalText: document.getElementById("memberRecentTotalText"),
         memberBindBtn: document.getElementById("memberBindBtn"),
         memberNameHint: document.getElementById("memberNameHint"),
@@ -1210,11 +1738,14 @@
         executeChips: document.getElementById("executeChips"),
         progressText: document.getElementById("progressText"),
         progressBar: document.getElementById("progressBar"),
+        executeReporterCard: document.getElementById("executeReporterCard"),
         executeEmpty: document.getElementById("executeEmpty"),
         executeItemList: document.getElementById("executeItemList"),
+        executeRemarkCard: document.getElementById("executeRemarkCard"),
         executeFoot: document.getElementById("executeFoot"),
         reportRemarkInput: document.getElementById("reportRemarkInput"),
         reporterInput: document.getElementById("reporterInput"),
+        reporterSelect: document.getElementById("reporterSelect"),
         chooseReporterBtn: document.getElementById("chooseReporterBtn"),
         reporterHint: document.getElementById("reporterHint"),
         nextPendingBtn: document.getElementById("nextPendingBtn"),
@@ -1238,10 +1769,16 @@
         memberBindModal: document.getElementById("memberBindModal"),
         closeMemberBindBtn: document.getElementById("closeMemberBindBtn"),
         memberBindCurrent: document.getElementById("memberBindCurrent"),
-        memberBindSearchInput: document.getElementById("memberBindSearchInput"),
-        memberBindSearchBtn: document.getElementById("memberBindSearchBtn"),
+        memberBindSelect: document.getElementById("memberBindSelect"),
         clearMemberBindBtn: document.getElementById("clearMemberBindBtn"),
-        memberBindList: document.getElementById("memberBindList"),
+        confirmMemberBindBtn: document.getElementById("confirmMemberBindBtn"),
+        liveScanModal: document.getElementById("liveScanModal"),
+        closeLiveScanBtn: document.getElementById("closeLiveScanBtn"),
+        liveScanVideo: document.getElementById("liveScanVideo"),
+        liveScanStatus: document.getElementById("liveScanStatus"),
+        photoPreviewModal: document.getElementById("photoPreviewModal"),
+        closePhotoPreviewBtn: document.getElementById("closePhotoPreviewBtn"),
+        photoPreviewImage: document.getElementById("photoPreviewImage"),
         toast: document.getElementById("toast"),
       };
 
@@ -1292,9 +1829,15 @@
           saveCurrentTaskDraft();
         });
 
-        refs.chooseReporterBtn.addEventListener("click", () => {
-          void openMemberBindModal();
+        refs.reporterSelect.addEventListener("change", () => {
+          handleReporterSelectChange();
         });
+
+        if (refs.chooseReporterBtn) {
+          refs.chooseReporterBtn.addEventListener("click", () => {
+            void openMemberBindModal();
+          });
+        }
 
         refs.scanInput.addEventListener("keydown", (event) => {
           if (event.key === "Enter") {
@@ -1370,14 +1913,23 @@
           }
         });
 
-        refs.memberBindSearchBtn.addEventListener("click", () => {
-          void searchMemberBindingCandidates();
+        refs.closeLiveScanBtn.addEventListener("click", () => {
+          closeLiveScanModal();
         });
 
-        refs.memberBindSearchInput.addEventListener("keydown", (event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            void searchMemberBindingCandidates();
+        refs.liveScanModal.addEventListener("click", (event) => {
+          if (event.target === refs.liveScanModal) {
+            closeLiveScanModal();
+          }
+        });
+
+        refs.closePhotoPreviewBtn.addEventListener("click", () => {
+          closePhotoPreview();
+        });
+
+        refs.photoPreviewModal.addEventListener("click", (event) => {
+          if (event.target === refs.photoPreviewModal) {
+            closePhotoPreview();
           }
         });
 
@@ -1388,28 +1940,8 @@
           showToast("已清除绑定执行人");
         });
 
-        refs.memberBindList.addEventListener("click", (event) => {
-          const target = event.target;
-          if (!(target instanceof HTMLElement)) {
-            return;
-          }
-          const trigger = target.closest("[data-action='bind-member']");
-          if (!trigger) {
-            return;
-          }
-          const payload = trigger.getAttribute("data-member") || "";
-          if (!payload) {
-            return;
-          }
-          try {
-            const member = JSON.parse(payload);
-            applyBoundMember(member, "manual");
-            closeMemberBindModal();
-            renderDashboard();
-            showToast("已绑定为默认执行人");
-          } catch (error) {
-            showToast("绑定失败，请重试");
-          }
+        refs.confirmMemberBindBtn.addEventListener("click", () => {
+          confirmMemberBindSelection();
         });
 
         refs.executeItemList.addEventListener("click", (event) => {
@@ -1424,6 +1956,47 @@
             const result = actionBtn.getAttribute("data-result") || "";
             if (Number.isFinite(index)) {
               setItemResult(index, result);
+            }
+            return;
+          }
+
+          const statusToggle = target.closest("[data-action='toggle-status-select']");
+          if (statusToggle) {
+            event.stopPropagation();
+            const index = Number(statusToggle.getAttribute("data-index"));
+            if (Number.isFinite(index)) {
+              toggleStatusSelect(index);
+            }
+            return;
+          }
+
+          const statusOption = target.closest("[data-action='choose-status-option']");
+          if (statusOption) {
+            event.stopPropagation();
+            const index = Number(statusOption.getAttribute("data-index"));
+            const value = statusOption.getAttribute("data-status-value") || "";
+            if (Number.isFinite(index)) {
+              chooseStatusOption(index, value);
+            }
+            return;
+          }
+
+          const removePhotoBtn = target.closest("[data-action='remove-photo']");
+          if (removePhotoBtn) {
+            const index = Number(removePhotoBtn.getAttribute("data-index"));
+            const photoId = removePhotoBtn.getAttribute("data-photo-id") || "";
+            if (Number.isFinite(index) && photoId) {
+              removeItemPhoto(index, photoId);
+            }
+            return;
+          }
+
+          const previewPhotoBtn = target.closest("[data-action='preview-photo']");
+          if (previewPhotoBtn) {
+            const index = Number(previewPhotoBtn.getAttribute("data-index"));
+            const photoId = previewPhotoBtn.getAttribute("data-photo-id") || "";
+            if (Number.isFinite(index) && photoId) {
+              openPhotoPreview(index, photoId);
             }
             return;
           }
@@ -1445,7 +2018,8 @@
           if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) {
             const previousStatus = state.selectedItems[index].resultState;
             if (field === "photoInput" && target instanceof HTMLInputElement && target.files) {
-              state.selectedItems[index].photos = Array.from(target.files).map((file) => file.name);
+              void addItemPhotos(index, target.files, target);
+              return;
             } else {
               state.selectedItems[index][field] = target.value;
             }
@@ -1464,6 +2038,12 @@
 
         refs.executeItemList.addEventListener("input", itemValueUpdate);
         refs.executeItemList.addEventListener("change", itemValueUpdate);
+        document.addEventListener("click", (event) => {
+          if (event.target instanceof HTMLElement && event.target.closest(".status-select")) {
+            return;
+          }
+          closeStatusSelects();
+        });
 
         refs.nextPendingBtn.addEventListener("click", () => {
           scrollToNextPendingItem();
@@ -1489,11 +2069,13 @@
         });
 
         window.addEventListener("pagehide", () => {
+          stopLiveScanSession();
           saveCurrentTaskDraft();
         });
 
         document.addEventListener("visibilitychange", () => {
           if (document.hidden) {
+            stopLiveScanSession();
             saveCurrentTaskDraft();
           }
         });
@@ -1504,6 +2086,7 @@
       }
 
       function switchView(name) {
+        document.body.classList.toggle("execute-mode", name === "execute");
         refs.dashboardView.classList.toggle("hidden", name !== "dashboard");
         refs.executeView.classList.toggle("hidden", name !== "execute");
         refs.summaryView.classList.toggle("hidden", name !== "summary");
@@ -1514,8 +2097,8 @@
           refs.headerActionBtn.textContent = "刷新";
           refs.headerActionBtn.classList.remove("hidden");
         } else if (name === "execute") {
-          refs.navBackBtn.classList.remove("hidden");
-          refs.headerTitle.textContent = state.selectedTask ? `${state.selectedTask.standardName || "任务执行"}` : "任务执行";
+          refs.navBackBtn.classList.add("hidden");
+          refs.headerTitle.textContent = "";
           refs.headerActionBtn.textContent = "";
           refs.headerActionBtn.classList.add("hidden");
         } else {
@@ -1583,6 +2166,26 @@
           setStatus("dashboard", `当前成员识别失败：${result.error || "请求失败"}`, true);
         }
 
+        const urlMemberName = String(
+          urlParams.get("webpage_user_name") ||
+            urlParams.get("user_name") ||
+            urlParams.get("userName") ||
+            urlParams.get("name") ||
+            ""
+        ).trim();
+        const urlMemberId = String(urlParams.get("webpage_user_id") || urlParams.get("user_id") || urlParams.get("userId") || "").trim();
+        if (urlMemberName || urlMemberId) {
+          applyBoundMember({
+            userId: urlMemberId,
+            userName: urlMemberName || urlMemberId,
+            uniqueId: String(urlParams.get("webpage_corp_user_id") || urlParams.get("uniqueid") || urlParams.get("uniqueId") || "").trim(),
+            mobile: String(urlParams.get("webpage_phone") || urlParams.get("mobile") || "").trim(),
+            email: String(urlParams.get("webpage_email") || urlParams.get("email") || "").trim(),
+            account: String(urlParams.get("webpage_account") || urlParams.get("account") || "").trim(),
+          }, "auto");
+          return;
+        }
+
         if (!restoreBoundMemberAsCurrent() && state.memberName) {
           state.currentMember = {
             userName: state.memberName,
@@ -1618,12 +2221,10 @@
       function renderDashboard() {
         const summary = state.dashboardSummary || {};
         const dateText = summary.date || state.today || formatDate(new Date());
+        const reportStats = state.memberReportStats || {};
         refs.dashboardDate.textContent = formatDisplayDate(dateText);
-        refs.dashboardHint.textContent = `今日共 ${summary.totalCount || 0} 项任务，待执行 ${summary.pendingCount || 0} 项`;
-
-        refs.pendingCount.textContent = String(summary.pendingCount || 0);
-        refs.doneCount.textContent = String(summary.doneCount || 0);
-        refs.memberReportCount.textContent = String(state.memberRecentReports.length || 0);
+        refs.todayReportCount.textContent = String(reportStats.dailyCount || 0);
+        refs.monthReportCount.textContent = String(reportStats.monthlyCount || 0);
         refs.memberRecentTotalText.textContent = `${state.memberRecentReports.length || 0} 条`;
         refs.memberBindBtn.textContent = state.memberName ? "切换执行人" : "绑定执行人";
         refs.memberNameHint.textContent = `当前成员：${formatMemberIdentityLabel()}`;
@@ -1729,12 +2330,20 @@
           saveCurrentTaskDraft();
         }
         state.memberRecentReports = [];
+        state.memberReportStats = {
+          dailyCount: 0,
+          monthlyCount: 0,
+        };
       }
 
       async function loadMemberRecentReports(options = {}) {
         const silent = Boolean(options.silent);
         if (!state.memberName) {
           state.memberRecentReports = [];
+          state.memberReportStats = {
+            dailyCount: 0,
+            monthlyCount: 0,
+          };
           if (!silent) {
             setStatus("dashboard", "未识别当前成员，无法加载“我的最近报工”");
           }
@@ -1744,11 +2353,22 @@
           const query = new URLSearchParams();
           query.set("limit", "30");
           query.set("reporter", state.memberName);
+          if (state.today) {
+            query.set("date", state.today);
+          }
           const resp = await requestApi(`/inspection-report/recent?${query.toString()}`);
           const list = Array.isArray(resp?.data?.list) ? resp.data.list : [];
           state.memberRecentReports = list;
+          state.memberReportStats = {
+            dailyCount: Number(resp?.data?.summary?.dailyCount || 0),
+            monthlyCount: Number(resp?.data?.summary?.monthlyCount || 0),
+          };
         } catch (error) {
           state.memberRecentReports = [];
+          state.memberReportStats = {
+            dailyCount: 0,
+            monthlyCount: 0,
+          };
           if (!silent) {
             setStatus("dashboard", `最近报工加载失败：${error.message}`, true);
             showToast(`最近报工加载失败：${error.message}`);
@@ -1775,7 +2395,7 @@
             <div class="task-top">
               <div style="min-width:0">
                 <div class="task-name">${escapeHtml(row.deviceName || row.deviceCode || "设备")} — ${escapeHtml(row.standardName || "-")}</div>
-                <div class="task-meta">${escapeHtml(row.reportDateText || "-")} · 报工人 ${escapeHtml(row.reporter || "-")}</div>
+                <div class="task-meta">${escapeHtml(row.reportDateText || "-")} · 执行人 ${escapeHtml(row.reporter || "-")}</div>
                 <div class="task-tags">
                   <span class="tag">${escapeHtml(row.reportNo || "报工记录")}</span>
                   <span class="tag ${resultTagClass}">${escapeHtml(result)}</span>
@@ -1793,9 +2413,8 @@
       async function openMemberBindModal() {
         refs.memberBindModal.classList.remove("hidden");
         renderMemberBindCurrent();
-        refs.memberBindList.innerHTML = '<div class="empty">正在加载通讯录成员...</div>';
-        refs.memberBindSearchInput.value = resolveBindSearchKeyword();
-        await searchMemberBindingCandidates();
+        renderMemberBindOptions([], { loading: true });
+        await loadMemberBindingCandidates();
       }
 
       function closeMemberBindModal() {
@@ -1811,55 +2430,193 @@
         refs.memberBindCurrent.textContent = `当前默认执行人：${label}`;
       }
 
-      function resolveBindSearchKeyword() {
-        const executeReporter = isCurrentView("execute") ? String(refs.reporterInput.value || "").trim() : "";
-        return executeReporter || state.memberName || String(refs.memberBindSearchInput.value || "").trim() || "";
-      }
-
-      async function searchMemberBindingCandidates() {
+      async function loadMemberBindingCandidates() {
         try {
-          const query = new URLSearchParams();
-          query.set("limit", "50");
-          const keyword = String(refs.memberBindSearchInput.value || "").trim();
-          if (keyword) {
-            query.set("q", keyword);
+          const list = await fetchMemberCandidates();
+          renderMemberBindOptions(list);
+          if (isCurrentView("execute")) {
+            renderReporterSelectOptions(list);
           }
-          const resp = await requestApi(`/inspection-report/member-search?${query.toString()}`);
-          const list = Array.isArray(resp?.data?.list) ? resp.data.list : [];
-          renderMemberBindList(list);
         } catch (error) {
-          refs.memberBindList.innerHTML = `<div class="empty">通讯录加载失败：${escapeHtml(error.message || "请求失败")}</div>`;
+          renderMemberBindOptions([], {
+            placeholder: `通讯录加载失败：${error.message || "请求失败"}`,
+            disabled: true,
+          });
         }
       }
 
-      function renderMemberBindList(list) {
-        refs.memberBindList.innerHTML = "";
-        if (!Array.isArray(list) || !list.length) {
-          refs.memberBindList.innerHTML = '<div class="empty">未搜索到匹配成员，请换个姓名/账号/手机号试试</div>';
+      async function fetchMemberCandidates(limit = 100) {
+        const query = new URLSearchParams();
+        query.set("limit", String(limit));
+        const resp = await requestApi(`/inspection-report/member-search?${query.toString()}`);
+        return Array.isArray(resp?.data?.list) ? resp.data.list : [];
+      }
+
+      function renderMemberBindOptions(list, options = {}) {
+        const loading = Boolean(options.loading);
+        const disabled = Boolean(options.disabled);
+        const placeholder = options.placeholder || (loading ? "正在加载通讯录成员..." : "请选择执行人");
+        const members = Array.isArray(list) ? list : [];
+        state.memberBindCandidates = members;
+
+        const currentKey = resolveCurrentBindCandidateKey();
+        const html = [`<option value="">${escapeHtml(placeholder)}</option>`];
+
+        members.forEach((member, index) => {
+          html.push(`<option value="${index}">${escapeHtml(formatMemberOptionLabel(member))}</option>`);
+        });
+
+        refs.memberBindSelect.innerHTML = html.join("");
+        refs.memberBindSelect.disabled = loading || disabled || !members.length;
+        refs.confirmMemberBindBtn.disabled = loading || disabled || !members.length;
+
+        if (!members.length) {
+          refs.memberBindSelect.value = "";
           return;
         }
 
-        list.forEach((member) => {
-          const div = document.createElement("div");
-          div.className = "task-item";
-          const info = [
-            member.user || member.account || "",
-            member.mobile || "",
-            member.userId || "",
-          ].filter(Boolean).join(" · ");
-          div.innerHTML = `
-            <div class="task-top">
-              <div style="min-width:0">
-                <div class="task-name">${escapeHtml(member.userName || member.user || "成员")}</div>
-                <div class="task-meta">${escapeHtml(info || "百数云通讯录成员")}</div>
-              </div>
-              <div class="task-action">
-                <button class="btn primary" type="button" data-action="bind-member" data-member='${escapeHtml(JSON.stringify(member))}'>绑定</button>
-              </div>
-            </div>
-          `;
-          refs.memberBindList.appendChild(div);
+        const matchedIndex = members.findIndex((member) => buildMemberCandidateKey(member) === currentKey);
+        if (matchedIndex >= 0) {
+          refs.memberBindSelect.value = String(matchedIndex);
+        } else {
+          refs.memberBindSelect.value = "";
+        }
+      }
+
+      async function loadReporterSelectCandidates() {
+        if (!refs.reporterSelect) {
+          return;
+        }
+        if (state.memberBindCandidates.length) {
+          renderReporterSelectOptions(state.memberBindCandidates);
+        } else {
+          renderReporterSelectOptions([], { loading: true });
+        }
+        try {
+          const list = await fetchMemberCandidates();
+          renderReporterSelectOptions(list);
+        } catch (error) {
+          renderReporterSelectOptions([], {
+            placeholder: "通讯录加载失败，请刷新重试",
+            disabled: true,
+          });
+        }
+      }
+
+      function renderReporterSelectOptions(list, options = {}) {
+        if (!refs.reporterSelect) {
+          return;
+        }
+        const loading = Boolean(options.loading);
+        const disabled = Boolean(options.disabled);
+        const placeholder = options.placeholder || (loading ? "正在加载执行人..." : "请选择执行人");
+        const members = Array.isArray(list) ? list : [];
+        state.reporterSelectCandidates = members;
+
+        const currentValue = String(refs.reporterInput?.value || state.memberName || "").trim();
+        const html = [`<option value="">${escapeHtml(placeholder)}</option>`];
+        let matchedIndex = -1;
+        const currentKey = resolveCurrentBindCandidateKey();
+
+        members.forEach((member, index) => {
+          const label = formatMemberOptionLabel(member);
+          const selectedByKey = currentKey && buildMemberCandidateKey(member) === currentKey;
+          const selectedByName = currentValue && label === currentValue;
+          if (matchedIndex < 0 && (selectedByKey || selectedByName)) {
+            matchedIndex = index;
+          }
+          html.push(`<option value="${index}">${escapeHtml(label)}</option>`);
         });
+
+        if (matchedIndex < 0 && currentValue && !loading) {
+          html.push(`<option value="__current">${escapeHtml(currentValue)}</option>`);
+        }
+
+        refs.reporterSelect.innerHTML = html.join("");
+        refs.reporterSelect.disabled = loading || disabled || (!members.length && !currentValue);
+
+        if (matchedIndex >= 0) {
+          refs.reporterSelect.value = String(matchedIndex);
+        } else if (currentValue && !loading) {
+          refs.reporterSelect.value = "__current";
+        } else {
+          refs.reporterSelect.value = "";
+        }
+      }
+
+      function syncReporterSelectValue() {
+        if (!refs.reporterSelect) {
+          return;
+        }
+        renderReporterSelectOptions(state.reporterSelectCandidates || []);
+      }
+
+      function handleReporterSelectChange() {
+        const value = String(refs.reporterSelect.value || "").trim();
+        if (!value) {
+          refs.reporterInput.value = "";
+          state.memberName = "";
+          saveCurrentTaskDraft();
+          syncReporterField();
+          return;
+        }
+        if (value === "__current") {
+          return;
+        }
+        const index = Number(value);
+        const member = Number.isFinite(index) ? state.reporterSelectCandidates[index] : null;
+        if (!member) {
+          showToast("未找到对应执行人，请重新选择");
+          return;
+        }
+        applyBoundMember(member, "manual");
+        syncReporterField();
+        saveCurrentTaskDraft();
+      }
+
+      function formatMemberOptionLabel(member) {
+        return String(member?.userName || member?.user || member?.account || "成员").trim() || "成员";
+      }
+
+      function buildMemberCandidateKey(member) {
+        if (!member || typeof member !== "object") {
+          return "";
+        }
+        return [
+          member.userId || "",
+          member.uniqueId || "",
+          member.mobile || "",
+          member.userName || member.user || "",
+        ]
+          .map((item) => String(item || "").trim())
+          .filter(Boolean)
+          .join("|");
+      }
+
+      function resolveCurrentBindCandidateKey() {
+        const current = state.boundMember || state.currentMember || null;
+        return buildMemberCandidateKey(current);
+      }
+
+      function confirmMemberBindSelection() {
+        const value = String(refs.memberBindSelect.value || "").trim();
+        if (value === "") {
+          showToast("请先选择执行人");
+          return;
+        }
+        const index = Number(value);
+        const member = Number.isFinite(index) ? state.memberBindCandidates[index] : null;
+        if (!member) {
+          showToast("未找到对应成员，请重新选择");
+          return;
+        }
+        applyBoundMember(member, "manual");
+        closeMemberBindModal();
+        renderDashboard();
+        if (isCurrentView("execute")) {
+          syncReporterField();
+        }
+        showToast(`已绑定执行人：${member.userName || member.user || "成员"}`);
       }
 
       function syncReporterField() {
@@ -1873,16 +2630,17 @@
         }
         refs.reporterInput.readOnly = locked;
         refs.reporterInput.placeholder = locked ? "已自动带出执行人" : "请输入或选择执行人";
-        refs.chooseReporterBtn.textContent = locked || state.boundMember ? "切换执行人" : "选择执行人";
-        if (locked) {
-          refs.reporterHint.textContent = `当前已带出：${formatMemberIdentityLabel()}，如需更换可点右侧切换`;
-          return;
+        syncReporterSelectValue();
+        if (refs.chooseReporterBtn) {
+          refs.chooseReporterBtn.textContent = locked || state.boundMember ? "切换执行人" : "选择执行人";
         }
-        if (refs.reporterInput.value.trim()) {
-          refs.reporterHint.textContent = "当前可继续手动修改，也可从通讯录重新选择";
-          return;
+        if (refs.reporterHint) {
+          if (locked) {
+            refs.reporterHint.textContent = `当前已带出：${formatMemberIdentityLabel()}`;
+            return;
+          }
+          refs.reporterHint.textContent = refs.reporterInput.value.trim() ? "已选择执行人" : "请选择执行人";
         }
-        refs.reporterHint.textContent = "未识别执行人时，可手动输入，也可从通讯录选择";
       }
 
       function applyScanFromUrl() {
@@ -1916,11 +2674,14 @@
               setStatus("dashboard", "已取消扫码");
               return;
             }
+            const message = buildDingTalkScanErrorMessage(error);
+            setStatus("dashboard", message, true);
+            showToast(message);
+            return;
           }
         }
 
-        refs.scanImageInput.value = "";
-        refs.scanImageInput.click();
+        await openLiveScanModal();
       }
 
       async function handleScanImage() {
@@ -1936,6 +2697,257 @@
         } catch (error) {
           showToast(error.message || "未识别到二维码");
         }
+      }
+
+      async function openLiveScanModal() {
+        refs.liveScanModal.classList.remove("hidden");
+        refs.liveScanStatus.textContent = "正在打开摄像头...";
+        try {
+          await startLiveScanSession();
+        } catch (error) {
+          closeLiveScanModal({ silent: true });
+          const message = buildLiveScanErrorMessage(error);
+          setStatus("dashboard", message, true);
+          showToast(message);
+        }
+      }
+
+      function closeLiveScanModal(options = {}) {
+        refs.liveScanModal.classList.add("hidden");
+        if (!options.silent) {
+          setStatus("dashboard", "准备就绪");
+        }
+        stopLiveScanSession();
+      }
+
+      async function startLiveScanSession() {
+        if (!isSecureCameraContext()) {
+          throw new Error("当前页面不是安全环境，无法直接调用摄像头扫码");
+        }
+        if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+          throw new Error("当前浏览器不支持直接调用摄像头扫码");
+        }
+
+        stopLiveScanSession();
+        state.liveScanSessionId += 1;
+        const sessionId = state.liveScanSessionId;
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        });
+
+        state.liveScanActive = true;
+        state.liveScanStream = stream;
+        state.liveScanFrameBusy = false;
+        state.liveScanMode = "detector";
+        state.liveScanDetector = null;
+
+        refs.liveScanVideo.srcObject = stream;
+        refs.liveScanVideo.setAttribute("playsinline", "true");
+        refs.liveScanVideo.setAttribute("webkit-playsinline", "true");
+        refs.liveScanVideo.muted = true;
+
+        try {
+          await refs.liveScanVideo.play();
+        } catch (error) {
+          console.warn("live scan video autoplay failed:", error);
+        }
+
+        refs.liveScanStatus.textContent = "请将二维码放入取景框内，识别后会自动进入报工";
+
+        if ("BarcodeDetector" in window) {
+          state.liveScanMode = "detector";
+          void runLiveDetectorScan(sessionId);
+        } else {
+          state.liveScanMode = "server";
+          refs.liveScanStatus.textContent = "正在使用兼容模式识别二维码，请保持画面稳定";
+          scheduleLiveServerScan(sessionId, 180);
+        }
+      }
+
+      function stopLiveScanSession() {
+        state.liveScanActive = false;
+        state.liveScanSessionId += 1;
+        state.liveScanMode = "";
+        state.liveScanFrameBusy = false;
+        state.liveScanDetector = null;
+        if (state.liveScanFrameTimer) {
+          window.clearTimeout(state.liveScanFrameTimer);
+          state.liveScanFrameTimer = 0;
+        }
+        if (state.liveScanRafId) {
+          window.cancelAnimationFrame(state.liveScanRafId);
+          state.liveScanRafId = 0;
+        }
+        if (state.liveScanStream) {
+          try {
+            state.liveScanStream.getTracks().forEach((track) => track.stop());
+          } catch (error) {
+            console.warn("stop live scan stream failed:", error);
+          }
+          state.liveScanStream = null;
+        }
+        if (refs.liveScanVideo) {
+          try {
+            refs.liveScanVideo.pause();
+          } catch (error) {
+            console.warn("pause live scan video failed:", error);
+          }
+          refs.liveScanVideo.srcObject = null;
+        }
+      }
+
+      async function runLiveDetectorScan(sessionId) {
+        if (!state.liveScanActive || sessionId !== state.liveScanSessionId || refs.liveScanModal.classList.contains("hidden")) {
+          return;
+        }
+
+        try {
+          if (!state.liveScanDetector) {
+            state.liveScanDetector = new BarcodeDetector({ formats: ["qr_code"] });
+          }
+          if (refs.liveScanVideo.readyState >= 2) {
+            const results = await state.liveScanDetector.detect(refs.liveScanVideo);
+            const first = Array.isArray(results) ? results.find((item) => item && item.rawValue) : null;
+            const decoded = normalizeScanValue(first && first.rawValue ? first.rawValue : "");
+            if (decoded) {
+              await finalizeLiveScanResult(decoded, sessionId);
+              return;
+            }
+          }
+        } catch (error) {
+          console.warn("live barcode detect failed:", error);
+          state.liveScanMode = "server";
+          refs.liveScanStatus.textContent = "当前环境不支持原生扫码识别，已切换兼容模式";
+          scheduleLiveServerScan(sessionId, 120);
+          return;
+        }
+
+        state.liveScanRafId = window.requestAnimationFrame(() => {
+          void runLiveDetectorScan(sessionId);
+        });
+      }
+
+      function scheduleLiveServerScan(sessionId, delay = 650) {
+        if (!state.liveScanActive || sessionId !== state.liveScanSessionId) {
+          return;
+        }
+        if (state.liveScanFrameTimer) {
+          window.clearTimeout(state.liveScanFrameTimer);
+        }
+        state.liveScanFrameTimer = window.setTimeout(() => {
+          void scanLiveFrameViaServer(sessionId);
+        }, delay);
+      }
+
+      async function scanLiveFrameViaServer(sessionId) {
+        if (!state.liveScanActive || sessionId !== state.liveScanSessionId || refs.liveScanModal.classList.contains("hidden")) {
+          return;
+        }
+        if (state.liveScanFrameBusy) {
+          scheduleLiveServerScan(sessionId, 220);
+          return;
+        }
+        if (!refs.liveScanVideo || refs.liveScanVideo.readyState < 2) {
+          scheduleLiveServerScan(sessionId, 180);
+          return;
+        }
+
+        state.liveScanFrameBusy = true;
+        try {
+          const imageBase64 = captureLiveVideoFrame();
+          if (!imageBase64) {
+            scheduleLiveServerScan(sessionId, 180);
+            return;
+          }
+          const resp = await requestApi("/qr/decode", "POST", { imageBase64 });
+          const decoded = normalizeScanValue(resp?.data?.scanValue || resp?.data?.rawValue || "");
+          if (decoded) {
+            await finalizeLiveScanResult(decoded, sessionId);
+            return;
+          }
+        } catch (error) {
+          const text = String(error && error.message ? error.message : error || "");
+          if (!/未识别到二维码|重新拍照|图片格式不正确|图片数据为空/.test(text)) {
+            console.warn("live scan via server failed:", error);
+            refs.liveScanStatus.textContent = `识别中：${text}`;
+          }
+        } finally {
+          state.liveScanFrameBusy = false;
+        }
+
+        scheduleLiveServerScan(sessionId, 700);
+      }
+
+      function captureLiveVideoFrame() {
+        const video = refs.liveScanVideo;
+        if (!video) {
+          return "";
+        }
+
+        const width = Number(video.videoWidth || 0);
+        const height = Number(video.videoHeight || 0);
+        if (!width || !height) {
+          return "";
+        }
+
+        const maxEdge = 960;
+        const scale = Math.min(1, maxEdge / Math.max(width, height));
+        const canvas = liveScanFrameCanvas || document.createElement("canvas");
+        liveScanFrameCanvas = canvas;
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+
+        const ctx = canvas.getContext("2d", { alpha: false });
+        if (!ctx) {
+          return "";
+        }
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.86);
+      }
+
+      async function finalizeLiveScanResult(decoded, sessionId) {
+        if (!decoded || sessionId !== state.liveScanSessionId) {
+          return;
+        }
+        refs.scanInput.value = decoded;
+        refs.liveScanStatus.textContent = "识别成功，正在匹配任务...";
+        closeLiveScanModal({ silent: true });
+        await quickScanAndStart();
+      }
+
+      function isSecureCameraContext() {
+        if (window.isSecureContext) {
+          return true;
+        }
+        const host = String(window.location.hostname || "").trim();
+        return host === "localhost" || host === "127.0.0.1";
+      }
+
+      function buildLiveScanErrorMessage(error) {
+        const text = String(error && error.message ? error.message : error || "").trim();
+        const name = String(error && error.name ? error.name : "").trim();
+        if (/安全环境|secure/i.test(text)) {
+          return "当前页面不是 HTTPS 安全环境，无法直接调用摄像头扫码";
+        }
+        if (/notallowederror/i.test(name) || /permission|权限|denied/i.test(text)) {
+          return "未获取摄像头权限，请在系统设置中允许钉钉访问相机后重试";
+        }
+        if (/notfounderror/i.test(name) || /未找到|摄像头/i.test(text)) {
+          return "未找到可用摄像头，请检查设备后重试";
+        }
+        if (/不支持/.test(text)) {
+          return text;
+        }
+        return text || "当前环境暂不支持直接扫码，请使用系统扫一扫";
       }
 
       async function decodeQrFromFile(file) {
@@ -2043,6 +3055,31 @@
         return canvas.toDataURL("image/jpeg", 0.88);
       }
 
+      async function compressPhotoDataUrl(dataUrl) {
+        const image = await loadImageFromDataUrl(dataUrl);
+        const width = Number(image.naturalWidth || image.width || 0);
+        const height = Number(image.naturalHeight || image.height || 0);
+        if (!width || !height) {
+          return dataUrl;
+        }
+
+        const maxSide = 900;
+        const scale = Math.min(1, maxSide / Math.max(width, height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+
+        const ctx = canvas.getContext("2d", { alpha: false });
+        if (!ctx) {
+          return dataUrl;
+        }
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL("image/jpeg", 0.82);
+      }
+
       function loadImageFromDataUrl(dataUrl) {
         return new Promise((resolve, reject) => {
           const image = new Image();
@@ -2059,6 +3096,17 @@
 
       function isDingTalkEnv() {
         return /DingTalk/i.test(String(navigator.userAgent || ""));
+      }
+
+      function buildDingTalkScanErrorMessage(error) {
+        const text = String(error && error.message ? error.message : error || "").trim();
+        if (/timeout|超时/i.test(text)) {
+          return "钉钉扫码未完成，请重新点击扫一扫";
+        }
+        if (/未提供|加载失败|初始化失败|JSAPI/i.test(text)) {
+          return "钉钉扫码能力暂不可用，请重新打开页面后重试";
+        }
+        return text || "钉钉扫码失败，请重新点击扫一扫";
       }
 
       function isWeChatEnv() {
@@ -2268,15 +3316,17 @@
           const tasks = Array.isArray(data.tasks) ? data.tasks : [];
           state.scanValue = scanValue;
           state.scanDevice = data.device || null;
-          state.scanTaskCandidates = tasks.map((task) => mergeTaskWithDevice(task, state.scanDevice));
+          state.scanTaskCandidates = tasks
+            .map((task) => mergeTaskWithDevice(task, state.scanDevice))
+            .filter((task) => isTodayTask(task));
 
           if (!state.scanTaskCandidates.length) {
-            showToast("该检查对象暂无可执行任务");
-            setStatus("dashboard", "检查对象已识别，但暂无可执行任务", true);
+            showToast("该检查对象今日暂无任务");
+            setStatus("dashboard", "检查对象已识别，但今日暂无任务", true);
             return;
           }
 
-          if (state.scanTaskCandidates.length === 1) {
+          if (state.scanTaskCandidates.length === 1 && !isDoneStatus(state.scanTaskCandidates[0].taskStatus || state.scanTaskCandidates[0].statusText || "")) {
             await startTask(state.scanTaskCandidates[0]);
             const matchedDeviceText = `${state.scanDevice?.code || "-"} ${state.scanDevice?.name || "-"}`.trim();
             setStatus("dashboard", `已匹配检查对象：${matchedDeviceText}`);
@@ -2318,17 +3368,36 @@
 
       function openTaskPicker(tasks) {
         refs.taskPickerList.innerHTML = "";
-        tasks.forEach((task) => {
+        const list = (Array.isArray(tasks) ? tasks : [])
+          .filter((task) => isTodayTask(task))
+          .sort((a, b) => {
+            const doneA = isDoneStatus(a.taskStatus || a.statusText || "") ? 1 : 0;
+            const doneB = isDoneStatus(b.taskStatus || b.statusText || "") ? 1 : 0;
+            return doneA - doneB || String(a.standardName || "").localeCompare(String(b.standardName || ""), "zh-Hans-CN");
+          });
+
+        if (!list.length) {
+          refs.taskPickerList.innerHTML = '<div class="empty">今日暂无可选择任务</div>';
+          refs.taskPickerModal.classList.remove("hidden");
+          return;
+        }
+
+        list.forEach((task) => {
+          const done = isDoneStatus(task.taskStatus || task.statusText || "");
+          const actionText = done ? "已执行" : "执行";
           const div = document.createElement("div");
-          div.className = "task-item";
+          div.className = `task-item ${done ? "done" : ""}`;
           div.innerHTML = `
             <div class="task-top">
               <div style="min-width:0">
                 <div class="task-name">${escapeHtml(task.deviceName || task.deviceCode || "设备")} — ${escapeHtml(task.standardName || task.standardCode || "点检")}</div>
                 <div class="task-meta">${escapeHtml(task.taskDateText || "-")} · ${escapeHtml(task.category || "点检")}</div>
+                <div class="task-tags">
+                  <span class="tag ${done ? "done" : ""}">${escapeHtml(done ? "已执行" : "待执行")}</span>
+                </div>
               </div>
               <div class="task-action">
-                <button class="btn primary" data-action="pick-task" data-task-id="${escapeHtml(task.id || "")}">执行</button>
+                <button class="btn ${done ? "" : "primary"}" data-action="pick-task" data-task-id="${escapeHtml(task.id || "")}" ${done ? "disabled" : ""}>${actionText}</button>
               </div>
             </div>
           `;
@@ -2376,7 +3445,7 @@
           refs.reportDetailHead.classList.remove("hidden");
           refs.reportDetailHead.innerHTML = `
             <h3>${escapeHtml(report.deviceName || report.deviceCode || "设备")} — ${escapeHtml(report.standardName || "点检")}</h3>
-            <p>${escapeHtml(report.reportDateText || "-")} · 报工人 ${escapeHtml(report.reporter || "-")} · 结果 ${escapeHtml(result)}</p>
+            <p>${escapeHtml(report.reportDateText || "-")} · 执行人 ${escapeHtml(report.reporter || "-")} · 结果 ${escapeHtml(result)}</p>
           `;
         } else {
           refs.reportDetailHead.classList.add("hidden");
@@ -2421,6 +3490,10 @@
           showToast("未找到任务，请刷新后重试");
           return;
         }
+        if (isDoneStatus(task.taskStatus || task.statusText || "")) {
+          showToast("该任务已执行");
+          return;
+        }
         await startTask(task);
       }
 
@@ -2440,8 +3513,11 @@
         refs.executeItemList.innerHTML = "";
         refs.executeEmpty.textContent = "正在加载点检明细...";
         refs.executeEmpty.classList.remove("hidden");
+        refs.executeReporterCard.classList.add("hidden");
+        refs.executeRemarkCard.classList.add("hidden");
         refs.executeFoot.classList.add("hidden");
         switchView("execute");
+        void loadReporterSelectCandidates();
         renderExecuteHeader();
 
         setLoading(true);
@@ -2455,20 +3531,11 @@
           renderExecute();
 
           if (!state.selectedItems.length) {
-            const sampleText = Array.isArray(stats.sampleDetailRefs) && stats.sampleDetailRefs.length
-              ? `；样例：${stats.sampleDetailRefs.slice(0, 3).map((row) => `[${row.standardId || "-"}|${row.standardName || "-"}]`).join(" ")}`
-              : "";
-            setStatus(
-              "execute",
-              `当前任务未匹配到明细。任务标准[ID:${stats.taskStandardId || "-"}/编号:${stats.taskStandardCode || "-"}/名称:${stats.taskStandardName || "-"}]，明细总数${stats.totalDetailCount || 0}，启用${stats.enabledDetailCount || 0}，匹配${stats.matchedDetailCount || 0}${sampleText}`,
-              true
-            );
+            setStatus("execute", "当前任务暂无可填写项，可返回任务首页查看其他任务。");
           } else {
-            setStatus("execute", restoredDraft ? `已恢复暂存内容，共 ${state.selectedItems.length} 项` : `明细加载完成，共 ${state.selectedItems.length} 项`);
-            if (restoredDraft) {
-              showToast("已恢复上次未提交内容");
-            } else if (!String(refs.reporterInput.value || "").trim()) {
-              showToast("可点“选择执行人”从通讯录选择报工人");
+            setStatus("execute", "");
+            if (!restoredDraft && !String(refs.reporterInput.value || "").trim()) {
+              showToast("请从执行人下拉选择执行人");
             }
           }
         } catch (error) {
@@ -2501,13 +3568,17 @@
 
         if (!state.selectedItems.length) {
           refs.executeEmpty.classList.remove("hidden");
-          refs.executeEmpty.textContent = "当前任务暂无可录入明细。";
+          refs.executeEmpty.textContent = "当前任务暂无可填写项。";
+          refs.executeReporterCard.classList.add("hidden");
+          refs.executeRemarkCard.classList.add("hidden");
           refs.executeFoot.classList.add("hidden");
           updateProgress();
           return;
         }
 
         refs.executeEmpty.classList.add("hidden");
+        refs.executeReporterCard.classList.remove("hidden");
+        refs.executeRemarkCard.classList.remove("hidden");
         refs.executeFoot.classList.remove("hidden");
 
         state.selectedItems.forEach((item, index) => {
@@ -2515,24 +3586,19 @@
           const status = resolveItemResultState(item, filled);
           const itemClass = status === "abnormal" ? "abnormal" : filled ? "done" : "";
           const executeMode = getItemExecuteMode(item);
+          const displaySeq = index + 1;
+          const itemTitle = item.pointItem || item.pointPart || "-";
 
           const div = document.createElement("div");
           div.className = `item-card ${itemClass}`;
           div.setAttribute("data-item-index", String(index));
           div.innerHTML = `
             <div class="item-head">
-              <div style="display:flex;gap:8px;min-width:0">
-                <span class="item-no">${escapeHtml(item.seq || index + 1)}</span>
-                <div style="min-width:0">
-                  <div class="item-name">${escapeHtml(item.pointPart || "-")} · ${escapeHtml(item.pointItem || "-")}</div>
-                  <div class="item-desc">标准：${escapeHtml(item.judgeStandard || "-")} ${item.unit ? ` | 单位：${escapeHtml(item.unit)}` : ""}</div>
-                  <div class="item-meta">
-                    <span class="meta-chip">${escapeHtml(getExecuteModeLabel(executeMode))}</span>
-                    ${item.checkMethod ? `<span class="meta-chip">执行方式：${escapeHtml(item.checkMethod)}</span>` : ""}
-                  </div>
-                </div>
+              <div class="item-title-row">
+                <span class="item-no">${displaySeq}</span>
+                <div class="item-name">${escapeHtml(itemTitle)}</div>
               </div>
-              <span class="item-status ${escapeHtml(status)}">${escapeHtml(itemStatusText(status))}</span>
+              <span class="item-mode-tag">${escapeHtml(getExecuteModeLabel(executeMode))}</span>
             </div>
 
             ${renderResultBar(index, item)}
@@ -2561,13 +3627,10 @@
 
         if (executeMode === "status") {
           const options = Array.isArray(item.options) ? item.options : [];
-          const optionHtml = ['<option value="">请选择</option>']
-            .concat(options.map((opt) => `<option value="${escapeHtml(opt)}" ${item.optionValue === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`))
-            .join("");
           return `
             <div class="field">
               <label><span class="required">*</span>状态选择</label>
-              <select class="select" data-index="${index}" data-field="optionValue">${optionHtml}</select>
+              ${renderStatusSelect(index, item, options)}
             </div>
           `;
         }
@@ -2584,6 +3647,66 @@
         `;
       }
 
+      function renderStatusSelect(index, item, options) {
+        const current = String(item.optionValue || "").trim();
+        const rows = Array.from(new Set((Array.isArray(options) ? options : []).map((opt) => String(opt || "").trim()).filter(Boolean)));
+        const allOptions = ["", ...rows];
+        const label = current || "请选择";
+        return `
+          <div class="status-select" data-status-select="${index}">
+            <button class="status-select-button${current ? "" : " is-placeholder"}" type="button" data-action="toggle-status-select" data-index="${index}" data-field="optionValue">
+              ${escapeHtml(label)}
+            </button>
+            <div class="status-select-panel hidden">
+              ${allOptions
+                .map((opt) => {
+                  const optionLabel = opt || "请选择";
+                  return `<button class="status-select-option${opt === current ? " is-selected" : ""}" type="button" data-action="choose-status-option" data-index="${index}" data-status-value="${escapeHtml(opt)}">${escapeHtml(optionLabel)}</button>`;
+                })
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function toggleStatusSelect(index) {
+        const root = refs.executeItemList.querySelector(`[data-status-select='${index}']`);
+        if (!(root instanceof HTMLElement)) {
+          return;
+        }
+        const panel = root.querySelector(".status-select-panel");
+        const willOpen = panel instanceof HTMLElement && panel.classList.contains("hidden");
+        closeStatusSelects(root);
+        root.classList.toggle("is-open", willOpen);
+        if (panel instanceof HTMLElement) {
+          panel.classList.toggle("hidden", !willOpen);
+        }
+      }
+
+      function closeStatusSelects(exceptRoot = null) {
+        refs.executeItemList.querySelectorAll(".status-select").forEach((root) => {
+          if (exceptRoot && root === exceptRoot) {
+            return;
+          }
+          root.classList.remove("is-open");
+          const panel = root.querySelector(".status-select-panel");
+          if (panel instanceof HTMLElement) {
+            panel.classList.add("hidden");
+          }
+        });
+      }
+
+      function chooseStatusOption(index, value) {
+        const item = state.selectedItems[index];
+        if (!item) {
+          return;
+        }
+        item.optionValue = String(value || "").trim();
+        normalizeItemStateByValue(index, "optionValue");
+        saveCurrentTaskDraft();
+        renderExecute();
+      }
+
       function renderResultBar(index, item) {
         if (getItemExecuteMode(item) !== "normal_abnormal") {
           return "";
@@ -2591,8 +3714,8 @@
 
         return `
           <div class="result-bar">
-            <button class="result-btn ${item.resultState === "normal" ? "active normal" : ""}" data-action="set-result" data-index="${index}" data-result="normal">正常</button>
             <button class="result-btn ${item.resultState === "abnormal" ? "active abnormal" : ""}" data-action="set-result" data-index="${index}" data-result="abnormal">异常</button>
+            <button class="result-btn ${item.resultState === "normal" ? "active normal" : ""}" data-action="set-result" data-index="${index}" data-result="normal">正常</button>
           </div>
         `;
       }
@@ -2614,9 +3737,17 @@
           return "";
         }
 
-        const photos = Array.isArray(item.photos) ? item.photos : [];
+        const photos = normalizePhotoList(item.photos);
         const photoHtml = photos.length
-          ? `<div class="photos">${photos.map((name) => `<span class="photo-chip">${escapeHtml(name)}</span>`).join("")}</div>`
+          ? `<div class="photos">${photos.map((photo) => `
+              <div>
+                <div class="photo-thumb" data-action="preview-photo" data-index="${index}" data-photo-id="${escapeHtml(photo.id)}">
+                  ${photo.url ? `<img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.name || "异常照片")}" />` : `<span class="photo-file">已选照片</span>`}
+                  <button class="photo-remove" type="button" data-action="remove-photo" data-index="${index}" data-photo-id="${escapeHtml(photo.id)}" aria-label="删除照片">×</button>
+                </div>
+                <div class="photo-name">${escapeHtml(photo.name || "照片")}</div>
+              </div>
+            `).join("")}</div>`
           : "";
 
         return `
@@ -2630,12 +3761,109 @@
               <textarea class="textarea" data-index="${index}" data-field="handling" placeholder="可填写处理措施">${escapeHtml(item.handling || "")}</textarea>
             </div>
             <div class="field">
-              <label>${item.requirePhotoOnAbnormal ? '<span class="required">*</span>' : ""}异常照片</label>
-              <input class="input" type="file" accept="image/*" capture="environment" multiple data-index="${index}" data-field="photoInput" />
+              <div class="photo-head">
+                <label>${item.requirePhotoOnAbnormal ? '<span class="required">*</span>' : ""}异常照片</label>
+                <label class="photo-add-btn" title="添加照片">
+                  +
+                  <input type="file" accept="image/*" capture="environment" multiple data-index="${index}" data-field="photoInput" hidden />
+                </label>
+              </div>
               ${photoHtml}
             </div>
           </div>
         `;
+      }
+
+      function normalizePhotoList(value) {
+        return (Array.isArray(value) ? value : [])
+          .map((item, index) => {
+            if (item && typeof item === "object") {
+              const name = String(item.name || item.fileName || `照片${index + 1}`).trim();
+              const url = String(item.url || item.previewUrl || item.dataUrl || "").trim();
+              return {
+                id: String(item.id || `${name}-${index}`).trim(),
+                name,
+                url,
+              };
+            }
+            const name = String(item || "").trim();
+            if (!name) {
+              return null;
+            }
+            return {
+              id: `${name}-${index}`,
+              name,
+              url: "",
+            };
+          })
+          .filter(Boolean);
+      }
+
+      async function addItemPhotos(index, fileList, inputEl) {
+        const item = state.selectedItems[index];
+        if (!item || !fileList || !fileList.length) {
+          return;
+        }
+
+        const files = Array.from(fileList).filter((file) => file && /^image\//i.test(file.type || ""));
+        if (!files.length) {
+          showToast("请选择图片文件");
+          if (inputEl) {
+            inputEl.value = "";
+          }
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const nextPhotos = normalizePhotoList(item.photos);
+          for (const file of files) {
+            const dataUrl = await readFileAsDataUrl(file);
+            const previewUrl = await compressPhotoDataUrl(dataUrl);
+            nextPhotos.push({
+              id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+              name: file.name || `异常照片_${nextPhotos.length + 1}.jpg`,
+              url: previewUrl,
+            });
+          }
+          item.photos = nextPhotos;
+          saveCurrentTaskDraft();
+          renderExecute();
+        } catch (error) {
+          showToast(`照片处理失败：${error.message || "请重试"}`);
+        } finally {
+          if (inputEl) {
+            inputEl.value = "";
+          }
+          setLoading(false);
+        }
+      }
+
+      function removeItemPhoto(index, photoId) {
+        const item = state.selectedItems[index];
+        if (!item) {
+          return;
+        }
+        item.photos = normalizePhotoList(item.photos).filter((photo) => photo.id !== photoId);
+        saveCurrentTaskDraft();
+        renderExecute();
+      }
+
+      function openPhotoPreview(index, photoId) {
+        const item = state.selectedItems[index];
+        const photo = normalizePhotoList(item && item.photos).find((row) => row.id === photoId);
+        if (!photo || !photo.url) {
+          showToast("当前照片暂无可预览内容");
+          return;
+        }
+        refs.photoPreviewImage.src = photo.url;
+        refs.photoPreviewImage.alt = photo.name || "异常照片预览";
+        refs.photoPreviewModal.classList.remove("hidden");
+      }
+
+      function closePhotoPreview() {
+        refs.photoPreviewModal.classList.add("hidden");
+        refs.photoPreviewImage.removeAttribute("src");
       }
 
       function setItemResult(index, result) {
@@ -2721,16 +3949,18 @@
 
         const reporter = refs.reporterInput.value.trim();
         if (!reporter) {
-          showToast("请填写报工人");
+          showToast("请选择执行人");
+          highlightBlock(refs.executeReporterCard);
           return;
         }
         localStorage.setItem("inspection_report_reporter", reporter);
         state.memberName = reporter;
         localStorage.setItem("inspection_member_name", reporter);
 
-        const validationError = validateBeforeSubmit(state.selectedItems);
-        if (validationError) {
-          showToast(validationError);
+        const validation = validateBeforeSubmit(state.selectedItems);
+        if (validation) {
+          showToast(validation.message);
+          highlightInvalidItem(validation.index, validation.field);
           return;
         }
 
@@ -2741,14 +3971,14 @@
           remark: refs.reportRemarkInput.value.trim(),
           startedAt: state.reportStartAt || nowDateTimeText(),
           endedAt: nowDateTimeText(),
-          items: state.selectedItems.map((item) => {
+          items: state.selectedItems.map((item, index) => {
             const isAbnormal = item.resultState === "abnormal";
             const inputValue = item.inputValue || "";
             const optionValue = item.optionValue || "";
             const numericValue = item.numericValue;
             return {
               standardDetailId: item.standardDetailId,
-              seq: item.seq,
+              seq: index + 1,
               pointPart: item.pointPart,
               pointItem: item.pointItem,
               checkMethod: item.checkMethod || "",
@@ -2761,7 +3991,7 @@
               isAbnormal,
               abnormalDesc: item.abnormalDesc || "",
               handling: item.handling || "",
-              photos: Array.isArray(item.photos) ? item.photos : [],
+              photos: isAbnormal ? normalizePhotoList(item.photos).map((photo) => photo.name).filter(Boolean) : [],
             };
           }),
         };
@@ -2789,16 +4019,95 @@
         for (let i = 0; i < items.length; i += 1) {
           const item = items[i];
           if (!isItemFilled(item)) {
-            return `第 ${item.seq || i + 1} 项尚未填写`;
+            return {
+              index: i,
+              field: resolvePrimaryInputField(item),
+              message: `第 ${i + 1} 项尚未填写`,
+            };
           }
           if (item.resultState === "abnormal" && item.requireDescOnAbnormal && !String(item.abnormalDesc || "").trim()) {
-            return `第 ${item.seq || i + 1} 项异常描述必填`;
+            return {
+              index: i,
+              field: "abnormalDesc",
+              message: `第 ${i + 1} 项异常描述必填`,
+            };
           }
-          if (item.resultState === "abnormal" && item.requirePhotoOnAbnormal && !(item.photos && item.photos.length)) {
-            return `第 ${item.seq || i + 1} 项异常照片必填`;
+          if (item.resultState === "abnormal" && item.requirePhotoOnAbnormal && !normalizePhotoList(item.photos).length) {
+            return {
+              index: i,
+              field: "photoInput",
+              message: `第 ${i + 1} 项异常照片必填`,
+            };
           }
         }
-        return "";
+        return null;
+      }
+
+      function resolvePrimaryInputField(item) {
+        const mode = getItemExecuteMode(item);
+        if (mode === "meter") {
+          return "numericValue";
+        }
+        if (mode === "status") {
+          return "optionValue";
+        }
+        if (mode === "text") {
+          return "inputValue";
+        }
+        return "result";
+      }
+
+      function highlightInvalidItem(index, field = "") {
+        const card = refs.executeItemList.querySelector(`[data-item-index='${index}']`);
+        if (!(card instanceof HTMLElement)) {
+          return;
+        }
+        clearValidationHighlights();
+        card.classList.add("missing");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        window.setTimeout(() => {
+          focusInvalidField(card, field);
+        }, 260);
+        window.setTimeout(() => {
+          card.classList.remove("missing");
+        }, 3200);
+      }
+
+      function highlightBlock(element) {
+        if (!(element instanceof HTMLElement)) {
+          return;
+        }
+        clearValidationHighlights();
+        element.classList.add("missing");
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        window.setTimeout(() => {
+          const input = element.querySelector("input:not([type='hidden']), select, textarea, button");
+          if (input && typeof input.focus === "function") {
+            input.focus({ preventScroll: true });
+          }
+        }, 260);
+        window.setTimeout(() => {
+          element.classList.remove("missing");
+        }, 3200);
+      }
+
+      function clearValidationHighlights() {
+        document.querySelectorAll(".item-card.missing, .exec-card.missing, .exec-reporter-row.missing").forEach((node) => {
+          node.classList.remove("missing");
+        });
+      }
+
+      function focusInvalidField(card, field) {
+        let target = null;
+        if (field && field !== "result") {
+          target = card.querySelector(`[data-field='${field}']`);
+        }
+        if (!target) {
+          target = card.querySelector("[data-action='set-result'], input:not([type='hidden']), select, textarea");
+        }
+        if (target && typeof target.focus === "function") {
+          target.focus({ preventScroll: true });
+        }
       }
 
       function isItemFilled(item) {
@@ -2820,10 +4129,11 @@
 
       function buildSummary(submitData) {
         const abnormalItems = state.selectedItems
-          .filter((item) => item.resultState === "abnormal")
-          .map((item, index) => ({
-            index: item.seq || index + 1,
-            title: `${item.pointPart || "-"} · ${item.pointItem || "-"}`,
+          .map((item, index) => ({ item, index }))
+          .filter(({ item }) => item.resultState === "abnormal")
+          .map(({ item, index }) => ({
+            index: index + 1,
+            title: item.pointItem || item.pointPart || "-",
             desc: item.abnormalDesc || "未填写异常描述",
           }));
 
@@ -2960,7 +4270,7 @@
               numericValue: item.numericValue === undefined || item.numericValue === null ? "" : item.numericValue,
               abnormalDesc: item.abnormalDesc || "",
               handling: item.handling || "",
-              photos: Array.isArray(item.photos) ? item.photos : [],
+              photos: normalizePhotoList(item.photos),
             })),
           };
           localStorage.setItem(getTaskDraftKey(state.selectedTask.id), JSON.stringify(payload));
@@ -3002,7 +4312,7 @@
               numericValue: matched.numericValue === undefined || matched.numericValue === null ? "" : String(matched.numericValue),
               abnormalDesc: String(matched.abnormalDesc || ""),
               handling: String(matched.handling || ""),
-              photos: Array.isArray(matched.photos) ? matched.photos : [],
+              photos: normalizePhotoList(matched.photos),
             };
             if (getItemExecuteMode(merged) === "meter" && !String(merged.numericValue || "").trim() && String(merged.inputValue || "").trim()) {
               merged.numericValue = String(merged.inputValue || "").trim();
@@ -3134,6 +4444,12 @@
         return ["已完成", "完成", "异常", "已报工", "已关闭", "作废", "失效"].includes(value);
       }
 
+      function isTodayTask(task) {
+        const taskDate = String(task && task.taskDateText ? task.taskDateText : "").trim();
+        const today = String(state.today || formatDate(new Date())).trim();
+        return Boolean(taskDate && today && taskDate === today);
+      }
+
       function isBinaryNormalAbnormalSelect(item) {
         if (!item || item.inputType !== "select") {
           return false;
@@ -3184,7 +4500,7 @@
         if (mode === "meter") return "抄表录入";
         if (mode === "status") return "状态选择";
         if (mode === "text") return "文本录入";
-        return "普通判定";
+        return "普通判断";
       }
 
       function normalizeResultState(value) {
@@ -3219,7 +4535,7 @@
           return {
             status: "pending",
             label: "待填",
-            detail: "请输入抄表数值",
+            detail: "",
           };
         }
 

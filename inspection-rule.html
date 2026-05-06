@@ -20,8 +20,17 @@
         box-sizing: border-box;
       }
 
+      html {
+        width: 100%;
+        min-height: 100%;
+        overflow: auto;
+      }
+
       body {
         margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: auto;
         background: var(--bg);
         color: var(--text);
         font: 13px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
@@ -30,10 +39,14 @@
       .page {
         width: 100%;
         min-height: 100vh;
+        min-height: 100dvh;
+        max-width: 100%;
+        overflow: auto;
         padding: 10px;
       }
 
       .panel {
+        min-width: 0;
         border: 1px solid var(--line);
         background: var(--panel);
         border-radius: 6px;
@@ -42,6 +55,8 @@
 
       .rule-panel {
         min-height: calc(100vh - 20px);
+        min-height: calc(100dvh - 20px);
+        min-width: 0;
         display: grid;
         grid-template-rows: auto auto minmax(0, 1fr) auto auto;
       }
@@ -51,7 +66,7 @@
         padding: 10px 12px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 12px;
       }
 
@@ -63,8 +78,7 @@
       .toolbar {
         padding: 10px 12px;
         border-bottom: 1px solid var(--line-soft);
-        display: grid;
-        grid-template-columns: 1.5fr 140px 140px auto;
+        display: flex;
         gap: 8px;
         align-items: center;
       }
@@ -78,6 +92,22 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        justify-content: flex-start;
+        flex: 0 0 auto;
+      }
+
+      .toolbar #keywordInput {
+        flex: 0 1 280px;
+        width: 280px;
+        max-width: 32vw;
+        margin-left: auto;
+      }
+
+      .toolbar #generationTypeFilter,
+      .toolbar #statusFilter,
+      .toolbar > .select-proxy {
+        flex: 0 0 140px;
+        width: 140px;
       }
 
       .input,
@@ -109,6 +139,169 @@
         outline: none;
         border-color: #89afe8;
         box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .native-select-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .select-proxy {
+        position: relative;
+      }
+
+      .select-proxy-button {
+        width: 100%;
+        min-height: 32px;
+        border: 1px solid #cad3e1;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 30px 0 8px;
+        font: inherit;
+        font-size: 13px;
+        text-align: left;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .select-proxy.has-value .select-proxy-button {
+        padding-right: 42px;
+      }
+
+      .select-proxy-button::after {
+        content: "";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 7px;
+        height: 7px;
+        border-right: 1px solid #65758c;
+        border-bottom: 1px solid #65758c;
+        transform: translateY(-65%) rotate(45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-button::after {
+        display: none;
+      }
+
+      .select-proxy-clear {
+        position: absolute;
+        right: 9px;
+        top: 50%;
+        z-index: 3;
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        border: 0;
+        border-radius: 999px;
+        background: #cbd4e2;
+        color: #fff;
+        padding: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+
+      .select-proxy-clear::before,
+      .select-proxy-clear::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 1.5px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .select-proxy-clear::before {
+        transform: rotate(45deg);
+      }
+
+      .select-proxy-clear::after {
+        transform: rotate(-45deg);
+      }
+
+      .select-proxy.has-value .select-proxy-clear {
+        display: inline-flex;
+      }
+
+      .select-proxy-clear:hover {
+        background: #b9c3d3;
+      }
+
+      .select-proxy-button span {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-button:focus,
+      .select-proxy.is-open .select-proxy-button {
+        outline: none;
+        border-color: #89afe8;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.14);
+      }
+
+      .select-proxy-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 90;
+        max-height: 260px;
+        overflow: auto;
+        padding: 4px;
+        border: 1px solid #9fb2cb;
+        border-radius: 6px;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(27, 48, 78, 0.16);
+      }
+
+      .select-proxy-panel.hidden {
+        display: none;
+      }
+
+      .select-proxy-option {
+        width: 100%;
+        min-height: 28px;
+        border: 0;
+        border-radius: 3px;
+        background: transparent;
+        color: var(--text);
+        display: block;
+        padding: 5px 8px 5px 24px;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+        position: relative;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .select-proxy-option:hover,
+      .select-proxy-option.is-selected {
+        background: #edf4ff;
+        color: #195bb5;
+      }
+
+      .select-proxy-option.is-selected::before {
+        content: "✓";
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary);
+        font-weight: 700;
       }
 
       .btn {
@@ -228,9 +421,11 @@
         z-index: 40;
         background: rgba(12, 22, 36, 0.36);
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
-        padding: 14px;
+        padding: 10px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
       }
 
       .modal-mask.hidden {
@@ -238,13 +433,25 @@
       }
 
       .modal {
-        width: min(920px, 100%);
-        max-height: calc(100vh - 30px);
+        width: min(1040px, calc(100vw - 20px));
+        height: min(600px, calc(100vh - 20px));
+        height: min(600px, calc(100dvh - 20px));
+        max-height: calc(100vh - 20px);
+        max-height: calc(100dvh - 20px);
+        min-height: 0;
         border: 1px solid #cfd8e6;
         border-radius: 6px;
         background: #fff;
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr) auto;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .modal > form {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       }
 
@@ -262,16 +469,24 @@
       }
 
       .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
         overflow: auto;
         padding: 10px 12px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
 
       .modal-foot {
         border-top: 1px solid var(--line);
+        background: #fff;
         padding: 8px 12px;
         display: flex;
         justify-content: flex-end;
         gap: 8px;
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
       }
 
       .grid {
@@ -386,9 +601,38 @@
         transform: translateY(0);
       }
 
+      @media (max-height: 720px) {
+        .modal-mask {
+          padding: 8px;
+        }
+
+        .modal {
+          width: min(1040px, calc(100vw - 16px));
+          height: min(600px, calc(100vh - 16px));
+          height: min(600px, calc(100dvh - 16px));
+          max-height: calc(100vh - 16px);
+          max-height: calc(100dvh - 16px);
+        }
+
+        .modal-body {
+          padding: 8px;
+        }
+      }
+
       @media (max-width: 980px) {
         .toolbar {
-          grid-template-columns: 1fr;
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .toolbar #keywordInput,
+        .toolbar #generationTypeFilter,
+        .toolbar #statusFilter,
+        .toolbar > .select-proxy {
+          flex: 0 0 auto;
+          width: 100%;
+          max-width: none;
+          margin-left: 0;
         }
 
         .grid.cols-3 {
@@ -396,20 +640,21 @@
         }
       }
     </style>
+    <link rel="stylesheet" href="compact-date-picker.css" />
   </head>
   <body>
     <div class="page">
       <section class="panel rule-panel">
         <div class="panel-head">
           <h1>点检规则配置</h1>
+        </div>
+
+        <div class="toolbar">
           <div class="btn-group">
             <button id="addBtn" class="btn primary">新增</button>
             <button id="editBtn" class="btn">编辑</button>
             <button id="deleteBtn" class="btn danger">删除</button>
           </div>
-        </div>
-
-        <div class="toolbar">
           <input id="keywordInput" class="input" type="text" placeholder="规则编号/名称" />
           <select id="generationTypeFilter" class="select">
             <option value="">全部生成类型</option>
@@ -488,8 +733,17 @@
                 <input id="versionInput" class="input readonly" type="text" value="V1" readonly />
               </div>
               <div class="field">
-                <label for="effectiveDateInput">规则变更生效日期</label>
-                <input id="effectiveDateInput" class="input" type="date" />
+                <label for="effectiveDateDisplayInput">规则变更生效日期</label>
+                <div id="effectiveDateField" class="date-field">
+                  <input id="effectiveDateDisplayInput" class="input date-display-input" type="text" placeholder="YYYY-MM-DD" readonly />
+                  <input id="effectiveDateInput" type="hidden" />
+                  <span class="date-field-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="17" rx="2"></rect>
+                      <path d="M8 2v4M16 2v4M3 10h18"></path>
+                    </svg>
+                  </span>
+                </div>
               </div>
               <div class="field full">
                 <label for="remarkInput">备注</label>
@@ -514,6 +768,7 @@
 
     <div id="toast" class="toast"></div>
 
+    <script src="compact-date-picker.js"></script>
     <script>
       const API_BASE = resolveApiBaseUrl();
 
@@ -572,24 +827,42 @@
         intervalUnitLabel: document.getElementById("intervalUnitLabel"),
         statusInput: document.getElementById("statusInput"),
         versionInput: document.getElementById("versionInput"),
+        effectiveDateField: document.getElementById("effectiveDateField"),
+        effectiveDateDisplayInput: document.getElementById("effectiveDateDisplayInput"),
         effectiveDateInput: document.getElementById("effectiveDateInput"),
         remarkInput: document.getElementById("remarkInput"),
         toast: document.getElementById("toast"),
       };
 
+      let effectiveDatePicker = null;
+
       init();
 
       async function init() {
         bindEvents();
+        bindSelectProxyShell();
+        enhanceSelectProxies(document);
+        effectiveDatePicker = window.CompactDatePicker?.attach({
+          field: refs.effectiveDateField,
+          displayInput: refs.effectiveDateDisplayInput,
+          valueInput: refs.effectiveDateInput,
+        });
         await loadBootstrap();
       }
 
       function bindEvents() {
-        refs.searchBtn.addEventListener("click", () => {
-          state.search.keyword = refs.keywordInput.value.trim();
-          state.search.generationType = refs.generationTypeFilter.value;
-          state.search.status = refs.statusFilter.value;
-          renderTable();
+        refs.searchBtn.addEventListener("click", applySearchFromInputs);
+
+        refs.generationTypeFilter.addEventListener("change", applySearchFromInputs);
+        refs.statusFilter.addEventListener("change", applySearchFromInputs);
+
+        refs.keywordInput.addEventListener("change", applySearchFromInputs);
+
+        refs.keywordInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            applySearchFromInputs();
+          }
         });
 
         refs.resetBtn.addEventListener("click", () => {
@@ -600,18 +873,12 @@
           refs.generationTypeFilter.value = "";
           refs.statusFilter.value = "";
           state.selectedIds.clear();
+          refreshSelectProxies(document);
           renderTable();
         });
 
         refs.refreshBtn.addEventListener("click", () => {
           void loadBootstrap();
-        });
-
-        refs.keywordInput.addEventListener("keydown", (event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            refs.searchBtn.click();
-          }
         });
 
         refs.addBtn.addEventListener("click", () => {
@@ -704,6 +971,14 @@
         });
       }
 
+      function applySearchFromInputs() {
+          state.search.keyword = refs.keywordInput.value.trim();
+          state.search.generationType = refs.generationTypeFilter.value;
+          state.search.status = refs.statusFilter.value;
+          state.selectedIds.clear();
+          renderTable();
+      }
+
       async function loadBootstrap() {
         setLoading(true);
         setStatus("正在加载规则配置...");
@@ -737,6 +1012,8 @@
         refs.statusFilter.innerHTML =
           '<option value="">全部状态</option>' +
           state.options.statuses.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join("");
+        refs.generationTypeFilter.value = state.search.generationType;
+        refs.statusFilter.value = state.search.status;
       }
 
       function filterRules() {
@@ -822,6 +1099,7 @@
         refs.intervalInput.value = "1";
         refs.versionInput.value = "V1";
         refs.effectiveDateInput.value = todayDateText();
+        effectiveDatePicker?.sync();
         refs.statusInput.value = "启用";
 
         if (mode === "edit") {
@@ -839,6 +1117,7 @@
           refs.statusInput.value = normalizeStatus(row.status);
           refs.versionInput.value = previewNextVersion(row.version || "V1");
           refs.effectiveDateInput.value = toDateInput(row.effectiveDate) || todayDateText();
+          effectiveDatePicker?.sync();
           refs.remarkInput.value = row.remark || "";
         } else {
           refs.modalTitle.textContent = "新增点检规则";
@@ -847,6 +1126,7 @@
 
         syncCategoryFromRuleName();
         applyCategoryPolicy();
+        refreshSelectProxies(refs.ruleForm);
         refs.modalMask.classList.remove("hidden");
       }
 
@@ -897,6 +1177,127 @@
         const mode = detectGenerationMode(refs.generationTypeInput.value);
         const unit = mode === "weekly" ? "周" : mode === "monthly" ? "月" : "天";
         refs.intervalUnitLabel.textContent = unit;
+      }
+
+      function bindSelectProxyShell() {
+        if (window.__selectProxyShellBound) return;
+        window.__selectProxyShellBound = true;
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement) || !event.target.closest(".select-proxy")) {
+            closeSelectProxies();
+          }
+        });
+        new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node instanceof HTMLElement) {
+                enhanceSelectProxies(node);
+              }
+            });
+          });
+        }).observe(document.body, { childList: true, subtree: true });
+      }
+
+      function enhanceSelectProxies(scope = document) {
+        if (!scope) return;
+        const selector = "select.select";
+        if (scope instanceof HTMLSelectElement && scope.matches(selector)) {
+          enhanceSelectProxy(scope);
+        }
+        scope.querySelectorAll?.(selector).forEach((select) => enhanceSelectProxy(select));
+      }
+
+      function enhanceSelectProxy(select) {
+        if (select.classList.contains("native-select-hidden")) {
+          refreshSelectProxy(select);
+          return;
+        }
+        select.classList.add("native-select-hidden");
+        const proxy = document.createElement("div");
+        proxy.className = "select-proxy";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "select-proxy-button";
+        const text = document.createElement("span");
+        button.appendChild(text);
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "select-proxy-clear";
+        clear.setAttribute("aria-label", "清空选择");
+        const panel = document.createElement("div");
+        panel.className = "select-proxy-panel hidden";
+        const list = document.createElement("div");
+        panel.appendChild(list);
+        proxy.appendChild(button);
+        proxy.appendChild(clear);
+        proxy.appendChild(panel);
+        select.insertAdjacentElement("afterend", proxy);
+
+        const render = () => renderSelectProxy(select, proxy, text, list);
+        clear.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (select.disabled) return;
+          const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+          if (!hasEmptyOption) return;
+          select.value = "";
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          closeSelectProxies();
+        });
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const willOpen = panel.classList.contains("hidden");
+          closeSelectProxies();
+          render();
+          if (willOpen) {
+            proxy.classList.add("is-open");
+            panel.classList.remove("hidden");
+          }
+        });
+        select.addEventListener("change", render);
+        new MutationObserver(render).observe(select, { childList: true, subtree: true });
+        render();
+      }
+
+      function renderSelectProxy(select, proxy, text, list) {
+        const selected = select.selectedOptions && select.selectedOptions[0];
+        text.textContent = selected?.textContent || "请选择";
+        const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
+        proxy.classList.toggle("has-value", Boolean(select.value) && hasEmptyOption && !select.disabled);
+        list.innerHTML = "";
+        Array.from(select.options).forEach((option) => {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = `select-proxy-option${option.value === select.value ? " is-selected" : ""}`;
+          item.textContent = option.textContent || "请选择";
+          item.addEventListener("click", () => {
+            select.value = option.value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            closeSelectProxies();
+          });
+          list.appendChild(item);
+        });
+        proxy.classList.toggle("is-disabled", select.disabled);
+      }
+
+      function refreshSelectProxy(select) {
+        const proxy = select?.nextElementSibling;
+        if (!proxy || !proxy.classList.contains("select-proxy")) return;
+        const text = proxy.querySelector(".select-proxy-button span");
+        const list = proxy.querySelector(".select-proxy-panel > div");
+        if (text && list) {
+          renderSelectProxy(select, proxy, text, list);
+        }
+      }
+
+      function refreshSelectProxies(scope = document) {
+        if (!scope) return;
+        scope.querySelectorAll("select.native-select-hidden").forEach(refreshSelectProxy);
+      }
+
+      function closeSelectProxies() {
+        document.querySelectorAll(".select-proxy.is-open").forEach((proxy) => proxy.classList.remove("is-open"));
+        document.querySelectorAll(".select-proxy-panel:not(.hidden)").forEach((panel) => panel.classList.add("hidden"));
       }
 
       async function submitRuleForm(event) {

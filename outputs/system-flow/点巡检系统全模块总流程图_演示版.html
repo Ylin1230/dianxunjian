@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>点巡检系统全模块总流程图</title>
+    <style>
+      :root {
+        --text: #1f2937;
+        --muted: #667085;
+        --line: #d0d7e2;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+        font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      }
+
+      header {
+        padding: 28px 36px 20px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      main {
+        padding: 20px;
+      }
+
+      .canvas {
+        min-width: 1480px;
+        padding: 20px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: auto;
+      }
+
+      .mermaid {
+        width: 100%;
+        overflow: visible;
+      }
+
+      .tips {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .tips div {
+        padding: 12px 14px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      footer {
+        padding: 14px 28px 24px;
+        color: var(--muted);
+        text-align: center;
+        font-size: 13px;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        header,
+        main {
+          padding: 8mm;
+        }
+
+        .canvas {
+          min-width: auto;
+          border: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>点巡检系统全模块总流程图</h1>
+      <p class="subtitle">一张图展示基础信息、点巡检、安全检查、相关方管理、后端服务、百数云底表和流程中心的整体关系。</p>
+    </header>
+
+    <main>
+      <div class="canvas">
+        <pre class="mermaid">
+flowchart LR
+  U["用户角色<br/>管理员、点检人员、安全检查人员、相关方人员、管理层"] --> PORTAL["百数云门户<br/>左侧菜单/二维码入口"]
+
+  subgraph BASE["基础信息管理"]
+    DEV["设备台账<br/>设备编号、类型、位置、责任人、二维码"]
+    CHEM["危化品台账<br/>危化品编号、存放位置、事故类型、二维码"]
+    TYPE["设备类型管理"]
+    UNIT["计量单位管理"]
+    ASSET["资产类别管理"]
+    SITE["场地管理"]
+    ACC["事故类型管理"]
+    PACK["包装形式管理"]
+  end
+
+  subgraph INSPECT["点巡检管理"]
+    STD["点检标准<br/>标准主表"]
+    STD_DETAIL["点检标准明细<br/>普通项、状态项、抄表项"]
+    REL["设备/危化品-点检标准关联"]
+    RULE["点检规则配置<br/>日检、周检、月检、自定义周期"]
+    TASK["点检任务底表<br/>自动生成待执行任务"]
+    REPORT["点检报工<br/>扫码识别、填写结果、提交汇总"]
+    REPORT_MAIN["点检报工主表"]
+    REPORT_DETAIL["点检报工明细表"]
+  end
+
+  subgraph SAFETY["安全检查管理"]
+    SAFE_TEMPLATE["检查模板<br/>检查类型、适用区域、默认责任人"]
+    SAFE_ITEM["安全检查模板明细<br/>检查项目、标准要求、结果类型"]
+    SAFE_TASK["检查任务<br/>计划时间、截止时间、责任人"]
+    SAFE_MOBILE["安全检查移动端<br/>现场执行检查"]
+    SAFE_SUBMIT["安全检查提交主表"]
+    SAFE_DETAIL["安全检查提交明细表"]
+  end
+
+  subgraph PARTNER["相关方管理"]
+    PARTNER_LEDGER["相关方单位台账"]
+    PARTNER_PROJECT["相关方项目信息库"]
+    PARTNER_TRAIN_ADMIN["相关方培训记录<br/>查询、维护、打印"]
+    PARTNER_QR["二维码下载页<br/>静态入口码、单位预填码"]
+    PARTNER_FORM["相关方入场培训填报<br/>安全告知、人员签字、提交"]
+    PARTNER_TRAIN["相关方安全教育培训记录"]
+    PARTNER_SUPERVISE["相关方监管记录查询"]
+  end
+
+  subgraph PLATFORM["平台与服务"]
+    API["后端服务<br/>接口代理、二维码解析、附件上传、任务同步"]
+    BES["百数云 OpenAPI<br/>主表、明细表、附件"]
+    FLOW["百数云流程中心<br/>隐患整改、退回、验收、关闭"]
+    MYSQL["可选 MySQL 任务底表<br/>TASK_STORE_MODE=db/dual"]
+  end
+
+  PORTAL --> DEV
+  PORTAL --> CHEM
+  PORTAL --> STD
+  PORTAL --> RULE
+  PORTAL --> REPORT
+  PORTAL --> SAFE_TEMPLATE
+  PORTAL --> SAFE_TASK
+  PORTAL --> SAFE_MOBILE
+  PORTAL --> SAFE_SUBMIT
+  PORTAL --> PARTNER_TRAIN_ADMIN
+  PORTAL --> PARTNER_QR
+  PORTAL --> PARTNER_FORM
+
+  TYPE --> DEV
+  UNIT --> STD_DETAIL
+  ASSET --> DEV
+  SITE --> DEV
+  SITE --> CHEM
+  ACC --> CHEM
+  PACK --> CHEM
+  DEV --> STD
+  CHEM --> STD
+
+  STD --> STD_DETAIL
+  STD --> REL
+  DEV --> REL
+  CHEM --> REL
+  REL --> RULE
+  STD_DETAIL --> RULE
+  RULE --> TASK
+  TASK --> REPORT
+  REPORT --> REPORT_MAIN
+  REPORT --> REPORT_DETAIL
+  REPORT_DETAIL --> HAZARD["隐患整改工单<br/>来源：点巡检异常或安全检查异常"]
+
+  SAFE_TEMPLATE --> SAFE_ITEM
+  SAFE_TEMPLATE --> SAFE_TASK
+  SAFE_ITEM --> SAFE_TASK
+  SAFE_TASK --> SAFE_MOBILE
+  SAFE_MOBILE --> SAFE_SUBMIT
+  SAFE_MOBILE --> SAFE_DETAIL
+  SAFE_DETAIL --> HAZARD
+
+  HAZARD --> FLOW
+  FLOW --> HAZARD_CLOSED["整改闭环<br/>待整改、待验收、已关闭"]
+  HAZARD_CLOSED --> REPORT_MAIN
+  HAZARD_CLOSED --> SAFE_SUBMIT
+
+  PARTNER_LEDGER --> PARTNER_TRAIN_ADMIN
+  PARTNER_PROJECT --> PARTNER_TRAIN_ADMIN
+  PARTNER_TRAIN_ADMIN --> PARTNER_QR
+  PARTNER_QR --> PARTNER_FORM
+  PARTNER_FORM --> PARTNER_TRAIN
+  PARTNER_TRAIN --> PARTNER_SUPERVISE
+
+  DEV --> API
+  CHEM --> API
+  STD --> API
+  RULE --> API
+  REPORT --> API
+  SAFE_TEMPLATE --> API
+  SAFE_TASK --> API
+  SAFE_MOBILE --> API
+  PARTNER_TRAIN_ADMIN --> API
+  PARTNER_FORM --> API
+
+  API --> BES
+  API --> MYSQL
+  BES --> DEV
+  BES --> CHEM
+  BES --> STD
+  BES --> TASK
+  BES --> REPORT_MAIN
+  BES --> SAFE_SUBMIT
+  BES --> PARTNER_TRAIN
+
+  REPORT_MAIN --> TRACE["数据追溯与管理看板<br/>任务、报工、明细、隐患、培训记录"]
+  SAFE_SUBMIT --> TRACE
+  PARTNER_TRAIN --> TRACE
+        </pre>
+      </div>
+
+      <div class="tips">
+        <div>讲入口：用户从百数云菜单或二维码进入，不需要记单独系统地址。</div>
+        <div>讲数据：设备、危化品、场地、人员等基础数据支撑后续全部业务。</div>
+        <div>讲点检：标准定义检查内容，规则生成任务，现场扫码报工。</div>
+        <div>讲闭环：点检异常和安全检查异常统一进入隐患整改流程。</div>
+        <div>讲培训：相关方扫码填报、阅读告知、手写签字，形成培训留痕。</div>
+        <div>讲追溯：所有结果最终沉淀到记录、明细、隐患和培训档案。</div>
+      </div>
+    </main>
+
+    <footer>说明：本页面使用 Mermaid 渲染，首次打开如流程图未显示，请确认浏览器可以访问 jsdelivr CDN。</footer>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: "loose",
+        theme: "base",
+        flowchart: {
+          curve: "basis",
+          nodeSpacing: 30,
+          rankSpacing: 40,
+        },
+        themeVariables: {
+          fontFamily: "Microsoft YaHei, PingFang SC, Arial",
+          primaryColor: "#e8f1ff",
+          primaryTextColor: "#1f2937",
+          primaryBorderColor: "#175cd3",
+          lineColor: "#667085",
+          secondaryColor: "#e8faf7",
+          tertiaryColor: "#fff7ed",
+          clusterBkg: "#fbfcff",
+          clusterBorder: "#b9c7d8",
+        },
+      });
+    </script>
+  </body>
+</html>

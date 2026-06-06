@@ -98,7 +98,7 @@
         border: 1px solid var(--border);
         border-radius: 8px;
         background: #fff;
-        overflow: hidden;
+        overflow: visible;
       }
 
       .overview-main {
@@ -106,12 +106,140 @@
       }
 
       .overview-title {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
       }
 
-      .overview-icon,
+      .overview-copy {
+        min-width: 0;
+      }
+
+      .overview-copy h2,
+      .overview-copy .meta {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .overview-inspector {
+        position: relative;
+        width: auto;
+        min-width: 82px;
+        max-width: min(148px, 36vw);
+        justify-self: end;
+        overflow: visible;
+        z-index: 8;
+      }
+
+      .overview-inspector .select {
+        position: absolute;
+        inset: 0;
+        width: 1px;
+        height: 1px;
+        min-height: 0;
+        border: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .inspector-picker {
+        position: relative;
+        width: 100%;
+        min-height: 30px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #30445f;
+        padding: 3px 18px 3px 6px;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.2;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        text-align: right;
+      }
+
+      .inspector-picker::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 4px;
+        width: 6px;
+        height: 6px;
+        border: solid #7e8da3;
+        border-width: 0 1.5px 1.5px 0;
+        transform: translateY(-62%) rotate(45deg);
+        pointer-events: none;
+      }
+
+      .inspector-picker[aria-expanded="true"]::after {
+        transform: translateY(-38%) rotate(225deg);
+      }
+
+      .inspector-picker:focus {
+        outline: none;
+        background: #f6f9ff;
+        box-shadow: 0 0 0 3px rgba(44, 121, 234, 0.12);
+      }
+
+      .inspector-picker-text {
+        display: block;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        white-space: normal;
+      }
+
+      .inspector-picker-panel {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 20;
+        width: max-content;
+        min-width: 116px;
+        max-width: min(240px, calc(100vw - 28px));
+        max-height: 224px;
+        overflow: auto;
+        padding: 4px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 14px 30px rgba(31, 42, 58, 0.18);
+      }
+
+      .inspector-picker-option {
+        width: 100%;
+        min-height: 34px;
+        border: 0;
+        border-radius: 6px;
+        background: #fff;
+        color: #30445f;
+        padding: 7px 10px;
+        text-align: left;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.35;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        overflow-wrap: anywhere;
+        white-space: normal;
+      }
+
+      .inspector-picker-option:hover {
+        background: #edf4ff;
+        color: var(--accent);
+      }
+
+      .inspector-picker-option.is-selected {
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+      }
+
       .task-icon {
         width: 38px;
         height: 38px;
@@ -167,10 +295,10 @@
       }
 
       .home-panel {
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: var(--panel);
-        padding: 11px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        padding: 0 1px;
       }
 
       .home-panel-head {
@@ -191,6 +319,84 @@
 
       .home-search {
         margin-bottom: 10px;
+      }
+
+      .home-panel .field {
+        margin-top: 0;
+      }
+
+      .task-workbench {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .task-workbench .home-search {
+        min-height: 40px;
+        border-color: #dce5f2;
+        border-radius: 8px;
+        background: #f9fbfe;
+      }
+
+      .task-mode-toggle {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px;
+        margin: 0;
+        padding: 3px;
+        border: 1px solid #dfe7f3;
+        border-radius: 8px;
+        background: #f2f6fb;
+      }
+
+      .mode-option {
+        min-height: 32px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #64748a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+      }
+
+      .mode-option.active {
+        background: #fff;
+        color: var(--accent);
+        box-shadow: 0 1px 4px rgba(31, 60, 103, 0.12);
+      }
+
+      .mode-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #c8d2e1;
+        flex: 0 0 auto;
+      }
+
+      .mode-option.active .mode-dot {
+        border: 2px solid rgba(44, 121, 234, 0.22);
+        background: var(--accent);
+      }
+
+      .task-workbench .home-search {
+        margin-bottom: 0;
+      }
+
+      .task-workbench .cards {
+        margin-top: 2px;
+      }
+
+      .task-workbench .empty {
+        padding: 30px 12px 26px;
       }
 
       .temporary-toggle {
@@ -392,6 +598,10 @@
         grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 10px;
         align-items: center;
+      }
+
+      .task-row.checked {
+        grid-template-columns: auto minmax(0, 1fr);
       }
 
       .task-main {
@@ -711,6 +921,248 @@
         white-space: nowrap;
       }
 
+      .submit-extra-card {
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .submit-extra-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .extra-status {
+        color: var(--muted);
+        font-size: 12px;
+        min-height: 18px;
+      }
+
+      .submit-photo-field {
+        margin-top: 2px;
+      }
+
+      .submit-photo-field .photo-head {
+        width: fit-content;
+        max-width: 100%;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px;
+        border: 1px solid #d8e3f5;
+        border-radius: 10px;
+        background: #fbfdff;
+      }
+
+      .submit-photo-field .photo-add-btn {
+        min-width: 96px;
+        height: 34px;
+        min-height: 34px;
+      }
+
+      .submit-photo-field .photos:empty,
+      .submit-photo-field .extra-status:empty {
+        display: none;
+      }
+
+      .signature-subform {
+        border: 1px solid #d8e3f5;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fbfdff;
+      }
+
+      .signature-list {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .signature-foot {
+        display: flex;
+        justify-content: flex-start;
+        padding: 10px;
+        border-top: 1px solid #e4ecf7;
+        background: #fff;
+      }
+
+      .signature-add-btn {
+        flex: 0 0 auto;
+        min-width: 104px;
+        height: 32px;
+        min-height: 32px;
+        border-radius: 7px;
+        padding: 0 12px 0 10px;
+        font-size: 13px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .signature-add-btn::before {
+        content: "+";
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid currentColor;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+        flex: 0 0 auto;
+      }
+
+      .signature-row {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) 34px;
+        gap: 10px;
+        align-items: center;
+        min-height: 72px;
+        padding: 12px;
+        border-top: 1px solid #e9eff8;
+      }
+
+      .signature-row:first-child {
+        border-top: 0;
+      }
+
+      .signature-seq {
+        color: #61738f;
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .signature-sign-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+
+      .signature-sign-btn {
+        flex: 1 1 240px;
+        max-width: none;
+        height: 46px;
+        min-height: 46px;
+        border-radius: 8px;
+        padding: 0 18px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .sign-thumb-btn {
+        border: 1px solid #d7e2f2;
+        border-radius: 7px;
+        background: #fff;
+        padding: 2px;
+        width: 96px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .sign-preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .signature-delete {
+        position: relative;
+        width: 30px;
+        height: 30px;
+        min-height: 30px;
+        border-radius: 50%;
+        border: 1px solid #d2dceb;
+        background: #fff;
+        color: #5f718a;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        justify-self: center;
+        align-self: center;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      .signature-delete::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 10px;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+        transform: translate(-50%, -50%);
+      }
+
+      .signature-delete:hover {
+        border-color: #efb9b9;
+        color: var(--danger);
+        background: #fff8f8;
+      }
+
+      .signature-time {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .sign-state {
+        font-size: 12px;
+        color: #7c8ba1;
+      }
+
+      .sign-state.done {
+        color: var(--success);
+      }
+
+      .sign-preview-link {
+        border: 0;
+        background: transparent;
+        color: var(--accent);
+        font-size: 12px;
+        padding: 0;
+        cursor: pointer;
+      }
+
+      .signature-status {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .sign-canvas-wrap {
+        padding: 12px;
+        background: #f7faff;
+      }
+
+      .sign-canvas {
+        width: 100%;
+        height: 210px;
+        display: block;
+        border: 1px dashed #b7c4d8;
+        border-radius: 8px;
+        background: #fff;
+        touch-action: none;
+      }
+
+      .signature-modal-foot {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
       .photo-preview-body {
         width: min(452px, 100%);
       }
@@ -819,6 +1271,45 @@
         .app {
           max-width: none;
         }
+
+        .signature-row {
+          grid-template-columns: minmax(0, 1fr) 30px;
+          gap: 8px;
+          min-height: 64px;
+          padding: 10px;
+          align-items: center;
+        }
+
+        .signature-seq,
+        .signature-time,
+        .signature-sign-cell .sign-state,
+        .signature-sign-cell .sign-preview-link {
+          display: none;
+        }
+
+        .signature-sign-cell {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          justify-content: center;
+          align-items: stretch;
+        }
+
+        .signature-sign-cell .btn {
+          width: 100%;
+          max-width: none;
+          height: 42px;
+          min-height: 42px;
+          border-radius: 7px;
+          padding: 0 8px;
+          font-size: 15px;
+          white-space: nowrap;
+        }
+
+        .signature-sign-cell .sign-thumb-btn {
+          width: 100%;
+          height: 52px;
+        }
       }
     </style>
   </head>
@@ -839,10 +1330,16 @@
           <section class="overview-card">
             <div class="overview-main">
               <div class="overview-title">
-                <span class="overview-icon">检</span>
-                <div>
+                <div class="overview-copy">
                   <h2 id="overviewDate">今日安全检查</h2>
                   <div id="overviewMeta" class="meta">正在加载任务...</div>
+                </div>
+                <div class="overview-inspector">
+                  <select id="inspectorInput" class="select" aria-label="检查人"></select>
+                  <button id="inspectorPickerBtn" class="inspector-picker" type="button" aria-label="选择检查人" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="inspectorPickerText" class="inspector-picker-text">请选择</span>
+                  </button>
+                  <div id="inspectorPickerPanel" class="inspector-picker-panel hidden" role="listbox" aria-label="检查人选项"></div>
                 </div>
               </div>
             </div>
@@ -862,17 +1359,16 @@
             </div>
           </section>
 
-          <section class="home-panel">
-            <div class="field" style="margin-top:0">
-              <label for="inspectorInput">检查人</label>
-              <select id="inspectorInput" class="select"></select>
-            </div>
-          </section>
-
-          <section class="home-panel">
-            <div class="section-title-row">
-              <h2>待检查任务</h2>
-              <span id="taskCountText" class="tag">0 项</span>
+          <section class="home-panel task-workbench">
+            <div class="task-mode-toggle" role="radiogroup" aria-label="检查任务筛选">
+              <button id="taskModePendingBtn" class="mode-option active" type="button" role="radio" aria-checked="true" data-mode="pending">
+                <span class="mode-dot"></span>
+                <span>待检查</span>
+              </button>
+              <button id="taskModeCheckedBtn" class="mode-option" type="button" role="radio" aria-checked="false" data-mode="checked">
+                <span class="mode-dot"></span>
+                <span>当日已检查</span>
+              </button>
             </div>
             <input id="keywordInput" class="input home-search" placeholder="搜索待检查任务/区域对象/责任人" />
             <div id="taskCards" class="cards"></div>
@@ -897,6 +1393,29 @@
           <div class="progress"><span id="progressBar"></span></div>
         </div>
         <div id="itemCards" class="cards execute-items"></div>
+        <section class="submit-extra-card">
+          <div class="submit-extra-title">现场信息</div>
+          <div class="field submit-photo-field">
+            <div class="photo-head">
+              <label for="submitPhotoInput">现场照片</label>
+              <label class="btn photo-add-btn" title="拍照或上传现场照片">
+                拍照/上传
+                <input id="submitPhotoInput" type="file" accept="image/*" capture="environment" multiple hidden />
+              </label>
+            </div>
+            <div id="submitPhotoList" class="photos"></div>
+            <div id="submitPhotoStatus" class="extra-status"></div>
+          </div>
+          <div class="field">
+            <label>签名</label>
+            <div class="signature-subform">
+              <div id="signatureList" class="signature-list"></div>
+              <div class="signature-foot">
+                <button id="addSignatureBtn" class="btn signature-add-btn" type="button">新增一项</button>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
       <section id="summaryView" class="view">
@@ -927,6 +1446,23 @@
         </div>
       </div>
     </div>
+    <div id="signatureModal" class="modal-mask hidden">
+      <div class="sheet">
+        <div class="sheet-head">
+          <h3>手写签名</h3>
+          <button id="closeSignatureBtn" class="btn link" type="button">关闭</button>
+        </div>
+        <div class="sign-canvas-wrap">
+          <canvas id="signatureCanvas" class="sign-canvas"></canvas>
+        </div>
+        <div id="signatureStatus" class="sheet-body signature-status">请在签名区书写后点击保存</div>
+        <div class="sheet-foot signature-modal-foot">
+          <button id="clearSignatureBtn" class="btn" type="button">清空重签</button>
+          <button id="saveSignatureBtn" class="btn primary" type="button">保存签名</button>
+          <button id="cancelSignatureBtn" class="btn" type="button">取消</button>
+        </div>
+      </div>
+    </div>
     <div id="toast" class="toast"></div>
 
     <script>
@@ -936,15 +1472,28 @@
         templates: [],
         items: [],
         tasks: [],
+        submissions: [],
         users: [],
         options: {},
+        taskMode: "pending",
         selectedTask: null,
         selectedTemplate: null,
         selectedItems: [],
+        submitPhotos: [],
+        signatures: [],
+        activeSignatureIndex: -1,
+        signaturePad: {
+          drawing: false,
+          dirty: false,
+          pointerId: null,
+          lastX: 0,
+          lastY: 0,
+        },
         startTime: "",
         target: "",
         summary: null,
         currentUserId: "",
+        currentUserName: "",
         currentCorpId: "",
       };
 
@@ -960,6 +1509,7 @@
       function collectExternalContext() {
         const params = new URLSearchParams(window.location.search || "");
         state.currentUserId = params.get("webpage_user_id") || params.get("user_id") || "";
+        state.currentUserName = params.get("webpage_user_name") || params.get("user_name") || params.get("userName") || params.get("name") || "";
         state.currentCorpId = params.get("webpage_crop_id") || params.get("crop_id") || "";
       }
 
@@ -967,8 +1517,11 @@
         [
           "title", "refreshBtn", "homeView", "executeView", "summaryView", "bottomBar", "modalRoot", "photoPreviewModal", "closePhotoPreviewBtn", "photoPreviewImage", "toast",
           "overviewDate", "overviewMeta", "statOverdue", "statPending", "statTemplates",
-          "inspectorInput", "keywordInput", "taskCards", "taskCountText",
+          "inspectorInput", "inspectorPickerBtn", "inspectorPickerText", "inspectorPickerPanel", "keywordInput", "taskCards", "taskModePendingBtn", "taskModeCheckedBtn",
           "executeTitle", "executeMeta", "abnormalCountTag", "progressText", "progressBar", "markAllNormalBtn", "itemCards",
+          "submitPhotoInput", "submitPhotoList", "submitPhotoStatus", "signatureList", "addSignatureBtn",
+          "signatureModal", "signatureCanvas", "signatureStatus",
+          "closeSignatureBtn", "clearSignatureBtn", "saveSignatureBtn", "cancelSignatureBtn",
           "backBtn", "submitBtn", "summaryResultTag", "summaryText", "summaryAbnormalList",
         ].forEach((id) => {
           refs[id] = document.getElementById(id);
@@ -978,6 +1531,29 @@
       function bindEvents() {
         refs.refreshBtn.addEventListener("click", () => loadData({ goHome: true }));
         refs.keywordInput.addEventListener("input", renderHome);
+        refs.taskModePendingBtn.addEventListener("click", () => setTaskMode("pending"));
+        refs.taskModeCheckedBtn.addEventListener("click", () => setTaskMode("checked"));
+        refs.inspectorPickerBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleInspectorPicker();
+        });
+        refs.inspectorPickerPanel.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement)) return;
+          const option = event.target.closest("[data-inspector-value]");
+          if (!option) return;
+          refs.inspectorInput.value = option.dataset.inspectorValue || "";
+          refs.inspectorInput.dispatchEvent(new Event("change", { bubbles: true }));
+          closeInspectorPicker();
+        });
+        refs.inspectorInput.addEventListener("change", () => {
+          updateInspectorPicker();
+          const value = refs.inspectorInput.value.trim();
+          if (value) {
+            localStorage.setItem("safety_check_inspector_id", value);
+          } else {
+            localStorage.removeItem("safety_check_inspector_id");
+          }
+        });
         refs.markAllNormalBtn.addEventListener("click", markAllNormal);
         refs.backBtn.addEventListener("click", () => switchView("home"));
         refs.submitBtn.addEventListener("click", submitInspection);
@@ -1015,12 +1591,72 @@
           }
           handleItemFieldInput(event);
         });
+        refs.submitPhotoInput.addEventListener("change", (event) => {
+          const target = event.target;
+          if (target.files) {
+            void addSubmitPhotos(target.files, target);
+          }
+        });
+        refs.submitPhotoList.addEventListener("click", (event) => {
+          const removeBtn = event.target.closest("[data-action='remove-submit-photo']");
+          if (removeBtn) {
+            event.stopPropagation();
+            removeSubmitPhoto(removeBtn.dataset.photoId || "");
+            return;
+          }
+          const previewBtn = event.target.closest("[data-action='preview-submit-photo']");
+          if (previewBtn) {
+            openSubmitPhotoPreview(previewBtn.dataset.photoId || "");
+          }
+        });
+        refs.addSignatureBtn.addEventListener("click", addSignatureRow);
+        refs.signatureList.addEventListener("click", (event) => {
+          const openBtn = event.target.closest("[data-action='open-signature']");
+          if (openBtn) {
+            openSignatureModal(Number(openBtn.dataset.index));
+            return;
+          }
+          const previewBtn = event.target.closest("[data-action='preview-signature']");
+          if (previewBtn) {
+            previewSignature(Number(previewBtn.dataset.index));
+            return;
+          }
+          const clearBtn = event.target.closest("[data-action='clear-signature']");
+          if (clearBtn) {
+            clearSavedSignature(Number(clearBtn.dataset.index));
+            return;
+          }
+          const removeBtn = event.target.closest("[data-action='remove-signature']");
+          if (removeBtn) {
+            removeSignatureRow(Number(removeBtn.dataset.index));
+          }
+        });
+        refs.closeSignatureBtn.addEventListener("click", closeSignatureModal);
+        refs.cancelSignatureBtn.addEventListener("click", closeSignatureModal);
+        refs.clearSignatureBtn.addEventListener("click", clearSignatureCanvas);
+        refs.saveSignatureBtn.addEventListener("click", saveSignature);
+        refs.signatureModal.addEventListener("click", (event) => {
+          if (event.target === refs.signatureModal) {
+            closeSignatureModal();
+          }
+        });
+        bindSignatureCanvas();
         refs.closePhotoPreviewBtn.addEventListener("click", closePhotoPreview);
         refs.photoPreviewModal.addEventListener("click", (event) => {
           if (event.target === refs.photoPreviewModal) {
             closePhotoPreview();
           }
         });
+        document.addEventListener("click", (event) => {
+          if (!(event.target instanceof HTMLElement) || event.target.closest(".overview-inspector")) return;
+          closeInspectorPicker();
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeInspectorPicker();
+          }
+        });
+        window.addEventListener("resize", closeInspectorPicker);
       }
 
       function handleItemFieldInput(event) {
@@ -1050,6 +1686,7 @@
           state.templates = data.templates || [];
           state.items = data.items || [];
           state.tasks = (data.tasks || []).filter((item) => ["", "待检查", "检查中"].includes(item.status || ""));
+          state.submissions = data.submissions || [];
           state.options = data.options || {};
           if (userResult.status === "fulfilled") {
             state.users = userResult.value.data?.users || [];
@@ -1070,48 +1707,139 @@
           refs.bottomBar.classList.add("hidden");
         }
         const keyword = refs.keywordInput.value.trim().toLowerCase();
-        const tasks = state.tasks.filter((item) => {
-          const text = [item.code, item.templateName, item.target, item.ownerUser, item.ownerDept].join(" ").toLowerCase();
-          return !keyword || text.includes(keyword);
-        });
+        const tasks = filterPendingTasks(keyword);
+        const checkedRecords = filterTodayCheckedRecords(keyword);
+        const activeRows = state.taskMode === "checked" ? checkedRecords : tasks;
+        const isCheckedMode = state.taskMode === "checked";
+        renderTaskModeState();
+        refs.keywordInput.placeholder = isCheckedMode ? "搜索已检查记录/区域对象/检查人" : "搜索待检查任务/区域对象/责任人";
+
         const overdueCount = tasks.filter((task) => task.overdue === "是").length;
         const checkingCount = tasks.filter((task) => task.status === "检查中").length;
         refs.overviewDate.textContent = formatChineseDate(new Date());
-        refs.overviewMeta.textContent = `${tasks.length} 项任务待处理`;
+        refs.overviewMeta.textContent = `${tasks.length} 项任务待处理 · 今日已检查 ${checkedRecords.length} 项`;
         refs.statOverdue.textContent = overdueCount;
         refs.statPending.textContent = Math.max(tasks.length - overdueCount, 0);
         refs.statTemplates.textContent = checkingCount;
-        refs.taskCountText.textContent = `${tasks.length} 项`;
-        refs.taskCards.innerHTML = tasks.length ? tasks.map(renderTaskCard).join("") : `<div class="empty">暂无待检查任务</div>`;
-        refs.taskCards.querySelectorAll("[data-start-task]").forEach((btn) => {
-          btn.addEventListener("click", () => startTask(btn.dataset.startTask));
+        refs.taskCards.innerHTML = activeRows.length
+          ? activeRows.map(isCheckedMode ? renderCheckedRecordCard : renderTaskCard).join("")
+          : `<div class="empty">${isCheckedMode ? "暂无当日已检查记录" : "暂无待检查任务"}</div>`;
+        if (!isCheckedMode) {
+          refs.taskCards.querySelectorAll("[data-start-task]").forEach((btn) => {
+            btn.addEventListener("click", () => startTask(btn.dataset.startTask));
+          });
+        }
+      }
+
+      function filterPendingTasks(keyword) {
+        return state.tasks.filter((item) => {
+          const text = [item.code, item.templateName, item.target, item.ownerUser, item.ownerDept].join(" ").toLowerCase();
+          return !keyword || text.includes(keyword);
         });
+      }
+
+      function filterTodayCheckedRecords(keyword) {
+        const todayKey = dateKeyOf(new Date());
+        return state.submissions.filter((item) => {
+          if (dateKeyOf(item.endTime || item.startTime) !== todayKey) {
+            return false;
+          }
+          const text = [item.code, item.templateName, item.target, item.inspector, item.result, item.status].join(" ").toLowerCase();
+          return !keyword || text.includes(keyword);
+        });
+      }
+
+      function setTaskMode(mode) {
+        state.taskMode = mode === "checked" ? "checked" : "pending";
+        renderHome();
+      }
+
+      function renderTaskModeState() {
+        const isChecked = state.taskMode === "checked";
+        refs.taskModePendingBtn.classList.toggle("active", !isChecked);
+        refs.taskModeCheckedBtn.classList.toggle("active", isChecked);
+        refs.taskModePendingBtn.setAttribute("aria-checked", String(!isChecked));
+        refs.taskModeCheckedBtn.setAttribute("aria-checked", String(isChecked));
       }
 
       function fillInspectorSelect() {
         const current = refs.inspectorInput.value;
-        refs.inspectorInput.innerHTML = `<option value="">请选择检查人</option>`;
+        refs.inspectorInput.innerHTML = `<option value="">请选择</option>`;
         state.users.forEach((user) => {
           const userId = user.userId || user.id || user._id || user.value || "";
           const label = user.name || user.nickname || user.userName || userId;
           if (!userId && !label) return;
           const option = document.createElement("option");
           option.value = userId || label;
-          option.textContent = user.mainDeptName ? `${label}（${user.mainDeptName}）` : label;
+          option.textContent = label;
+          if (user.mainDeptName) {
+            option.title = `${label}（${user.mainDeptName}）`;
+          }
           option.dataset.label = label;
           refs.inspectorInput.appendChild(option);
         });
         if (state.currentUserId && ![...refs.inspectorInput.options].some((option) => option.value === state.currentUserId)) {
           const option = document.createElement("option");
+          const label = state.currentUserName || state.currentUserId;
           option.value = state.currentUserId;
-          option.textContent = state.currentUserId;
-          option.dataset.label = state.currentUserId;
+          option.textContent = label;
+          option.dataset.label = label;
           refs.inspectorInput.appendChild(option);
         }
         const preferred = state.currentUserId || current || localStorage.getItem("safety_check_inspector_id") || "";
         if (preferred && [...refs.inspectorInput.options].some((option) => option.value === preferred)) {
           refs.inspectorInput.value = preferred;
+        } else if (state.currentUserName) {
+          const matched = [...refs.inspectorInput.options].find((option) => option.dataset.label === state.currentUserName || option.textContent === state.currentUserName);
+          if (matched) {
+            refs.inspectorInput.value = matched.value;
+          }
         }
+        updateInspectorPicker();
+      }
+
+      function toggleInspectorPicker() {
+        const willOpen = refs.inspectorPickerPanel.classList.contains("hidden");
+        if (!willOpen) {
+          closeInspectorPicker();
+          return;
+        }
+        updateInspectorPicker();
+        refs.inspectorPickerPanel.classList.remove("hidden");
+        refs.inspectorPickerBtn.setAttribute("aria-expanded", "true");
+        const selected = refs.inspectorPickerPanel.querySelector(".is-selected");
+        if (selected) {
+          selected.scrollIntoView({ block: "nearest" });
+        }
+      }
+
+      function closeInspectorPicker() {
+        refs.inspectorPickerPanel.classList.add("hidden");
+        refs.inspectorPickerBtn.setAttribute("aria-expanded", "false");
+      }
+
+      function updateInspectorPicker() {
+        const option = refs.inspectorInput.selectedOptions && refs.inspectorInput.selectedOptions[0];
+        const label = (option?.dataset?.label || option?.textContent || "请选择").trim() || "请选择";
+        refs.inspectorPickerText.textContent = label;
+        refs.inspectorPickerBtn.title = label;
+        renderInspectorPickerOptions();
+      }
+
+      function renderInspectorPickerOptions() {
+        refs.inspectorPickerPanel.innerHTML = "";
+        Array.from(refs.inspectorInput.options).forEach((option) => {
+          const item = document.createElement("button");
+          const label = option.dataset.label || option.textContent || "请选择";
+          item.type = "button";
+          item.className = `inspector-picker-option${option.value === refs.inspectorInput.value ? " is-selected" : ""}`;
+          item.dataset.inspectorValue = option.value;
+          item.textContent = label;
+          item.title = option.title || label;
+          item.setAttribute("role", "option");
+          item.setAttribute("aria-selected", String(option.value === refs.inspectorInput.value));
+          refs.inspectorPickerPanel.appendChild(item);
+        });
       }
 
       function selectedInspector() {
@@ -1137,6 +1865,27 @@
                 </div>
               </div>
               <button class="btn primary task-action" data-start-task="${escapeHtml(task.id)}">去执行</button>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderCheckedRecordCard(record) {
+        const isAbnormal = record.result === "异常";
+        const finishTime = record.endTime || record.startTime;
+        return `
+          <article class="task-card">
+            <div class="task-row checked">
+              <span class="task-icon">已</span>
+              <div class="task-main">
+                <h3>${escapeHtml(record.templateName || "安全检查")}</h3>
+                <div class="meta">${escapeHtml(record.target || "未填写区域/对象")} · 完成 ${escapeHtml(shortDateTime(finishTime))}</div>
+                <div class="task-chips">
+                  <span class="tag ${isAbnormal ? "danger" : "ok"}">${escapeHtml(record.result || "正常")}</span>
+                  ${record.inspector ? `<span class="tag">${escapeHtml(record.inspector)}</span>` : ""}
+                  <span class="tag">${Number(record.abnormalCount || 0)} 异常</span>
+                </div>
+              </div>
             </div>
           </article>
         `;
@@ -1180,8 +1929,13 @@
           inputValue: "",
           abnormalDesc: "",
           handling: "",
+          handlingStatus: "待处理",
           photos: [],
         }));
+        state.submitPhotos = [];
+        state.signatures = [createSignatureRow()];
+        state.activeSignatureIndex = -1;
+        resetSignaturePadState();
         renderExecute();
         switchView("execute");
       }
@@ -1191,6 +1945,7 @@
         refs.executeTitle.textContent = state.selectedTemplate?.name || "安全检查";
         refs.executeMeta.textContent = `${state.target || "未填写区域/对象"} · ${selectedInspector().label || "检查人"}`;
         refs.itemCards.innerHTML = renderGroupedItemCards();
+        renderSubmitExtras();
         updateProgress();
       }
 
@@ -1289,6 +2044,13 @@
             <textarea class="textarea" data-index="${index}" data-field="handling" placeholder="可填写整改要求">${escapeHtml(item.handling || "")}</textarea>
           </div>
           <div class="field">
+            <label><span class="required">*</span>处理情况</label>
+            <select class="input" data-index="${index}" data-field="handlingStatus">
+              <option value="待处理" ${(item.handlingStatus || "待处理") === "待处理" ? "selected" : ""}>待处理</option>
+              <option value="已处理" ${item.handlingStatus === "已处理" ? "selected" : ""}>已处理</option>
+            </select>
+          </div>
+          <div class="field">
             <div class="photo-head">
               <label>${item.abnormalPhotoRequired === "是" ? '<span class="required">*</span>' : ""}异常照片</label>
               <label class="btn photo-add-btn" title="添加照片">
@@ -1363,6 +2125,127 @@
         }
       }
 
+      function renderSubmitExtras() {
+        const photos = normalizePhotoList(state.submitPhotos);
+        refs.submitPhotoList.innerHTML = photos.length ? photos.map((photo) => `
+          <div class="photo-card">
+            <div class="photo-thumb" data-action="preview-submit-photo" data-photo-id="${escapeHtml(photo.id)}">
+              ${photo.url ? `<img src="${escapeHtml(photo.url)}" alt="${escapeHtml(photo.name || "现场照片")}" />` : `<span class="photo-file">已选照片</span>`}
+              <button class="photo-remove" type="button" data-action="remove-submit-photo" data-photo-id="${escapeHtml(photo.id)}" aria-label="删除照片">×</button>
+            </div>
+            <div class="photo-name">${escapeHtml(photo.name || "现场照片")}</div>
+          </div>
+        `).join("") : "";
+        refs.submitPhotoStatus.textContent = photos.length ? `已选择 ${photos.length} 张现场照片` : "";
+
+        if (!Array.isArray(state.signatures) || !state.signatures.length) {
+          state.signatures = [createSignatureRow()];
+        }
+        refs.signatureList.innerHTML = state.signatures.map((signature, index) => {
+          const hasSign = Boolean(signature && signature.dataUrl);
+          const previewUrl = hasSign ? String(signature.previewUrl || signature.dataUrl || "").trim() : "";
+          const signTimeText = signature.signTime ? String(signature.signTime).slice(0, 16) : "";
+          return `
+            <div class="signature-row" data-signature-index="${index}">
+              <div class="signature-seq">${index + 1}</div>
+              <div class="signature-sign-cell">
+                ${previewUrl ? `<button type="button" class="sign-thumb-btn" data-action="preview-signature" data-index="${index}" aria-label="查看签名"><img class="sign-preview-img" src="${escapeHtml(previewUrl)}" alt="签名预览" /></button>` : ""}
+                <button class="btn signature-sign-btn" type="button" data-action="open-signature" data-index="${index}">${hasSign ? "重签" : "点击签名"}</button>
+                <span class="sign-state${hasSign ? " done" : ""}">${hasSign ? "已签" : "未签名"}</span>
+                ${hasSign ? `<button type="button" class="sign-preview-link" data-action="preview-signature" data-index="${index}">预览</button>` : ""}
+                ${hasSign ? `<button type="button" class="sign-preview-link" data-action="clear-signature" data-index="${index}">清除</button>` : ""}
+                ${signTimeText ? `<span class="signature-time">${escapeHtml(signTimeText)}</span>` : ""}
+              </div>
+              <button type="button" class="signature-delete" data-action="remove-signature" data-index="${index}" aria-label="删除签名"></button>
+            </div>
+          `;
+        }).join("");
+      }
+
+      function createSignatureRow() {
+        return {
+          id: `signature_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          name: "",
+          dataUrl: "",
+          previewUrl: "",
+          signTime: "",
+        };
+      }
+
+      function addSignatureRow() {
+        state.signatures.push(createSignatureRow());
+        renderSubmitExtras();
+      }
+
+      function removeSignatureRow(index) {
+        if (!Number.isFinite(index) || !state.signatures[index]) {
+          return;
+        }
+        if (state.signatures.length <= 1) {
+          clearSavedSignature(index);
+          return;
+        }
+        state.signatures.splice(index, 1);
+        renderSubmitExtras();
+      }
+
+      function previewSignature(index) {
+        const signature = state.signatures[index];
+        if (!signature || !signature.dataUrl) {
+          showToast("当前签名暂无可预览内容");
+          return;
+        }
+        openPhotoPreviewByPhoto({
+          name: `签名${index + 1}`,
+          url: signature.previewUrl || signature.dataUrl,
+        }, "当前签名暂无可预览内容");
+      }
+
+      async function addSubmitPhotos(fileList, inputEl) {
+        if (!fileList || !fileList.length) {
+          return;
+        }
+        const files = Array.from(fileList).filter((file) => file && /^image\//i.test(file.type || ""));
+        if (!files.length) {
+          showToast("请选择图片文件");
+          if (inputEl) inputEl.value = "";
+          return;
+        }
+
+        try {
+          const nextPhotos = normalizePhotoList(state.submitPhotos);
+          for (const file of files) {
+            const dataUrl = await readFileAsDataUrl(file);
+            const previewUrl = await compressPhotoDataUrl(dataUrl);
+            nextPhotos.push({
+              id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+              name: file.name || `现场照片_${nextPhotos.length + 1}.jpg`,
+              url: previewUrl,
+              dataUrl: previewUrl,
+            });
+          }
+          state.submitPhotos = nextPhotos;
+          renderSubmitExtras();
+        } catch (error) {
+          showToast(`照片处理失败：${error.message || "请重试"}`);
+        } finally {
+          if (inputEl) inputEl.value = "";
+        }
+      }
+
+      function removeSubmitPhoto(photoId) {
+        if (!photoId) {
+          return;
+        }
+        state.submitPhotos = normalizePhotoList(state.submitPhotos).filter((photo) => photo.id !== photoId);
+        renderSubmitExtras();
+      }
+
+      function openSubmitPhotoPreview(photoId) {
+        const photo = normalizePhotoList(state.submitPhotos).find((row) => row.id === photoId);
+        openPhotoPreviewByPhoto(photo, "当前现场照片暂无可预览内容");
+      }
+
       function removeItemPhoto(index, photoId) {
         const item = state.selectedItems[index];
         if (!item || !photoId) {
@@ -1375,12 +2258,16 @@
       function openPhotoPreview(index, photoId) {
         const item = state.selectedItems[index];
         const photo = normalizePhotoList(item && item.photos).find((row) => row.id === photoId);
+        openPhotoPreviewByPhoto(photo, "当前照片暂无可预览内容");
+      }
+
+      function openPhotoPreviewByPhoto(photo, emptyMessage) {
         if (!photo || !photo.url) {
-          showToast("当前照片暂无可预览内容");
+          showToast(emptyMessage || "当前照片暂无可预览内容");
           return;
         }
         refs.photoPreviewImage.src = photo.url;
-        refs.photoPreviewImage.alt = photo.name || "异常照片预览";
+        refs.photoPreviewImage.alt = photo.name || "照片预览";
         refs.photoPreviewModal.classList.remove("hidden");
       }
 
@@ -1432,6 +2319,205 @@
         });
       }
 
+      function openSignatureModal(index) {
+        if (!Number.isFinite(index) || !state.signatures[index]) {
+          showToast("当前签名行不存在");
+          return;
+        }
+        state.activeSignatureIndex = index;
+        refs.signatureModal.classList.remove("hidden");
+        resizeSignatureCanvas();
+        clearSignatureCanvas();
+        refs.signatureStatus.textContent = `请在签名区书写后点击保存（签名 ${index + 1}）`;
+      }
+
+      function closeSignatureModal() {
+        state.activeSignatureIndex = -1;
+        refs.signatureModal.classList.add("hidden");
+        clearSignatureCanvas();
+      }
+
+      function bindSignatureCanvas() {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        canvas.addEventListener("pointerdown", handleSignaturePointerDown);
+        canvas.addEventListener("pointermove", handleSignaturePointerMove);
+        canvas.addEventListener("pointerup", handleSignaturePointerUp);
+        canvas.addEventListener("pointerleave", handleSignaturePointerUp);
+        canvas.addEventListener("pointercancel", handleSignaturePointerUp);
+        window.addEventListener("resize", () => {
+          if (!refs.signatureModal.classList.contains("hidden")) {
+            resizeSignatureCanvas();
+          }
+        });
+      }
+
+      function resizeSignatureCanvas() {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.max(1, window.devicePixelRatio || 1);
+        const width = Math.max(1, Math.round(rect.width * ratio));
+        const height = Math.max(1, Math.round(rect.height * ratio));
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#111827";
+        resetSignaturePadState();
+      }
+
+      function clearSignatureCanvas() {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, rect.width, rect.height);
+        resetSignaturePadState();
+        refs.signatureStatus.textContent = "已清空，请重新签名";
+      }
+
+      function resetSignaturePadState() {
+        state.signaturePad.drawing = false;
+        state.signaturePad.dirty = false;
+        state.signaturePad.pointerId = null;
+        state.signaturePad.lastX = 0;
+        state.signaturePad.lastY = 0;
+      }
+
+      function handleSignaturePointerDown(event) {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        event.preventDefault();
+        const point = getCanvasPoint(canvas, event);
+        state.signaturePad.drawing = true;
+        state.signaturePad.pointerId = event.pointerId;
+        state.signaturePad.lastX = point.x;
+        state.signaturePad.lastY = point.y;
+        refs.signatureStatus.textContent = "正在签名...";
+        if (typeof canvas.setPointerCapture === "function") {
+          try {
+            canvas.setPointerCapture(event.pointerId);
+          } catch {
+            // ignore pointer capture errors
+          }
+        }
+      }
+
+      function handleSignaturePointerMove(event) {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement) || !state.signaturePad.drawing || state.signaturePad.pointerId !== event.pointerId) {
+          return;
+        }
+        event.preventDefault();
+        const point = getCanvasPoint(canvas, event);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(state.signaturePad.lastX, state.signaturePad.lastY);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+        state.signaturePad.lastX = point.x;
+        state.signaturePad.lastY = point.y;
+        state.signaturePad.dirty = true;
+      }
+
+      function handleSignaturePointerUp(event) {
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          return;
+        }
+        if (state.signaturePad.pointerId !== null && state.signaturePad.pointerId !== event.pointerId) {
+          return;
+        }
+        event.preventDefault();
+        state.signaturePad.drawing = false;
+        state.signaturePad.pointerId = null;
+        if (state.signaturePad.dirty) {
+          refs.signatureStatus.textContent = "签名完成，点击保存后回填";
+        }
+        if (typeof canvas.releasePointerCapture === "function") {
+          try {
+            canvas.releasePointerCapture(event.pointerId);
+          } catch {
+            // ignore pointer capture errors
+          }
+        }
+      }
+
+      function getCanvasPoint(canvas, event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
+      }
+
+      function saveSignature() {
+        if (!state.signaturePad.dirty) {
+          refs.signatureStatus.textContent = "请先在签名区完成签名";
+          return;
+        }
+        const index = state.activeSignatureIndex;
+        if (!Number.isFinite(index) || !state.signatures[index]) {
+          refs.signatureStatus.textContent = "当前签名行不存在，请关闭后重试";
+          return;
+        }
+        const canvas = refs.signatureCanvas;
+        if (!(canvas instanceof HTMLCanvasElement)) {
+          refs.signatureStatus.textContent = "签名板不可用，请刷新后重试";
+          return;
+        }
+        const dataUrl = canvas.toDataURL("image/png");
+        state.signatures[index] = {
+          ...state.signatures[index],
+          name: `safety-check-signature-${Date.now()}.png`,
+          dataUrl,
+          previewUrl: dataUrl,
+          signTime: nowDateTimeText(),
+        };
+        renderSubmitExtras();
+        showToast("签名已保存");
+        closeSignatureModal();
+      }
+
+      function clearSavedSignature(index) {
+        if (!Number.isFinite(index) || !state.signatures[index]) {
+          return;
+        }
+        state.signatures[index] = {
+          ...state.signatures[index],
+          name: "",
+          dataUrl: "",
+          previewUrl: "",
+          signTime: "",
+        };
+        renderSubmitExtras();
+        showToast("签名已清空");
+      }
+
       function updateProgress() {
         const total = state.selectedItems.length;
         const done = state.selectedItems.filter(isItemDone).length;
@@ -1467,6 +2553,19 @@
           corpId: state.currentCorpId,
           startTime: state.startTime,
           endTime: nowDateTimeText(),
+          photos: normalizePhotoList(state.submitPhotos)
+            .map((photo) => ({
+              name: photo.name,
+              dataUrl: photo.dataUrl || (/^data:image\//i.test(photo.url || "") ? photo.url : ""),
+            }))
+            .filter((photo) => photo.name || photo.dataUrl),
+          signature: (Array.isArray(state.signatures) ? state.signatures : [])
+            .filter((signature) => signature && signature.dataUrl)
+            .map((signature) => ({
+              name: signature.name,
+              dataUrl: signature.dataUrl,
+              signTime: signature.signTime,
+            })),
           items: state.selectedItems.map((item) => ({
             itemId: item.id,
             seq: item.seq,
@@ -1479,6 +2578,7 @@
             isAbnormal: item.result === "异常" ? "是" : "否",
             abnormalDesc: item.abnormalDesc,
             handling: item.handling,
+            handlingStatus: item.result === "异常" ? (item.handlingStatus || "待处理") : "",
             photos: item.result === "异常" ? normalizePhotoList(item.photos)
               .map((photo) => ({
                 name: photo.name,
@@ -1515,6 +2615,9 @@
           if (item.result === "异常" && item.abnormalPhotoRequired === "是" && !normalizePhotoList(item.photos).length) {
             return `第 ${item.seq || i + 1} 项异常照片必传`;
           }
+          if (item.result === "异常" && !["已处理", "待处理"].includes(String(item.handlingStatus || "").trim())) {
+            return `第 ${item.seq || i + 1} 项请选择处理情况`;
+          }
         }
         return "";
       }
@@ -1530,20 +2633,26 @@
       function renderSummary() {
         const data = state.summary || {};
         const abnormalItems = state.selectedItems.filter((item) => item.result === "异常");
-        const flowCount = Array.isArray(data.flowIds || data.hazardIds) ? (data.flowIds || data.hazardIds).length : Number(data.flowStartCount || 0);
+        const flowCount = Number(data.flowStartCount || (Array.isArray(data.flowIds) ? data.flowIds.length : 0));
+        const closedCount = Number(data.closedHazardCount || (Array.isArray(data.closedHazardIds) ? data.closedHazardIds.length : 0));
+        const flowText = [
+          flowCount ? `已发起 ${flowCount} 条整改流程` : "",
+          closedCount ? `已关闭 ${closedCount} 条隐患工单` : "",
+        ].filter(Boolean).join(" · ");
         refs.summaryResultTag.textContent = data.result || "正常";
         refs.summaryResultTag.className = "summary-badge";
-        refs.summaryText.textContent = `${state.selectedTemplate?.name || "安全检查"} · ${state.target || ""} · ${data.detailCount || state.selectedItems.length} 项 · ${data.abnormalCount || 0} 异常${flowCount ? ` · 已发起 ${flowCount} 条整改流程` : ""}`;
+        refs.summaryText.textContent = `${state.selectedTemplate?.name || "安全检查"} · ${state.target || ""} · ${data.detailCount || state.selectedItems.length} 项 · ${data.abnormalCount || 0} 异常${flowText ? ` · ${flowText}` : ""}`;
         refs.summaryAbnormalList.innerHTML = abnormalItems.length ? abnormalItems.map((item) => `
           <article class="card">
             <h3>${escapeHtml(item.item || "异常项")}</h3>
             <div class="meta">${escapeHtml(item.abnormalDesc || "未填写异常说明")}</div>
-            <span class="tag warn">已发起整改流程</span>
+            <span class="tag ${item.handlingStatus === "已处理" ? "ok" : "warn"}">${item.handlingStatus === "已处理" ? "已处理并关闭工单" : "待处理，已发起整改流程"}</span>
           </article>
         `).join("") : `<div class="empty">本次未发现异常</div>`;
       }
 
       function switchView(name) {
+        closeInspectorPicker();
         refs.homeView.classList.toggle("active", name === "home");
         refs.executeView.classList.toggle("active", name === "execute");
         refs.summaryView.classList.toggle("active", name === "summary");
@@ -1578,6 +2687,19 @@
 
       function shortDateTime(value) {
         return String(value || "").replace("T", " ").slice(0, 16) || "-";
+      }
+
+      function dateKeyOf(value) {
+        if (value instanceof Date) {
+          const pad = (n) => String(n).padStart(2, "0");
+          return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+        }
+        const text = String(value || "").trim();
+        const match = text.match(/(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})/);
+        if (!match) {
+          return "";
+        }
+        return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
       }
 
       function formatChineseDate(date) {

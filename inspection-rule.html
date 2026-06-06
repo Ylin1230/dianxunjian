@@ -652,8 +652,6 @@
         <div class="toolbar">
           <div class="btn-group">
             <button id="addBtn" class="btn primary">新增</button>
-            <button id="editBtn" class="btn">编辑</button>
-            <button id="deleteBtn" class="btn danger">删除</button>
           </div>
           <input id="keywordInput" class="input" type="text" placeholder="规则编号/名称" />
           <select id="generationTypeFilter" class="select">
@@ -807,8 +805,6 @@
         resetBtn: document.getElementById("resetBtn"),
         refreshBtn: document.getElementById("refreshBtn"),
         addBtn: document.getElementById("addBtn"),
-        editBtn: document.getElementById("editBtn"),
-        deleteBtn: document.getElementById("deleteBtn"),
         checkAll: document.getElementById("checkAll"),
         tableBody: document.getElementById("tableBody"),
         tableFoot: document.getElementById("tableFoot"),
@@ -883,19 +879,6 @@
 
         refs.addBtn.addEventListener("click", () => {
           openModal("add");
-        });
-
-        refs.editBtn.addEventListener("click", () => {
-          const ids = Array.from(state.selectedIds);
-          if (ids.length !== 1) {
-            showToast("请选择 1 条规则进行编辑");
-            return;
-          }
-          openModal("edit", ids[0]);
-        });
-
-        refs.deleteBtn.addEventListener("click", () => {
-          void deleteSelectedRules(Array.from(state.selectedIds));
         });
 
         refs.checkAll.addEventListener("change", () => {
@@ -1394,6 +1377,14 @@
       }
 
       async function toggleRuleStatus(id, enable) {
+        if (!enable) {
+          const rule = state.rules.find((item) => item.id === id) || {};
+          const name = rule.name || rule.code || id;
+          const ok = window.confirm(`确认停用规则“${name}”吗？停用后将同步清理后续未开始任务。`);
+          if (!ok) {
+            return;
+          }
+        }
         setLoading(true);
         setStatus(`正在${enable ? "启用" : "停用"}规则...`);
         try {
@@ -1436,10 +1427,7 @@
       }
 
       function renderActionDisabled() {
-        const hasSelection = state.selectedIds.size > 0;
         refs.addBtn.disabled = state.loading;
-        refs.editBtn.disabled = state.loading || state.selectedIds.size !== 1;
-        refs.deleteBtn.disabled = state.loading || !hasSelection;
         refs.refreshBtn.disabled = state.loading;
         refs.searchBtn.disabled = state.loading;
         refs.resetBtn.disabled = state.loading;

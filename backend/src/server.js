@@ -284,6 +284,76 @@ app.post("/api/partner-training/signature-upload", async (req, res) => {
   }
 });
 
+app.post("/api/partner-training/file-upload", async (req, res) => {
+  const dataUrl = String((req.body && req.body.dataUrl) || "").trim();
+  const inputName = toOptionalText(req.body && req.body.name);
+
+  if (!dataUrl) {
+    res.status(400).json({ ok: false, message: "缺少附件数据" });
+    return;
+  }
+
+  let tempFilePath = "";
+
+  try {
+    const parsed = parseFileDataUrl(dataUrl);
+    const tempDir = path.join(config.staticRoot, "__partner-training-uploads");
+    fs.mkdirSync(tempDir, { recursive: true });
+
+    const ext = getUploadExtension(inputName, parsed.mime, parsed.ext);
+    const fileName = buildTempUploadFileName(inputName || "attachment", ext);
+    tempFilePath = path.join(tempDir, fileName);
+    fs.writeFileSync(tempFilePath, parsed.buffer);
+
+    const publicBaseUrl = getPublicBaseUrl(req);
+    if (!isExternallyReachableBaseUrl(publicBaseUrl)) {
+      throw new Error(
+        "当前服务器地址属于本地或内网地址，百数云无法回抓附件。请将系统部署到公网 HTTPS 域名，并在 backend/.env 中配置 PUBLIC_BASE_URL 后再上传附件。"
+      );
+    }
+
+    const publicUrl = new URL(`/__partner-training-uploads/${encodeURIComponent(fileName)}`, publicBaseUrl).toString();
+    const upstreamResult = await requestOpenApi(config, req, {
+      path: `/app/${config.defaultAppId}/entry/${PARTNER_TRAINING_ENTRY_ID}/upload_file`,
+      method: "POST",
+      body: [
+        {
+          name: inputName || fileName,
+          url: publicUrl,
+        },
+      ],
+    });
+
+    const files = extractObjectArray(upstreamResult, ["data"]).filter((item) => item && typeof item === "object");
+    if (!files.length) {
+      throw new Error("上传成功但未返回文件信息");
+    }
+
+    res.json({
+      ok: true,
+      data: {
+        files,
+        file: files[0],
+        sourceUrl: publicUrl,
+      },
+    });
+  } catch (error) {
+    res.status(502).json({
+      ok: false,
+      message: "附件上传失败",
+      detail: error.message,
+    });
+  } finally {
+    if (tempFilePath) {
+      try {
+        fs.unlinkSync(tempFilePath);
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+  }
+});
+
 // 前端透传路径：/api/app/:appId/entry/:entryId/:action
 app.all("/api/app/:appId/entry/:entryId/:action", async (req, res) => {
   const appId = String(req.params.appId || "").trim() || config.defaultAppId;
@@ -361,6 +431,22 @@ app.get("/h5/partner-training", (req, res) => {
 
 app.get("/h5/partner-training-admin", (req, res) => {
   sendStaticHtml(res, config.staticRoot, "partner-entry-training.html");
+});
+
+app.get("/h5/partner-training-qr", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "partner-entry-training-qr.html");
+});
+
+app.get("/partner-entry-training-qr", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "partner-entry-training-qr.html");
+});
+
+app.get("/inspection-monthly-report", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "inspection-monthly-report.html");
+});
+
+app.get("/h5/inspection-monthly-report", (req, res) => {
+  sendStaticHtml(res, config.staticRoot, "inspection-monthly-report.html");
 });
 
 app.get("/safety-check", (req, res) => {
@@ -932,21 +1018,34 @@ function extractErrorMessage(payload) {
 }
 
 function parseImageDataUrl(value) {
-  const text = String(value || "").trim();
-  const match = text.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,([\s\S]+)$/i);
-  if (!match) {
+  const parsed = parseFileDataUrl(value);
+  if (!String(parsed.mime || "").toLowerCase().startsWith("image/")) {
     throw new Error("签字图片格式不正确");
   }
 
-  const mime = String(match[1] || "").toLowerCase();
+  return {
+    mime: parsed.mime,
+    ext: getImageExtensionByMime(parsed.mime),
+    buffer: parsed.buffer,
+  };
+}
+
+function parseFileDataUrl(value) {
+  const text = String(value || "").trim();
+  const match = text.match(/^data:([^;,]+)?(?:;[^,]*)*;base64,([\s\S]+)$/i);
+  if (!match) {
+    throw new Error("附件格式不正确");
+  }
+
+  const mime = String(match[1] || "application/octet-stream").toLowerCase();
   const base64 = String(match[2] || "").trim();
   if (!base64) {
-    throw new Error("签字图片数据为空");
+    throw new Error("附件数据为空");
   }
 
   return {
     mime,
-    ext: getImageExtensionByMime(mime),
+    ext: getFileExtensionByMime(mime),
     buffer: Buffer.from(base64, "base64"),
   };
 }
@@ -960,6 +1059,38 @@ function getImageExtensionByMime(mime) {
     return "webp";
   }
   return "png";
+}
+
+function getFileExtensionByMime(mime) {
+  const value = String(mime || "").toLowerCase();
+  const map = {
+    "application/pdf": "pdf",
+    "application/msword": "doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.ms-powerpoint": "ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+    "text/plain": "txt",
+    "text/csv": "csv",
+    "application/zip": "zip",
+    "application/x-zip-compressed": "zip",
+  };
+  if (value.startsWith("image/")) {
+    return getImageExtensionByMime(value);
+  }
+  return map[value] || "bin";
+}
+
+function getUploadExtension(fileName, mime, fallback) {
+  const fromName = path.extname(String(fileName || ""))
+    .replace(/^\./, "")
+    .replace(/[^a-zA-Z0-9]+/g, "")
+    .toLowerCase();
+  if (fromName && fromName.length <= 12) {
+    return fromName;
+  }
+  return getFileExtensionByMime(mime) || fallback || "bin";
 }
 
 function buildTempUploadFileName(baseName, ext) {

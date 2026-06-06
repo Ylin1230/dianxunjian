@@ -280,6 +280,11 @@
         border-color: #9fb2cb;
       }
 
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
       .btn.primary {
         border-color: var(--accent);
         background: var(--accent);
@@ -608,6 +613,77 @@
         white-space: nowrap;
       }
 
+      .select-proxy.is-smart .select-proxy-button {
+        display: flex;
+        align-items: center;
+      }
+
+      .select-proxy.is-smart .select-proxy-button .ss-display,
+      .select-proxy.is-smart .select-proxy-button .ss-placeholder {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .select-proxy.is-smart .ss-display {
+        color: var(--text);
+      }
+
+      .select-proxy.is-smart .ss-placeholder {
+        color: #9aa6b6;
+        font-weight: 400;
+      }
+
+      .select-proxy.is-smart.has-value .ss-placeholder,
+      .select-proxy.is-smart.is-open .ss-display,
+      .select-proxy.is-smart.is-open .ss-placeholder {
+        display: none;
+      }
+
+      .select-proxy.is-smart .ss-input {
+        display: none;
+        width: 100%;
+        min-width: 0;
+        height: 28px;
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        padding: 0;
+        font: inherit;
+        font-size: 13px;
+        line-height: 28px;
+      }
+
+      .select-proxy.is-smart .ss-input:focus {
+        outline: 0;
+      }
+
+      .select-proxy.is-smart.is-open .ss-input {
+        display: block;
+      }
+
+      .select-proxy.is-smart .select-proxy-clear {
+        display: none;
+        background: transparent;
+        color: #9aa6b6;
+      }
+
+      .select-proxy.is-smart.has-value:hover .select-proxy-clear {
+        display: inline-flex;
+      }
+
+      .select-proxy.is-smart .select-proxy-clear:hover {
+        background: #eef3fb;
+        color: #6f7d93;
+      }
+
+      .select-proxy.is-smart.has-value .select-proxy-button::after {
+        display: block;
+      }
+
+      .select-proxy.is-smart.has-value:hover .select-proxy-button::after {
+        display: none;
+      }
+
       .select-proxy-button:focus,
       .select-proxy.is-open .select-proxy-button {
         outline: none;
@@ -677,6 +753,13 @@
         line-height: 1.3;
       }
 
+      .select-proxy-empty {
+        padding: 7px 8px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
       .select-proxy-option.is-grouped {
         padding-left: 32px;
       }
@@ -711,16 +794,67 @@
       .content-split {
         min-height: 0;
         display: grid;
-        grid-template-rows: minmax(280px, 64%) minmax(132px, 1fr);
+        grid-template-rows: minmax(260px, 52%) minmax(160px, 1fr);
         gap: 8px;
         padding: 0 10px 10px;
         overflow: hidden;
         background: var(--panel-soft);
       }
 
+      .table-section {
+        min-height: 0;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        border-bottom: 1px solid var(--line-soft);
+      }
+
       .content-split .table-wrap {
         padding: 0;
-        border-bottom: 1px solid var(--line-soft);
+      }
+
+      .pagination-bar {
+        min-height: 42px;
+        padding: 7px 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-top: 1px solid var(--line-soft);
+        background: #fff;
+      }
+
+      .pagination-info {
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .pagination-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .pagination-page-btn {
+        min-width: 30px;
+        height: 28px;
+        min-height: 28px;
+        padding: 0 8px;
+        border-radius: 4px;
+      }
+
+      .pagination-page-btn.is-current {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .pagination-size {
+        width: 92px;
+        min-height: 28px;
+        font-size: 12px;
       }
 
       tbody tr.is-active {
@@ -1320,26 +1454,42 @@
         </div>
 
         <div class="content-split">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 44px">
-                    <input id="checkAll" type="checkbox" />
-                  </th>
-                  <th>设备编号</th>
-                  <th>设备名称</th>
-                  <th>分类</th>
-                  <th>型号</th>
-                  <th>状态</th>
-                  <th>位置</th>
-                  <th>责任人</th>
-                  <th>点检状态</th>
-                  <th style="width: 150px">操作</th>
-                </tr>
-              </thead>
-              <tbody id="tableBody"></tbody>
-            </table>
+          <div class="table-section">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 44px">
+                      <input id="checkAll" type="checkbox" />
+                    </th>
+                    <th>设备编号</th>
+                    <th>设备名称</th>
+                    <th>分类</th>
+                    <th>型号</th>
+                    <th>状态</th>
+                    <th>位置</th>
+                    <th>责任人</th>
+                    <th>点检状态</th>
+                    <th style="width: 150px">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination-bar">
+              <div id="paginationInfo" class="pagination-info">第 1 / 1 页</div>
+              <div class="pagination-actions">
+                <select id="pageSizeSelect" class="control pagination-size" aria-label="每页设备数量">
+                  <option value="10">10 条/页</option>
+                  <option value="15">15 条/页</option>
+                  <option value="20" selected>20 条/页</option>
+                  <option value="30">30 条/页</option>
+                </select>
+                <button id="prevPageBtn" class="btn pagination-page-btn" type="button">上一页</button>
+                <div id="pageButtons" class="pagination-actions" aria-label="设备分页"></div>
+                <button id="nextPageBtn" class="btn pagination-page-btn" type="button">下一页</button>
+              </div>
+            </div>
           </div>
 
           <section class="standard-usage-panel">
@@ -1655,7 +1805,6 @@
       <div class="modal detail-modal">
         <div class="modal-head">
           <h3>设备详情</h3>
-          <button type="button" id="closeDetailModal" class="btn">关闭</button>
         </div>
         <div class="modal-body">
           <section class="section-card">
@@ -1882,6 +2031,8 @@
         keyword: "",
         status: "",
         inspection: "",
+        tablePage: 1,
+        tablePageSize: 20,
         openTreeDeleteNodeId: "",
         editingDeviceId: null,
         viewingQrDeviceId: "",
@@ -1902,6 +2053,11 @@
         categoryTree: document.getElementById("categoryTree"),
         categoryHint: document.getElementById("categoryHint"),
         tableBody: document.getElementById("tableBody"),
+        paginationInfo: document.getElementById("paginationInfo"),
+        pageButtons: document.getElementById("pageButtons"),
+        pageSizeSelect: document.getElementById("pageSizeSelect"),
+        prevPageBtn: document.getElementById("prevPageBtn"),
+        nextPageBtn: document.getElementById("nextPageBtn"),
         summaryText: document.getElementById("summaryText"),
         apiStatusText: document.getElementById("apiStatusText"),
         standardUsageDeviceText: document.getElementById("standardUsageDeviceText"),
@@ -1982,7 +2138,6 @@
         downloadQrBtn: document.getElementById("downloadQrBtn"),
         openReportByQrBtn: document.getElementById("openReportByQrBtn"),
         detailModal: document.getElementById("detailModal"),
-        closeDetailModal: document.getElementById("closeDetailModal"),
         closeDetailFootBtn: document.getElementById("closeDetailFootBtn"),
         detailCodeInput: document.getElementById("detailCodeInput"),
         detailNameInput: document.getElementById("detailNameInput"),
@@ -2633,6 +2788,7 @@
           label.addEventListener("click", () => {
             state.selectedCategoryId = node.id;
             state.openTreeDeleteNodeId = "";
+            resetTablePage();
             setCategoryHint(`当前分类：${node.name}`);
             renderTree();
             renderTable();
@@ -2699,6 +2855,60 @@
         const selectedCount = filtered.reduce((sum, item) => (state.selectedDeviceIds.has(item.id) ? sum + 1 : sum), 0);
         refs.checkAll.checked = selectedCount === filtered.length;
         refs.checkAll.indeterminate = selectedCount > 0 && selectedCount < filtered.length;
+      }
+
+      function getPaginationState(filtered) {
+        const total = Array.isArray(filtered) ? filtered.length : 0;
+        const pageSize = Math.max(1, Number(state.tablePageSize) || 20);
+        const pageCount = Math.max(1, Math.ceil(total / pageSize));
+        const page = Math.min(Math.max(1, Number(state.tablePage) || 1), pageCount);
+        if (state.tablePage !== page) {
+          state.tablePage = page;
+        }
+        const startIndex = total ? (page - 1) * pageSize : 0;
+        const endIndex = total ? Math.min(total, startIndex + pageSize) : 0;
+        const rows = total ? filtered.slice(startIndex, endIndex) : [];
+        return {
+          total,
+          pageSize,
+          pageCount,
+          page,
+          startIndex,
+          endIndex,
+          rows,
+        };
+      }
+
+      function resetTablePage() {
+        state.tablePage = 1;
+      }
+
+      function renderPagination(pageState) {
+        const info = pageState.total
+          ? `第 ${pageState.page} / ${pageState.pageCount} 页，显示 ${pageState.startIndex + 1}-${pageState.endIndex} 条`
+          : "暂无设备数据";
+        refs.paginationInfo.textContent = info;
+        refs.prevPageBtn.disabled = pageState.page <= 1;
+        refs.nextPageBtn.disabled = pageState.page >= pageState.pageCount;
+        refs.pageSizeSelect.value = String(pageState.pageSize);
+
+        const maxButtons = 7;
+        let start = Math.max(1, pageState.page - Math.floor(maxButtons / 2));
+        let end = Math.min(pageState.pageCount, start + maxButtons - 1);
+        start = Math.max(1, end - maxButtons + 1);
+
+        const buttons = [];
+        for (let page = start; page <= end; page += 1) {
+          buttons.push(`
+            <button
+              class="btn pagination-page-btn${page === pageState.page ? " is-current" : ""}"
+              type="button"
+              data-page="${page}"
+              aria-current="${page === pageState.page ? "page" : "false"}"
+            >${page}</button>
+          `);
+        }
+        refs.pageButtons.innerHTML = buttons.join("");
       }
 
       function selectDeviceForStandards(deviceId) {
@@ -2828,6 +3038,8 @@
 
       function renderTable() {
         const filtered = filterDevices();
+        const pageState = getPaginationState(filtered);
+        const pageRows = pageState.rows;
         refs.tableBody.innerHTML = "";
 
         const validIds = new Set(devices.map((item) => item.id));
@@ -2847,7 +3059,7 @@
           refs.tableBody.appendChild(tr);
         }
 
-        filtered.forEach((device) => {
+        pageRows.forEach((device) => {
           const tr = document.createElement("tr");
           tr.dataset.rowId = device.id;
           tr.className = device.id === state.selectedStandardDeviceId ? "is-active" : "";
@@ -2874,8 +3086,10 @@
         });
 
         const selectedVisible = filtered.reduce((sum, item) => (state.selectedDeviceIds.has(item.id) ? sum + 1 : sum), 0);
-        refs.summaryText.textContent = `共 ${devices.length} 台设备，当前筛选 ${filtered.length} 台，已选择 ${selectedVisible} 台`;
-        syncCheckAll(filtered);
+        const pageSummary = filtered.length ? `，当前页 ${pageState.startIndex + 1}-${pageState.endIndex} 台` : "";
+        refs.summaryText.textContent = `共 ${devices.length} 台设备，当前筛选 ${filtered.length} 台${pageSummary}，已选择 ${selectedVisible} 台`;
+        syncCheckAll(pageRows);
+        renderPagination(pageState);
         renderStandardUsageList();
       }
 
@@ -2956,9 +3170,10 @@
 
       function populateCategoryGroupSelect() {
         const groups = categoryRoot.children || [];
-        refs.categoryGroupInput.innerHTML = groups
-          .map((group) => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)}</option>`)
-          .join("");
+        refs.categoryGroupInput.innerHTML = [
+          '<option value="">请选择</option>',
+          ...groups.map((group) => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)}</option>`),
+        ].join("");
       }
 
       function populateDeviceTypeSelect(preferredType = "") {
@@ -4594,7 +4809,7 @@
       }
 
       function extractPossibleTotal(result) {
-        const keys = ["total", "count", "data_count", "rows_count", "records_total", "size"];
+        const keys = ["total", "total_count", "totalCount", "count", "data_count", "rows_count", "records_total", "size", "data"];
         const queue = [result];
         const visited = new Set();
         while (queue.length) {
@@ -4798,12 +5013,21 @@
       }
 
       async function fetchEntryRecords(entryOptions = {}) {
+        const skipRecords = await fetchEntryRecordsBySkip(entryOptions).catch((error) => {
+          console.warn("fetch entry records by skip failed:", error);
+          return null;
+        });
+        if (skipRecords) {
+          return skipRecords;
+        }
+
         const listPayloadCandidates = [
-          { page: 1, limit: 1000 },
-          { page_no: 1, page_size: 1000 },
-          { pageNum: 1, pageSize: 1000 },
-          { offset: 0, limit: 1000 },
-          { start: 0, limit: 1000 },
+          { limit: 300, skip: 0 },
+          { page: 1, limit: 300 },
+          { page_no: 1, page_size: 300 },
+          { pageNum: 1, pageSize: 300 },
+          { offset: 0, limit: 300 },
+          { start: 0, limit: 300 },
           {},
         ];
 
@@ -4821,6 +5045,60 @@
           }
         }
         throw lastError || new Error("未命中可用的数据查询接口");
+      }
+
+      async function fetchEntryRecordsBySkip(entryOptions = {}) {
+        const path = "data";
+        const pageSize = 300;
+        const maxPages = 200;
+        const totalResult = await requestEntryOnce("data_count", {}, "POST", entryOptions);
+        const total = extractPossibleTotal(totalResult);
+        if (!Number.isFinite(total) || total < 0) {
+          return null;
+        }
+        if (total === 0) {
+          return [];
+        }
+
+        const output = [];
+        const seenIds = new Set();
+        const seenFingerprints = new Set();
+        for (let skip = 0, page = 1; skip < total && page <= maxPages; skip += pageSize, page += 1) {
+          const result = await requestEntryOnce(path, { limit: pageSize, skip }, "POST", entryOptions);
+          const records = extractRecordArray(result);
+          if (!records) {
+            throw new Error(`接口 ${path} 返回结构无法识别：${previewPayload(result)}`);
+          }
+          if (!records.length) {
+            break;
+          }
+
+          const fingerprint = records.map((item) => extractRecordId(item)).filter(Boolean).join("|");
+          if (fingerprint && seenFingerprints.has(fingerprint)) {
+            break;
+          }
+          if (fingerprint) {
+            seenFingerprints.add(fingerprint);
+          }
+
+          records.forEach((record) => {
+            const id = extractRecordId(record) || JSON.stringify(record);
+            if (seenIds.has(id)) {
+              return;
+            }
+            seenIds.add(id);
+            output.push(record);
+          });
+
+          if (records.length < pageSize) {
+            break;
+          }
+        }
+
+        if (total > pageSize && output.length < Math.min(total, pageSize * 2)) {
+          console.warn(`entry ${entryOptions.entryId || state.apiConfig.entryId} expected ${total} records but fetched ${output.length}`);
+        }
+        return output;
       }
 
       async function fetchCloudRecords() {
@@ -5237,6 +5515,7 @@
         state.keyword = refs.keywordInput.value;
         state.status = refs.statusFilter.value;
         state.inspection = refs.inspectionFilter.value;
+        resetTablePage();
         renderTable();
       });
 
@@ -5248,6 +5527,7 @@
         refs.statusFilter.value = "";
         refs.inspectionFilter.value = "";
         refreshSelectProxies(document);
+        resetTablePage();
         renderTable();
       });
 
@@ -5260,21 +5540,58 @@
 
       refs.statusFilter.addEventListener("change", () => {
         state.status = refs.statusFilter.value;
+        resetTablePage();
         renderTable();
       });
 
       refs.inspectionFilter.addEventListener("change", () => {
         state.inspection = refs.inspectionFilter.value;
+        resetTablePage();
         renderTable();
       });
 
       refs.checkAll.addEventListener("change", () => {
         const filtered = filterDevices();
+        const pageRows = getPaginationState(filtered).rows;
         if (refs.checkAll.checked) {
-          filtered.forEach((item) => state.selectedDeviceIds.add(item.id));
+          pageRows.forEach((item) => state.selectedDeviceIds.add(item.id));
         } else {
-          filtered.forEach((item) => state.selectedDeviceIds.delete(item.id));
+          pageRows.forEach((item) => state.selectedDeviceIds.delete(item.id));
         }
+        renderTable();
+      });
+
+      refs.pageSizeSelect.addEventListener("change", () => {
+        const nextSize = Number(refs.pageSizeSelect.value) || 20;
+        state.tablePageSize = nextSize;
+        resetTablePage();
+        renderTable();
+      });
+
+      refs.prevPageBtn.addEventListener("click", () => {
+        state.tablePage = Math.max(1, state.tablePage - 1);
+        renderTable();
+      });
+
+      refs.nextPageBtn.addEventListener("click", () => {
+        state.tablePage += 1;
+        renderTable();
+      });
+
+      refs.pageButtons.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
+        const button = target.closest("[data-page]");
+        if (!button) {
+          return;
+        }
+        const page = Number(button.getAttribute("data-page"));
+        if (!Number.isFinite(page) || page < 1 || page === state.tablePage) {
+          return;
+        }
+        state.tablePage = page;
         renderTable();
       });
 
@@ -5395,20 +5712,45 @@
           next.remove();
         }
         select.classList.add("native-select-hidden");
+        const smart = isSmartSelectProxy(select);
 
         const proxy = document.createElement("div");
-        proxy.className = "select-proxy";
-        const button = document.createElement("button");
-        button.type = "button";
+        proxy.className = `select-proxy${smart ? " is-smart" : ""}`;
+        const button = smart ? document.createElement("div") : document.createElement("button");
+        if (!smart) {
+          button.type = "button";
+        } else {
+          button.tabIndex = 0;
+          button.setAttribute("role", "combobox");
+          button.setAttribute("aria-haspopup", "listbox");
+          button.setAttribute("aria-expanded", "false");
+        }
         button.className = "select-proxy-button";
         const text = document.createElement("span");
+        if (smart) {
+          text.className = "ss-display";
+        }
         button.appendChild(text);
+        let searchInput = null;
+        if (smart) {
+          const placeholder = document.createElement("span");
+          placeholder.className = "ss-placeholder";
+          placeholder.textContent = "请选择";
+          searchInput = document.createElement("input");
+          searchInput.type = "text";
+          searchInput.className = "ss-input";
+          searchInput.autocomplete = "off";
+          searchInput.setAttribute("aria-label", "输入所属分类关键字");
+          button.appendChild(placeholder);
+          button.appendChild(searchInput);
+        }
         const clear = document.createElement("button");
         clear.type = "button";
         clear.className = "select-proxy-clear";
         clear.setAttribute("aria-label", "清空选择");
         const panel = document.createElement("div");
         panel.className = "select-proxy-panel hidden";
+        panel.setAttribute("role", "listbox");
         const list = document.createElement("div");
         list.className = "select-proxy-list";
         panel.appendChild(list);
@@ -5417,7 +5759,7 @@
         proxy.appendChild(panel);
         select.insertAdjacentElement("afterend", proxy);
 
-        const render = () => renderSelectProxy(select, proxy, text, list);
+        const render = () => renderSelectProxy(select, proxy, text, list, searchInput ? searchInput.value : "");
         clear.addEventListener("click", (event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -5432,36 +5774,82 @@
           event.stopPropagation();
           const willOpen = panel.classList.contains("hidden");
           closeSelectProxies();
+          if (searchInput) {
+            searchInput.value = "";
+          }
           render();
           if (willOpen) {
             proxy.classList.add("is-open");
             panel.classList.remove("hidden");
+            button.setAttribute("aria-expanded", "true");
             positionSelectProxyPanel(proxy, panel);
+            if (searchInput) {
+              setTimeout(() => searchInput.focus(), 0);
+            }
           }
         });
+        if (smart && searchInput) {
+          button.addEventListener("keydown", (event) => {
+            if (event.target === searchInput) return;
+            if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+              event.preventDefault();
+              button.click();
+            }
+          });
+          searchInput.addEventListener("click", (event) => event.stopPropagation());
+          searchInput.addEventListener("input", render);
+          searchInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.stopPropagation();
+              const matches = getSelectProxyOptions(select, searchInput.value);
+              if (matches.length === 1) {
+                select.value = matches[0].value;
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+                closeSelectProxies();
+              }
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              closeSelectProxies();
+            }
+          });
+        }
         select.addEventListener("change", render);
         new MutationObserver(render).observe(select, { childList: true, subtree: true });
         render();
       }
 
-      function renderSelectProxy(select, proxy, text, list) {
+      function isSmartSelectProxy(select) {
+        return select?.id === "categoryGroupInput";
+      }
+
+      function renderSelectProxy(select, proxy, text, list, keyword = "") {
+        const smart = proxy.classList.contains("is-smart");
         const selected = select.selectedOptions && select.selectedOptions[0];
-        text.textContent = selected?.textContent || "请选择";
+        const hasValue = Boolean(select.value);
+        text.textContent = smart ? (hasValue ? selected?.textContent || "" : "") : selected?.textContent || "请选择";
         const hasEmptyOption = Array.from(select.options).some((option) => option.value === "");
         proxy.classList.toggle("has-value", Boolean(select.value) && hasEmptyOption && !select.disabled);
         list.innerHTML = "";
+        let renderedCount = 0;
         const appendOption = (option, grouped = false) => {
+          if (smart && !option.value) return;
+          if (smart && !matchesSelectProxyKeyword(option, keyword)) return;
           const item = document.createElement("button");
           item.type = "button";
           item.className = `select-proxy-option${grouped ? " is-grouped" : ""}${option.value === select.value ? " is-selected" : ""}`;
           item.textContent = option.textContent || "请选择";
           item.disabled = option.disabled;
+          item.setAttribute("role", "option");
+          item.setAttribute("aria-selected", String(option.value === select.value));
           item.addEventListener("click", () => {
             select.value = option.value;
             select.dispatchEvent(new Event("change", { bubbles: true }));
             closeSelectProxies();
           });
           list.appendChild(item);
+          renderedCount += 1;
         };
         Array.from(select.children).forEach((child) => {
           if (child instanceof HTMLOptGroupElement) {
@@ -5480,7 +5868,34 @@
             appendOption(child, false);
           }
         });
+        if (smart && !renderedCount) {
+          list.innerHTML = '<div class="select-proxy-empty">未找到匹配项</div>';
+        }
         proxy.classList.toggle("is-disabled", select.disabled);
+      }
+
+      function getSelectProxyOptions(select, keyword = "") {
+        const options = [];
+        Array.from(select.children).forEach((child) => {
+          if (child instanceof HTMLOptGroupElement) {
+            Array.from(child.children).forEach((option) => {
+              if (option instanceof HTMLOptionElement && option.value && matchesSelectProxyKeyword(option, keyword)) {
+                options.push(option);
+              }
+            });
+            return;
+          }
+          if (child instanceof HTMLOptionElement && child.value && matchesSelectProxyKeyword(child, keyword)) {
+            options.push(child);
+          }
+        });
+        return options;
+      }
+
+      function matchesSelectProxyKeyword(option, keyword = "") {
+        const text = String(keyword || "").trim().toLowerCase();
+        if (!text) return true;
+        return `${option.textContent || ""} ${option.value || ""}`.toLowerCase().includes(text);
       }
 
       function refreshSelectProxy(select) {
@@ -5501,6 +5916,16 @@
       function closeSelectProxies() {
         document.querySelectorAll(".select-proxy.is-open").forEach((proxy) => {
           proxy.classList.remove("is-open", "is-upward");
+          const button = proxy.querySelector(".select-proxy-button");
+          button?.setAttribute("aria-expanded", "false");
+          const input = proxy.querySelector(".ss-input");
+          if (input) {
+            input.value = "";
+          }
+          const select = proxy.previousElementSibling;
+          if (select instanceof HTMLSelectElement) {
+            refreshSelectProxy(select);
+          }
         });
         document.querySelectorAll(".select-proxy-panel:not(.hidden)").forEach((panel) => {
           panel.classList.add("hidden");
@@ -5599,7 +6024,6 @@
       refs.downloadQrBtn.addEventListener("click", downloadQrImage);
       refs.openReportByQrBtn.addEventListener("click", openReportByQr);
 
-      refs.closeDetailModal.addEventListener("click", closeDetailModal);
       refs.closeDetailFootBtn.addEventListener("click", closeDetailModal);
       refs.detailModal.addEventListener("click", (event) => {
         if (event.target === refs.detailModal) {

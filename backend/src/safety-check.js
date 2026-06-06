@@ -77,6 +77,12 @@ const SUBMISSION_FIELD = {
   reviewRequired: "_widget_1776820784507",
   reviewer: "_widget_1776820784547",
   status: "_widget_1776820784566",
+  signature: "_widget_1779262802768",
+};
+
+const SUBMISSION_SIGNATURE_FIELD = {
+  sign: "_widget_1779262802794",
+  signTime: "_widget_1779262802797",
 };
 
 const SUBMISSION_DETAIL_FIELD = {
@@ -90,6 +96,7 @@ const SUBMISSION_DETAIL_FIELD = {
   submitTime: "_widget_1776821048859",
   abnormalDesc: "_widget_1776821048668",
   handling: "_widget_1776821048685",
+  handlingStatus: "_widget_1780483037794",
   abnormalPhotos: "_widget_1776821048718",
   hazardId: "_widget_1776821048840",
 };
@@ -130,7 +137,38 @@ const DEFAULT_OPTIONS = {
   hazardStatuses: ["待整改", "整改中", "待验收", "已关闭", "已退回", "已延期"],
 };
 
+const SAFETY_CHECK_FILE_DIRECTORIES = new Set([
+  "__safety-check-photos",
+  "__safety-check-submission-files",
+  "__safety-check-submission-signatures",
+]);
+
 function registerSafetyCheckRoutes(app, config) {
+  app.get("/api/safety-check/file/:directory/:fileName", (req, res) => {
+    const directory = String(req.params.directory || "").trim();
+    if (!SAFETY_CHECK_FILE_DIRECTORIES.has(directory)) {
+      res.status(404).send("not found");
+      return;
+    }
+    const fileName = path.basename(String(req.params.fileName || ""));
+    if (!fileName) {
+      res.status(404).send("not found");
+      return;
+    }
+    const root = path.resolve(config.staticRoot, directory);
+    const target = path.resolve(root, fileName);
+    if (!target.startsWith(root + path.sep) && target !== root) {
+      res.status(400).send("invalid path");
+      return;
+    }
+    if (!fs.existsSync(target)) {
+      res.status(404).send("not found");
+      return;
+    }
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    res.sendFile(target);
+  });
+
   app.get("/api/safety-check/bootstrap", asyncHandler(async (req, res) => {
     const [templateRecords, itemRecords, taskRecords, submissionRecords, detailRecords] = await Promise.all([
       fetchEntryRecords(config, TEMPLATE_ENTRY_ID),
@@ -265,6 +303,8 @@ function registerSafetyCheckRoutes(app, config) {
       return;
     }
     await attachSubmitItemPhotos(config, req, items);
+    const submissionPhotos = await attachSubmissionPhotos(config, req, payload.photos);
+    const signatureRows = await buildSubmissionSignatureRows(config, req, payload.signature || payload.signatures);
 
     let task = null;
     if (taskId) {
@@ -282,9 +322,10 @@ function registerSafetyCheckRoutes(app, config) {
     const startTime = normalizeDateTime(payload.startTime || payload.startedAt) || formatDateTime(new Date());
     const endTime = normalizeDateTime(payload.endTime || payload.endedAt) || formatDateTime(new Date());
     const abnormalCount = items.filter((item) => item.isAbnormal).length;
+    const pendingAbnormalCount = items.filter((item) => item.isAbnormal && !isSubmitItemHandled(item)).length;
     const result = abnormalCount > 0 ? "异常" : "正常";
-    const reviewRequired = abnormalCount > 0 ? "是" : "否";
-    const status = abnormalCount > 0 ? "待复核" : "已提交";
+    const reviewRequired = pendingAbnormalCount > 0 ? "是" : "否";
+    const status = pendingAbnormalCount > 0 ? "待复核" : "已提交";
 
     const submissionResp = await requestEntry(config, SUBMISSION_ENTRY_ID, "data_create", {
       data: {
@@ -297,12 +338,13 @@ function registerSafetyCheckRoutes(app, config) {
         [SUBMISSION_FIELD.endTime]: endTime,
         [SUBMISSION_FIELD.result]: result,
         [SUBMISSION_FIELD.abnormalCount]: abnormalCount,
-        [SUBMISSION_FIELD.photos]: normalizePhotos(payload.photos),
+        [SUBMISSION_FIELD.photos]: submissionPhotos,
         [SUBMISSION_FIELD.location]: normalizeLocation(payload.location),
         [SUBMISSION_FIELD.remark]: toDisplayText(payload.remark),
         [SUBMISSION_FIELD.reviewRequired]: reviewRequired,
         [SUBMISSION_FIELD.reviewer]: normalizeMemberValue(payload.reviewerId || payload.reviewer),
         [SUBMISSION_FIELD.status]: status,
+        ...(signatureRows.length ? { [SUBMISSION_FIELD.signature]: signatureRows } : {}),
       },
     });
 
@@ -313,6 +355,8 @@ function registerSafetyCheckRoutes(app, config) {
 
     const submitTime = formatDateTime(new Date());
     const hazardIds = [];
+    const flowIds = [];
+    const closedHazardIds = [];
     let flowStartCount = 0;
     const hazardWarnings = [];
     let detailCount = 0;
@@ -326,6 +370,7 @@ function registerSafetyCheckRoutes(app, config) {
       detailCount += 1;
 
       if (item.isAbnormal && detailId) {
+        const handled = isSubmitItemHandled(item);
         const hazardPayload = buildHazardFromSubmitItem(item, {
             submissionId,
             detailId,
@@ -333,14 +378,26 @@ function registerSafetyCheckRoutes(app, config) {
             fallbackDept: payload.ownerDeptId || payload.ownerDept,
             fallbackUser: payload.ownerUserId || payload.ownerUser,
         });
-        const hazardResult = await createHazardRecord(config, hazardPayload, { operator: flowOperator });
+        const hazardResult = handled
+          ? await createClosedHazardRecord(config, hazardPayload, { operator: flowOperator })
+          : await createHazardRecord(config, hazardPayload, { operator: flowOperator });
         const hazardResp = hazardResult.response;
         const hazardId = extractRecordId(hazardResp && hazardResp.data ? hazardResp.data : hazardResp);
-        flowStartCount += 1;
+        if (hazardResult.flowUsed || !handled) {
+          flowStartCount += 1;
+        }
         if (hazardId) {
           hazardIds.push(hazardId);
+          if (handled && !hazardResult.flowUsed) {
+            closedHazardIds.push(hazardId);
+          } else {
+            flowIds.push(hazardId);
+          }
         } else {
           hazardWarnings.push("整改流程已发起，但百数云未返回流程数据ID");
+        }
+        if (hazardResult.warning) {
+          hazardWarnings.push(hazardResult.warning);
         }
         const detailUpdateData = {};
         if (hazardId) {
@@ -359,9 +416,9 @@ function registerSafetyCheckRoutes(app, config) {
       await requestEntry(config, TASK_ENTRY_ID, "data_update", {
         data_id: task.id,
         data: {
-          [TASK_FIELD.status]: abnormalCount > 0 ? "异常待整改" : "已完成",
+          [TASK_FIELD.status]: pendingAbnormalCount > 0 ? "异常待整改" : "已完成",
           [TASK_FIELD.submitCount]: Number(task.submitCount || 0) + 1,
-          [TASK_FIELD.overdue]: computeOverdue(task.deadline, abnormalCount > 0 ? "异常待整改" : "已完成"),
+          [TASK_FIELD.overdue]: computeOverdue(task.deadline, pendingAbnormalCount > 0 ? "异常待整改" : "已完成"),
         },
       });
     }
@@ -374,10 +431,14 @@ function registerSafetyCheckRoutes(app, config) {
         abnormalCount,
         detailCount,
         hazardIds,
-        flowIds: hazardIds,
+        flowIds,
+        closedHazardIds,
         flowStartCount,
+        pendingAbnormalCount,
+        closedHazardCount: closedHazardIds.length,
         hazardWarning: hazardWarnings[0] || "",
-        taskStatus: task ? (abnormalCount > 0 ? "异常待整改" : "已完成") : "",
+        hazardWarnings,
+        taskStatus: task ? (pendingAbnormalCount > 0 ? "异常待整改" : "已完成") : "",
       },
     });
   }));
@@ -527,6 +588,20 @@ async function createHazardRecord(config, values, options = {}) {
   throw new Error(`整改流程发起失败：${errors.filter(Boolean).join("；") || "未知错误"}`);
 }
 
+async function createClosedHazardRecord(config, values, options = {}) {
+  try {
+    const response = await requestEntry(config, HAZARD_ENTRY_ID, "data_create", { data: values });
+    return { response, flowUsed: false };
+  } catch (error) {
+    const fallback = await createHazardRecord(config, values, options);
+    return {
+      ...fallback,
+      flowUsed: true,
+      warning: `已处理隐患工单直接归档失败，已按流程发起：${error.message}`,
+    };
+  }
+}
+
 async function attachSubmitItemPhotos(config, req, items) {
   for (const item of items) {
     if (!item.isAbnormal) {
@@ -558,30 +633,99 @@ async function attachSubmitItemPhotos(config, req, items) {
   }
 }
 
+async function attachSubmissionPhotos(config, req, value) {
+  const files = await resolveSafetyCheckFiles(config, req, value, {
+    entryId: SUBMISSION_ENTRY_ID,
+    directory: "__safety-check-submission-files",
+    label: "现场照片",
+    defaultName: "safety-check-scene-photo",
+  });
+  return normalizePhotos(files);
+}
+
+async function buildSubmissionSignatureRows(config, req, value) {
+  const rows = Array.isArray(value) ? value : value ? [value] : [];
+  const result = [];
+  for (const row of rows) {
+    const source = row && typeof row === "object"
+      ? (row.sign || row.signature || row.files || row.file || row)
+      : row;
+    const files = await resolveSafetyCheckFiles(config, req, source, {
+      entryId: SUBMISSION_ENTRY_ID,
+      directory: "__safety-check-submission-signatures",
+      label: "签名",
+      defaultName: "safety-check-signature",
+    });
+    const signFiles = files.filter((item) => item && typeof item === "object");
+    if (!signFiles.length) {
+      continue;
+    }
+    const signTime = normalizeDateTime(row && typeof row === "object"
+      ? (row.signTime || row.signatureTime || row.time)
+      : "") || formatDateTime(new Date());
+    result.push({
+      [SUBMISSION_SIGNATURE_FIELD.sign]: signFiles,
+      [SUBMISSION_SIGNATURE_FIELD.signTime]: signTime,
+    });
+  }
+  return result;
+}
+
+async function resolveSafetyCheckFiles(config, req, value, options = {}) {
+  const photos = normalizeInputPhotoList(value);
+  if (!photos.length) {
+    return [];
+  }
+  const existingFiles = photos.filter(isUploadFileObject);
+  const uploadablePhotos = photos.filter((photo) => {
+    if (!photo || typeof photo !== "object" || isUploadFileObject(photo)) {
+      return false;
+    }
+    const dataUrl = String(photo.dataUrl || photo.url || "").trim();
+    return /^data:image\//i.test(dataUrl);
+  });
+  const uploadedFiles = uploadablePhotos.length ? await uploadSafetyCheckFiles(config, req, uploadablePhotos, options) : [];
+  const legacyValues = photos
+    .filter((photo) => typeof photo === "string")
+    .map((photo) => photo.trim())
+    .filter(Boolean);
+  return [...existingFiles, ...uploadedFiles, ...legacyValues];
+}
+
 async function uploadSafetyCheckPhotos(config, req, photos) {
+  return uploadSafetyCheckFiles(config, req, photos, {
+    entryId: HAZARD_ENTRY_ID,
+    directory: "__safety-check-photos",
+    label: "异常照片",
+    defaultName: "safety-check-photo",
+  });
+}
+
+async function uploadSafetyCheckFiles(config, req, photos, options = {}) {
   const publicBaseUrl = getPublicBaseUrl(config, req);
   if (!isExternallyReachableBaseUrl(publicBaseUrl)) {
-    throw new Error("当前服务器未配置公网 HTTPS 域名，异常照片无法上传到百数云。");
+    throw new Error(`当前服务器未配置公网 HTTPS 域名，${options.label || "图片"}无法上传到百数云。`);
   }
 
-  const tempDir = path.join(config.staticRoot, "__safety-check-photos");
+  const directory = options.directory || "__safety-check-photos";
+  const tempDir = path.join(config.staticRoot, directory);
   fs.mkdirSync(tempDir, { recursive: true });
 
   const uploadItems = photos.map((photo, index) => {
     const dataUrl = String(photo.dataUrl || photo.url || "").trim();
-    const parsed = parseImageDataUrl(dataUrl, "异常照片");
-    const fileName = buildTempUploadFileName(photo.name || `safety-check-photo-${index + 1}`, parsed.ext);
+    const parsed = parseImageDataUrl(dataUrl, options.label || "图片");
+    const fileName = buildTempUploadFileName(photo.name || `${options.defaultName || "safety-check-photo"}-${index + 1}`, parsed.ext);
     fs.writeFileSync(path.join(tempDir, fileName), parsed.buffer);
     return {
       name: fileName,
-      url: new URL(`/__safety-check-photos/${encodeURIComponent(fileName)}`, publicBaseUrl).toString(),
+      url: new URL(`/api/safety-check/file/${encodeURIComponent(directory)}/${encodeURIComponent(fileName)}`, publicBaseUrl).toString(),
     };
   });
 
-  const uploadResp = await requestEntry(config, HAZARD_ENTRY_ID, "upload_file", uploadItems);
+  const uploadResp = await requestEntry(config, options.entryId || HAZARD_ENTRY_ID, "upload_file", uploadItems);
   const files = extractObjectArray(uploadResp, ["data"]).filter((item) => item && typeof item === "object");
   if (!files.length) {
-    throw new Error("异常照片上传成功但百数云未返回文件信息");
+    throw new Error(`${options.label || "图片"}上传成功但百数云未返回文件信息`);
   }
   return files;
 }
@@ -729,6 +873,7 @@ function buildSubmissionDetailPayload(item, submissionId, submitTime, context = 
     [SUBMISSION_DETAIL_FIELD.submitTime]: submitTime,
     [SUBMISSION_DETAIL_FIELD.abnormalDesc]: item.abnormalDesc || "",
     [SUBMISSION_DETAIL_FIELD.handling]: item.handling || "",
+    [SUBMISSION_DETAIL_FIELD.handlingStatus]: item.isAbnormal ? normalizeHandlingStatus(item.handlingStatus) : "",
     [SUBMISSION_DETAIL_FIELD.abnormalPhotos]: normalizePhotos(item.uploadedPhotos || item.abnormalPhotos || item.photos),
     [SUBMISSION_DETAIL_FIELD.hazardId]: "",
   };
@@ -749,6 +894,8 @@ function buildHazardFromSubmitItem(item, context) {
   const deadline = addDays(new Date(), Number(item.deadlineDays || 7));
   const title = item.item || item.content || "安全检查异常";
   const description = item.abnormalDesc || item.content || item.standard || title;
+  const handled = isSubmitItemHandled(item);
+  const closedAt = handled ? formatDateTime(new Date()) : "";
   const payload = {
     [HAZARD_FIELD.submissionId]: context.submissionId || "",
     [HAZARD_FIELD.submissionDetailId]: context.detailId || "",
@@ -759,13 +906,13 @@ function buildHazardFromSubmitItem(item, context) {
     [HAZARD_FIELD.ownerUser]: normalizeMemberValue(item.ownerUserId || item.ownerUser || context.fallbackUser),
     [HAZARD_FIELD.deadline]: formatDateTime(deadline),
     [HAZARD_FIELD.requirement]: item.handling || "请按检查标准完成整改，并上传整改后照片。",
-    [HAZARD_FIELD.status]: "待整改",
-    [HAZARD_FIELD.actionDesc]: "",
+    [HAZARD_FIELD.status]: handled ? "已关闭" : "待整改",
+    [HAZARD_FIELD.actionDesc]: handled ? "现场已处理，提交检查时自动关闭。" : "",
     [HAZARD_FIELD.beforePhotos]: normalizePhotos(item.uploadedPhotos || item.abnormalPhotos || item.photos),
     [HAZARD_FIELD.afterPhotos]: "",
     [HAZARD_FIELD.verifier]: normalizeMemberValue(item.verifierId || item.verifier),
-    [HAZARD_FIELD.verifyComment]: "",
-    [HAZARD_FIELD.closedAt]: "",
+    [HAZARD_FIELD.verifyComment]: handled ? "现场已处理，无需后续整改。" : "",
+    [HAZARD_FIELD.closedAt]: closedAt,
     [HAZARD_FIELD.overdue]: "否",
     [HAZARD_FIELD.source]: "安全检查",
   };
@@ -898,6 +1045,7 @@ function normalizeSubmitItem(input) {
     abnormalDesc: toDisplayText(input.abnormalDesc),
     abnormalPhotos: input.abnormalPhotos || input.photos,
     handling: toDisplayText(input.handling),
+    handlingStatus: normalizeHandlingStatus(input.handlingStatus || input.processStatus || input.disposalStatus),
     riskLevel: toDisplayText(input.riskLevel),
     deadlineDays: toNumberOrEmpty(input.deadlineDays),
     defaultDept: toDisplayText(input.defaultDept),
@@ -1009,6 +1157,8 @@ function mapTaskRecord(record) {
 function mapSubmissionRecord(record) {
   const rawInspector = getAliasRawValue(record, SUBMISSION_FIELD.inspector);
   const rawReviewer = getAliasRawValue(record, SUBMISSION_FIELD.reviewer);
+  const rawSignature = getAliasRawValue(record, SUBMISSION_FIELD.signature);
+  const rawPhotos = getAliasRawValue(record, SUBMISSION_FIELD.photos);
   return {
     id: extractRecordId(record),
     code: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.code)),
@@ -1022,19 +1172,83 @@ function mapSubmissionRecord(record) {
     endTime: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.endTime)),
     result: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.result)),
     abnormalCount: toNumber(getAliasRawValue(record, SUBMISSION_FIELD.abnormalCount)),
-    photos: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.photos)),
+    photos: toDisplayText(rawPhotos),
+    photoFiles: normalizeRecordFiles(rawPhotos),
     location: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.location)),
     remark: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.remark)),
     reviewRequired: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.reviewRequired)),
     reviewer: toDisplayText(rawReviewer),
     reviewerId: extractComplexId(rawReviewer),
     status: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.status)),
+    signatures: normalizeSubmissionSignatures(rawSignature),
   };
+}
+
+function normalizeSubmissionSignatures(value) {
+  return normalizeSubformRows(value)
+    .map((row) => {
+      const source = row && typeof row === "object" ? row : {};
+      const signRaw = getAliasRawValue(source, SUBMISSION_SIGNATURE_FIELD.sign) || source.sign || source.signature || source.files || source.file;
+      const signTimeRaw = getAliasRawValue(source, SUBMISSION_SIGNATURE_FIELD.signTime) || source.signTime || source.signatureTime || source.time;
+      const files = normalizeSignatureFiles(signRaw);
+      return {
+        signTime: toDisplayText(signTimeRaw),
+        files,
+      };
+    })
+    .filter((row) => row.signTime || row.files.length);
+}
+
+function normalizeSubformRows(value) {
+  if (!value) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap(normalizeSubformRows).filter(Boolean);
+  }
+  if (typeof value === "object") {
+    for (const key of ["data", "rows", "list", "items", "records", "entry_data_list"]) {
+      if (Array.isArray(value[key])) {
+        return value[key].flatMap(normalizeSubformRows).filter(Boolean);
+      }
+    }
+    return [value];
+  }
+  return [];
+}
+
+function normalizeSignatureFiles(value) {
+  return normalizeRecordFiles(value);
+}
+
+function normalizeRecordFiles(value) {
+  return normalizeInputPhotoList(value)
+    .map((item) => {
+      if (item && typeof item === "object") {
+        const url = toDisplayText(
+          item.url ||
+            item.download_url ||
+            item.downloadUrl ||
+            item.link ||
+            item.href ||
+            item.preview_url ||
+            item.previewUrl ||
+            item.dataUrl
+        );
+        const name = toDisplayText(item.name || item.fileName || item.filename || item.title || item.fileId || item.file_id || item.id || "附件");
+        return { name, url };
+      }
+      const text = toDisplayText(item);
+      return { name: text, url: "" };
+    })
+    .filter((item) => item.name || item.url);
 }
 
 function mapSubmissionDetailRecord(record) {
   const itemName = toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.itemName));
   const result = toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.result));
+  const rawAbnormalPhotos = getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.abnormalPhotos);
+  const rawHandlingStatus = getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.handlingStatus);
   return {
     id: extractRecordId(record),
     submissionId: toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.submissionId)),
@@ -1048,8 +1262,10 @@ function mapSubmissionDetailRecord(record) {
     result,
     inputValue: result,
     abnormalDesc: toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.abnormalDesc)),
-    abnormalPhotos: toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.abnormalPhotos)),
+    abnormalPhotos: toDisplayText(rawAbnormalPhotos),
+    abnormalPhotoFiles: normalizeRecordFiles(rawAbnormalPhotos),
     handling: toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.handling)),
+    handlingStatus: toDisplayText(rawHandlingStatus) ? normalizeHandlingStatus(rawHandlingStatus) : "",
     hazardId: toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.hazardId)),
     submitTime: toDisplayText(getAliasRawValue(record, SUBMISSION_DETAIL_FIELD.submitTime)),
   };
@@ -1383,7 +1599,16 @@ function normalizeInputPhotoList(value) {
     if (isUploadFileObject(value)) {
       return [value];
     }
-    const rawUrl = String(value.url || value.previewUrl || "").trim();
+    const rawUrl = String(
+      value.url ||
+        value.download_url ||
+        value.downloadUrl ||
+        value.link ||
+        value.href ||
+        value.preview_url ||
+        value.previewUrl ||
+        ""
+    ).trim();
     const dataUrl = String(value.dataUrl || (/^data:image\//i.test(rawUrl) ? rawUrl : "")).trim();
     const url = dataUrl ? "" : rawUrl;
     const name = toDisplayText(value.name || value.fileName || value.filename || value.title || "异常照片");
@@ -1401,7 +1626,16 @@ function isUploadFileObject(value) {
     return false;
   }
   const dataUrl = String(value.dataUrl || "").trim();
-  const url = String(value.url || value.previewUrl || "").trim();
+  const url = String(
+    value.url ||
+      value.download_url ||
+      value.downloadUrl ||
+      value.link ||
+      value.href ||
+      value.preview_url ||
+      value.previewUrl ||
+      ""
+  ).trim();
   if (dataUrl || /^data:image\//i.test(url)) {
     return false;
   }
@@ -1647,6 +1881,18 @@ function toYesNo(value) {
     return "是";
   }
   return "否";
+}
+
+function normalizeHandlingStatus(value) {
+  const text = toDisplayText(value);
+  if (text.includes("已")) {
+    return "已处理";
+  }
+  return "待处理";
+}
+
+function isSubmitItemHandled(item) {
+  return normalizeHandlingStatus(item && item.handlingStatus) === "已处理";
 }
 
 function sortByNameAndCode(a, b) {

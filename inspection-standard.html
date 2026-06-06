@@ -64,7 +64,7 @@
 
       .main-panel {
         display: grid;
-        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto;
         min-height: 0;
         min-width: 0;
         overflow: hidden;
@@ -72,11 +72,11 @@
 
       .main-switch-row {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         justify-content: flex-start;
         align-items: flex-start;
-        gap: 4px;
-        padding: 8px 10px 0;
+        gap: 8px;
+        padding: 8px 10px;
         border-bottom: 1px solid var(--line);
       }
 
@@ -118,13 +118,69 @@
         grid-template-columns: repeat(3, 56px);
         gap: 6px;
         justify-content: start;
-        order: 0;
-        padding-bottom: 2px;
       }
 
       .switch-actions .btn {
         width: 56px;
         padding: 0;
+      }
+
+      .standard-summary {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfcfe;
+      }
+
+      .standard-summary-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .standard-summary-head h2 {
+        margin: 0;
+        color: var(--text);
+        font-size: 16px;
+        line-height: 1.4;
+        font-weight: 600;
+      }
+
+      .standard-summary-grid {
+        margin-top: 8px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px 14px;
+      }
+
+      .standard-summary-item {
+        min-width: 0;
+      }
+
+      .standard-summary-item span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .standard-summary-item strong {
+        display: block;
+        margin-top: 3px;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .standard-summary-item.full {
+        grid-column: 1 / -1;
+      }
+
+      .standard-tab-row {
+        padding: 0 10px;
+        border-bottom: 1px solid var(--line);
       }
 
       .toolbar {
@@ -684,7 +740,6 @@
         gap: 2px;
         padding: 0;
         background: transparent;
-        order: 1;
       }
 
       .tab-btn {
@@ -914,12 +969,10 @@
       }
 
       .range-input {
-        display: inline-grid;
-        grid-template-columns: 36px 10px 36px;
-        align-items: center;
-        justify-content: center;
+        display: block;
         margin: 0 auto;
-        width: 82px;
+        width: 100%;
+        max-width: 128px;
         height: 30px;
         min-width: 0;
         overflow: hidden;
@@ -935,15 +988,15 @@
       }
 
       .range-input .input {
-        width: 36px;
+        width: 100%;
         height: 28px;
         min-width: 0;
-        padding: 0 2px;
+        padding: 0 8px;
         border: 0;
         border-radius: 0;
         background: transparent;
         box-shadow: none;
-        text-align: center;
+        text-align: left;
       }
 
       .range-input .input:focus {
@@ -1174,25 +1227,42 @@
         margin-right: 2px;
       }
 
+      .required.hidden {
+        display: none;
+      }
+
+      .inline-required-cell {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .inline-required-cell .required {
+        flex: 0 0 auto;
+      }
+
       .toast {
         position: fixed;
-        right: 18px;
-        bottom: 18px;
-        z-index: 60;
-        background: rgba(23, 35, 55, 0.92);
+        top: 18px;
+        left: 50%;
+        z-index: 120;
+        max-width: min(640px, calc(100vw - 32px));
+        background: rgba(35, 47, 68, 0.96);
         color: #fff;
-        font-size: 12px;
-        padding: 8px 11px;
-        border-radius: 5px;
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 10px 14px;
+        border-radius: 6px;
         opacity: 0;
-        transform: translateY(7px);
+        transform: translate(-50%, -8px);
         pointer-events: none;
         transition: all 0.2s ease;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.2);
       }
 
       .toast.show {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate(-50%, 0);
       }
 
       @media (max-width: 1320px) {
@@ -1255,8 +1325,11 @@
           grid-template-columns: 1fr;
         }
 
+        .standard-summary-grid {
+          grid-template-columns: 1fr;
+        }
+
         .main-switch-row {
-          flex-direction: column;
           align-items: stretch;
           gap: 4px;
           padding-top: 6px;
@@ -1314,14 +1387,17 @@
 
       <section class="panel main-panel">
         <div class="main-switch-row">
-          <div class="tabs">
-            <button class="tab-btn active" data-tab="details">点检明细列表</button>
-            <button id="objectsTabBtn" class="tab-btn" data-tab="devices">适用范围</button>
-          </div>
           <div class="actions switch-actions">
             <button id="addStandardTopBtn" class="btn primary">新增</button>
             <button id="editStandardBtn" class="btn">编辑</button>
             <button id="deleteStandardBtn" class="btn danger">删除</button>
+          </div>
+        </div>
+        <div id="standardSummary" class="standard-summary"></div>
+        <div class="standard-tab-row">
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="details">点检明细列表</button>
+            <button id="objectsTabBtn" class="tab-btn" data-tab="devices">适用范围</button>
           </div>
         </div>
 
@@ -1387,7 +1463,7 @@
           <h3 id="standardModalTitle">新建点检标准</h3>
           <button id="closeStandardModalBtn" type="button" class="btn">关闭</button>
         </div>
-        <form id="standardForm">
+        <form id="standardForm" novalidate>
           <div class="modal-body">
             <section class="card">
               <div class="card-head">
@@ -1461,12 +1537,12 @@
                   <input id="stdDeptIdInput" type="hidden" />
                 </div>
                 <div class="field">
-                  <label for="stdOwnerComboButton">默认负责人</label>
+                  <label for="stdOwnerComboButton">负责人</label>
                   <div id="stdOwnerCombo" class="combo">
                     <button id="stdOwnerComboButton" class="combo-button is-placeholder" type="button">
-                      <span id="stdOwnerComboText">请选择默认负责人</span>
+                      <span id="stdOwnerComboText">请选择负责人</span>
                     </button>
-                    <button id="stdOwnerComboClear" class="combo-clear" type="button" aria-label="清空默认负责人"></button>
+                    <button id="stdOwnerComboClear" class="combo-clear" type="button" aria-label="清空负责人"></button>
                     <div id="stdOwnerComboPanel" class="combo-panel hidden">
                       <div class="combo-search-wrap">
                         <input id="stdOwnerKeywordInput" class="input combo-search" type="text" placeholder="输入姓名/账号/手机号搜索" autocomplete="off" />
@@ -1475,7 +1551,7 @@
                     </div>
                   </div>
                   <select id="stdOwnerInput" class="select native-hidden" tabindex="-1" aria-hidden="true">
-                    <option value="">请选择默认负责人</option>
+                    <option value="">请选择负责人</option>
                   </select>
                   <input id="stdOwnerIdInput" type="hidden" />
                 </div>
@@ -1526,14 +1602,13 @@
                   <thead>
                     <tr>
                       <th style="width: 62px">序号</th>
-                      <th style="width: 120px">点检部位</th>
-                      <th style="width: 220px">点检项目名称</th>
-                      <th style="width: 110px">执行方式</th>
+                      <th style="width: 120px"><span class="required">*</span>点检部位</th>
+                      <th style="width: 220px"><span class="required">*</span>点检项目名称</th>
+                      <th style="width: 110px"><span class="required">*</span>执行方式</th>
                       <th style="width: 110px">点检类型</th>
-                      <th style="width: 180px">标准内容</th>
-                      <th style="width: 90px">参数单位</th>
-                      <th style="width: 118px">判断标准</th>
-                      <th style="width: 90px">是否报工</th>
+                      <th style="width: 180px"><span class="required">*</span>标准内容</th>
+                      <th style="width: 90px"><span class="required">*</span>参数单位</th>
+                      <th style="width: 118px"><span class="required">*</span>判断标准</th>
                       <th style="width: 90px">操作</th>
                     </tr>
                   </thead>
@@ -1584,7 +1659,7 @@
           <h3 id="detailModalTitle">新增点检明细</h3>
           <button id="closeDetailModalBtn" type="button" class="btn">关闭</button>
         </div>
-        <form id="detailForm">
+        <form id="detailForm" novalidate>
           <div class="modal-body">
             <div class="grid cols-3">
               <div class="field">
@@ -1592,11 +1667,11 @@
                 <input id="detNoInput" class="input" type="number" min="1" step="1" />
               </div>
               <div class="field">
-                <label for="detPartInput">点检部位</label>
-                <input id="detPartInput" class="input" type="text" />
+                <label for="detPartInput"><span class="required">*</span>点检部位</label>
+                <input id="detPartInput" class="input" type="text" required />
               </div>
               <div class="field">
-                <label for="detUnitInput">参数单位</label>
+                <label for="detUnitInput"><span id="detUnitRequiredMark" class="required hidden">*</span>参数单位</label>
                 <input id="detUnitInput" class="input" type="text" />
               </div>
 
@@ -1605,8 +1680,8 @@
                 <input id="detItemInput" class="input" type="text" required />
               </div>
               <div class="field">
-                <label for="detExecuteModeInput">执行方式</label>
-                <select id="detExecuteModeInput" class="select">
+                <label for="detExecuteModeInput"><span class="required">*</span>执行方式</label>
+                <select id="detExecuteModeInput" class="select" required>
                   <option value="普通">普通</option>
                   <option value="状态">状态</option>
                   <option value="抄表">抄表</option>
@@ -1620,19 +1695,12 @@
                 </select>
               </div>
               <div class="field">
-                <label for="detReportRequiredInput">是否报工</label>
-                <select id="detReportRequiredInput" class="select">
-                  <option value="启用">是</option>
-                  <option value="停用">否</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="detStandardTextInput">判断标准</label>
+                <label for="detStandardTextInput"><span id="detJudgeRequiredMark" class="required hidden">*</span>判断标准</label>
                 <input id="detStandardTextInput" class="input" type="text" placeholder="例如 正常,异常" />
               </div>
 
               <div class="field full">
-                <label for="detStandardInput">标准内容</label>
+                <label for="detStandardInput"><span class="required">*</span>标准内容</label>
                 <textarea id="detStandardInput" class="input"></textarea>
               </div>
               <div class="field full">
@@ -1689,7 +1757,7 @@
       </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 
     <script src="compact-date-picker.js"></script>
     <script>
@@ -1894,6 +1962,7 @@
         editStandardBtn: document.getElementById("editStandardBtn"),
         deleteStandardBtn: document.getElementById("deleteStandardBtn"),
 
+        standardSummary: document.getElementById("standardSummary"),
         tabs: Array.from(document.querySelectorAll(".tab-btn")),
         detailsPanel: document.getElementById("detailsPanel"),
         devicesPanel: document.getElementById("devicesPanel"),
@@ -1977,9 +2046,10 @@
         detItemInput: document.getElementById("detItemInput"),
         detExecuteModeInput: document.getElementById("detExecuteModeInput"),
         detInspectTypeInput: document.getElementById("detInspectTypeInput"),
-        detReportRequiredInput: document.getElementById("detReportRequiredInput"),
         detStandardTextInput: document.getElementById("detStandardTextInput"),
         detUnitInput: document.getElementById("detUnitInput"),
+        detUnitRequiredMark: document.getElementById("detUnitRequiredMark"),
+        detJudgeRequiredMark: document.getElementById("detJudgeRequiredMark"),
         detStandardInput: document.getElementById("detStandardInput"),
         detRemarkInput: document.getElementById("detRemarkInput"),
 
@@ -2534,7 +2604,7 @@
         const targetOwnerId = hasOwnerSelection ? String(selectedOwnerId || "").trim() : current.userId;
         const targetOwnerName = hasOwnerSelection ? String(selectedOwnerName || "").trim() : current.name;
         const targetValue = preserveCurrent ? current.value : makeOwnerSelectValue(targetOwnerId, targetOwnerName);
-        const loadingPlaceholder = state.contacts.loading ? "默认负责人加载中..." : "请选择默认负责人";
+        const loadingPlaceholder = state.contacts.loading ? "负责人加载中..." : "请选择负责人";
 
         const users = Array.isArray(state.contacts.users) ? state.contacts.users : [];
         const options = users.map((user) => {
@@ -2590,7 +2660,7 @@
               keyword: refs.stdOwnerKeywordInput,
               list: refs.stdOwnerOptionList,
               select: refs.stdOwnerInput,
-              placeholder: state.contacts.loading ? "默认负责人加载中..." : "请选择默认负责人",
+              placeholder: state.contacts.loading ? "负责人加载中..." : "请选择负责人",
             }
           : {
               root: refs.stdDeptCombo,
@@ -3211,6 +3281,9 @@
             closeDetailModal();
           }
         });
+        refs.detExecuteModeInput.addEventListener("change", () => {
+          updateDetailModeRequiredState();
+        });
         refs.detailForm.addEventListener("submit", (event) => {
           void saveDetail(event);
         });
@@ -3774,6 +3847,7 @@
       function renderTabState() {
         const current = getSelectedStandard();
         const objectType = normalizeApplicableDeviceType(current?.applicableDeviceType);
+        renderStandardSummary(current);
         refs.objectsTabBtn.textContent = "适用范围";
         refs.deviceKeywordInput.placeholder = getObjectSearchPlaceholder(objectType);
         renderObjectTableHead(refs.deviceTableHead, objectType, { selectable: false });
@@ -3784,6 +3858,47 @@
         refs.devicesPanel.classList.toggle("hidden", state.activeTab !== "devices");
         renderDetailsTable();
         renderDeviceTable();
+      }
+
+      function renderStandardSummary(standard = getSelectedStandard()) {
+        if (!standard) {
+          refs.standardSummary.innerHTML = '<div class="empty">请选择左侧点检标准查看主表内容</div>';
+          return;
+        }
+
+        const detailsCount = Array.isArray(standard.details) ? standard.details.length : 0;
+        const linkedCount = getCurrentLinkedDevices().length;
+        refs.standardSummary.innerHTML = `
+          <div class="standard-summary-head">
+            <h2>${escapeHtml(standard.name || "未命名标准")}</h2>
+          </div>
+          <div class="standard-summary-grid">
+            ${renderStandardSummaryItem("标准编号", standard.code || "自动生成")}
+            ${renderStandardSummaryItem("执行规则", standard.category || "-")}
+            ${renderStandardSummaryItem("适用对象", standard.applicableDeviceType || "-")}
+            ${renderStandardSummaryItem("状态", standard.status || "-")}
+            ${renderStandardSummaryItem("所属车间", standard.workshop || "-")}
+            ${renderStandardSummaryItem("所属区域", standard.area || "-")}
+            ${renderStandardSummaryItem("责任岗位", standard.responsibilityPost || "-")}
+            ${renderStandardSummaryItem("责任部门", standard.responsibilityDept || "-")}
+            ${renderStandardSummaryItem("负责人", standard.defaultOwner || "-")}
+            ${renderStandardSummaryItem("生效日期", standard.effectiveDate || "-")}
+            ${renderStandardSummaryItem("失效日期", standard.expiryDate || "-")}
+            ${renderStandardSummaryItem("点检明细", `${detailsCount} 项`)}
+            ${renderStandardSummaryItem("适用范围", `${linkedCount} 个`)}
+            ${renderStandardSummaryItem("备注", standard.remark || "-")}
+          </div>
+        `;
+      }
+
+      function renderStandardSummaryItem(label, value, full = false) {
+        const text = String(value || "-");
+        return `
+          <div class="standard-summary-item ${full ? "full" : ""}">
+            <span>${escapeHtml(label)}</span>
+            <strong title="${escapeHtml(text)}">${escapeHtml(text)}</strong>
+          </div>
+        `;
       }
 
       function renderDetailsTable() {
@@ -4013,6 +4128,11 @@
 
         if (!draft.category) {
           showToast("请选择执行规则");
+          return;
+        }
+
+        if (!draft.applicableDeviceType) {
+          showToast("请选择适用设备类型");
           return;
         }
 
@@ -4546,8 +4666,8 @@
         const standardContent = normalized.standard || "";
         const standardText = normalized.standardText || "";
         const range = executeMode === "抄表" ? parseNumericRange(standardText) : null;
-        const lower = range ? range.min : "";
-        const upper = range ? range.max : "";
+        const lower = range && range.min !== null ? range.min : "";
+        const upper = range && range.max !== null ? range.max : "";
         const judgeValue = executeMode === "抄表" ? standardText : "枚举判断";
         const resultOptions = executeMode === "抄表" ? "" : standardContent;
         const mobileInputMode = executeMode === "抄表" ? "数值录入" : "单选";
@@ -4572,7 +4692,7 @@
           [DETAIL_FIELD.mobileInputMode]: mobileInputMode,
           [DETAIL_FIELD.unit]: normalized.unit || "",
           [DETAIL_FIELD.sortNo]: toIntOrDefault(normalized.sortNo || normalized.no, 1),
-          [DETAIL_FIELD.enabledStatus]: normalized.enabledStatus || "启用",
+          [DETAIL_FIELD.enabledStatus]: "启用",
           [DETAIL_FIELD.remark]: normalized.remark || "",
         };
       }
@@ -4679,7 +4799,6 @@
           refs.detItemInput.value = currentRow.item || "";
           refs.detExecuteModeInput.value = currentRow.executeMode || "普通";
           refs.detInspectTypeInput.value = currentRow.inspectType || "日常点检";
-          refs.detReportRequiredInput.value = normalizeStatus(currentRow.enabledStatus || "启用");
           refs.detStandardTextInput.value = currentRow.standardText || "";
           refs.detUnitInput.value = currentRow.unit || "";
           refs.detStandardInput.value = currentRow.standard || "";
@@ -4689,16 +4808,36 @@
           refs.detNoInput.value = nextDetailNo(list);
           refs.detExecuteModeInput.value = "普通";
           refs.detInspectTypeInput.value = "日常点检";
-          refs.detReportRequiredInput.value = "启用";
           refs.detailModalTitle.textContent = "新增点检明细";
         }
 
+        updateDetailModeRequiredState();
         refreshSelectProxies(refs.detailForm);
         refs.detailModal.classList.remove("hidden");
       }
 
       function closeDetailModal() {
         refs.detailModal.classList.add("hidden");
+      }
+
+      function updateDetailModeRequiredState() {
+        const executeMode = normalizeExecuteMode(refs.detExecuteModeInput.value || "普通");
+        const isMeter = executeMode === "抄表";
+        refs.detUnitRequiredMark.classList.toggle("hidden", !isMeter);
+        refs.detJudgeRequiredMark.classList.toggle("hidden", !isMeter);
+        refs.detUnitInput.required = isMeter;
+        refs.detStandardTextInput.required = isMeter;
+        refs.detStandardTextInput.placeholder = isMeter
+          ? "如 48-80、>10、>=10、<5"
+          : executeMode === "状态"
+            ? "与标准内容一致"
+            : "例如 正常,异常";
+        if (executeMode === "普通" && !refs.detStandardInput.value.trim()) {
+          refs.detStandardInput.value = "正常,异常";
+        }
+        if (isMeter && (refs.detUnitInput.value.trim() === "-")) {
+          refs.detUnitInput.value = "";
+        }
       }
 
       async function saveDetail(event) {
@@ -4722,11 +4861,13 @@
           standard: refs.detStandardInput.value.trim(),
           remark: refs.detRemarkInput.value.trim(),
           sortNo: toIntOrDefault(refs.detNoInput.value, 1),
-          enabledStatus: normalizeStatus(refs.detReportRequiredInput.value || "启用"),
+          enabledStatus: "启用",
         };
+        const normalizedDetail = deriveDetailByMode(detail);
 
-        if (!detail.item) {
-          showToast("请填写点检项目");
+        const validation = validateDetailRequiredFields(normalizedDetail);
+        if (!validation.ok) {
+          showToast(validation.message);
           return;
         }
 
@@ -4734,11 +4875,11 @@
           if (mode === "edit") {
             const idx = list.findIndex((item) => item.id === editingId);
             if (idx >= 0) {
-              list[idx] = detail;
+              list[idx] = normalizedDetail;
             }
             showToast("明细已更新");
           } else {
-            list.push(detail);
+            list.push(normalizedDetail);
             showToast("明细已新增");
           }
 
@@ -4759,26 +4900,26 @@
 
         try {
           if (mode === "edit") {
-            if (!detail.cloudId) {
+            if (!normalizedDetail.cloudId) {
               throw new Error("明细记录缺少ID，无法更新");
             }
-            await updateRecord(API_CONFIG.detailEntryId, detail.cloudId, buildDetailPayload(detail, standard));
+            await updateRecord(API_CONFIG.detailEntryId, normalizedDetail.cloudId, buildDetailPayload(normalizedDetail, standard));
             const idx = list.findIndex((item) => item.id === editingId);
             if (idx >= 0) {
-              list[idx] = detail;
+              list[idx] = normalizedDetail;
             }
             showToast("明细已更新");
           } else {
             const result = await requestEntry(
               API_CONFIG.detailEntryId,
               "data_create",
-              { data: buildDetailPayload(detail, standard) },
+              { data: buildDetailPayload(normalizedDetail, standard) },
               "POST"
             );
             const cloudId = extractRecordId(result?.data || result);
-            detail.cloudId = cloudId;
-            detail.id = cloudId || detail.id;
-            list.push(detail);
+            normalizedDetail.cloudId = cloudId;
+            normalizedDetail.id = cloudId || normalizedDetail.id;
+            list.push(normalizedDetail);
             showToast("明细已新增");
           }
 
@@ -4949,7 +5090,7 @@
           standardText: editingRow?.standardText || "",
           remark: editingRow?.remark || "",
           sortNo: toIntOrDefault(editingRow?.sortNo || fallbackNo, fallbackNo),
-          enabledStatus: editingRow?.enabledStatus || "启用",
+          enabledStatus: "启用",
         });
 
         if (target === "active") {
@@ -5016,32 +5157,14 @@
           standardText: String(inline.draft.standardText || "").trim(),
           remark: String(inline.draft.remark || "").trim(),
           sortNo: no,
-          enabledStatus: normalizeStatus(inline.draft.enabledStatus || "启用"),
+          enabledStatus: "启用",
         };
         const normalizedDetail = deriveDetailByMode(detail);
 
-        if (!normalizedDetail.item) {
-          showToast("请填写点检项目名称");
+        const validation = validateDetailRequiredFields(normalizedDetail);
+        if (!validation.ok) {
+          showToast(validation.message);
           return;
-        }
-
-        if (normalizedDetail.executeMode === "状态") {
-          const options = splitStateOptions(normalizedDetail.standard);
-          if (options.length < 2) {
-            showToast('执行方式为“状态”时，标准内容请至少填写2个状态（用英文逗号分隔）');
-            return;
-          }
-        }
-
-        if (normalizedDetail.executeMode === "抄表") {
-          if (!normalizedDetail.unit || normalizedDetail.unit === "-") {
-            showToast('执行方式为“抄表”时，请填写参数单位');
-            return;
-          }
-          if (!parseNumericRange(normalizedDetail.standardText)) {
-            showToast('执行方式为“抄表”时，判断标准请填写数值范围，如 48-80');
-            return;
-          }
         }
 
         if (target === "draft") {
@@ -5115,7 +5238,7 @@
         const judgeReadonly = executeMode === "抄表" ? "" : "readonly";
         const standardPlaceholder = executeMode === "状态" ? "例如 前进,待修,停用" : defaultStandardByMode(executeMode);
         const judgePlaceholder =
-          executeMode === "抄表" ? "例如 48-80" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
+          executeMode === "抄表" ? "如 48-80、>10、>=10、<5" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
         const judgeControl =
           executeMode === "抄表"
             ? renderRangeInputControl(row)
@@ -5160,25 +5283,12 @@
           .join("");
       }
 
-      function renderReportRequiredOptions(enabledStatus) {
-        const current = normalizeStatus(enabledStatus || "启用");
-        return [
-          { value: "启用", label: "是" },
-          { value: "停用", label: "否" },
-        ]
-          .map((item) => {
-            const selected = item.value === current ? "selected" : "";
-            return `<option value="${escapeHtml(item.value)}" ${selected}>${escapeHtml(item.label)}</option>`;
-          })
-          .join("");
-      }
-
       function renderDraftDetailTable() {
         const rows = getDraftDetails();
         refs.modalDetailTableBody.innerHTML = "";
 
         if (!rows.length) {
-          refs.modalDetailTableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#7e8a9b;padding:16px">暂无明细</td></tr>';
+          refs.modalDetailTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7e8a9b;padding:16px">暂无明细</td></tr>';
           return;
         }
 
@@ -5192,18 +5302,20 @@
           const judgeReadonly = executeMode === "抄表" ? "" : "readonly";
           const standardPlaceholder = executeMode === "状态" ? "例如 前进,待修,停用" : defaultStandardByMode(executeMode);
           const judgePlaceholder =
-            executeMode === "抄表" ? "例如 48-80" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
+            executeMode === "抄表" ? "如 48-80、>10、>=10、<5" : executeMode === "状态" ? "与标准内容一致" : "正常,异常";
           const judgeControl =
             executeMode === "抄表"
               ? renderRangeInputControl(row, { rowId: row.id })
               : `<input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standardText" ${judgeReadonly} placeholder="${escapeHtml(judgePlaceholder)}" value="${escapeHtml(row.standardText || "")}" />`;
+          const unitRequiredMark = executeMode === "抄表" ? '<span class="required">*</span>' : "";
+          const unitPlaceholder = executeMode === "抄表" ? "必填" : "-";
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td><input class="input" type="number" min="1" step="1" data-row-id="${escapeHtml(row.id)}" data-inline-field="no" value="${escapeHtml(row.no ?? "")}" /></td>
-            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="part" value="${escapeHtml(row.part || "")}" /></td>
-            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="item" value="${escapeHtml(row.item || "")}" /></td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="part" required value="${escapeHtml(row.part || "")}" /></td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="item" required value="${escapeHtml(row.item || "")}" /></td>
             <td>
-              <select class="select" data-row-id="${escapeHtml(row.id)}" data-inline-field="executeMode">
+              <select class="select" data-row-id="${escapeHtml(row.id)}" data-inline-field="executeMode" required>
                 ${renderInlineSelectOptions(["普通", "状态", "抄表"], executeMode)}
               </select>
             </td>
@@ -5212,14 +5324,14 @@
                 ${renderInlineSelectOptions(["日常点检", "重点点检"], row.inspectType || "日常点检")}
               </select>
             </td>
-            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standard" ${standardReadonly} placeholder="${escapeHtml(standardPlaceholder)}" value="${escapeHtml(row.standard || "")}" /></td>
-            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="unit" value="${escapeHtml(row.unit || "")}" /></td>
-            <td>${judgeControl}</td>
+            <td><input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="standard" ${standardReadonly} required placeholder="${escapeHtml(standardPlaceholder)}" value="${escapeHtml(row.standard || "")}" /></td>
             <td>
-              <select class="select" data-row-id="${escapeHtml(row.id)}" data-inline-field="enabledStatus">
-                ${renderReportRequiredOptions(row.enabledStatus)}
-              </select>
+              <div class="inline-required-cell">
+                ${unitRequiredMark}
+                <input class="input" type="text" data-row-id="${escapeHtml(row.id)}" data-inline-field="unit" ${executeMode === "抄表" ? "required" : ""} placeholder="${escapeHtml(unitPlaceholder)}" value="${escapeHtml(row.unit || "")}" />
+              </div>
             </td>
+            <td>${judgeControl}</td>
             <td>
               <div class="cell-actions">
                 <button class="text-btn danger" data-action="delete" data-id="${escapeHtml(row.id)}">删除</button>
@@ -5231,13 +5343,10 @@
       }
 
       function renderRangeInputControl(row, { rowId = "" } = {}) {
-        const range = getRangeInputParts(row);
         const rowAttr = rowId ? ` data-row-id="${escapeHtml(rowId)}"` : "";
         return `
-          <div class="range-input" aria-label="判断标准区间">
-            <input class="input" type="text" inputmode="decimal" autocomplete="off"${rowAttr} data-inline-field="rangeMin" placeholder="下限" value="${escapeHtml(range.min)}" />
-            <span class="range-separator">-</span>
-            <input class="input" type="text" inputmode="decimal" autocomplete="off"${rowAttr} data-inline-field="rangeMax" placeholder="上限" value="${escapeHtml(range.max)}" />
+          <div class="range-input" aria-label="判断标准条件">
+            <input class="input" type="text" inputmode="decimal" autocomplete="off"${rowAttr} data-inline-field="standardText" required placeholder="48-80 / >10" value="${escapeHtml(row.standardText || "")}" />
           </div>
         `;
       }
@@ -5254,8 +5363,8 @@
           return { min: "", max: "" };
         }
         return {
-          min: formatNumeric(range.min),
-          max: formatNumeric(range.max),
+          min: range.min !== null ? formatNumeric(range.min) : "",
+          max: range.max !== null ? formatNumeric(range.max) : "",
         };
       }
 
@@ -5988,32 +6097,21 @@
             standardText: source.standardText || "",
             remark: source.remark || "",
             sortNo: toIntOrDefault(source.sortNo || normalizedNo, normalizedNo),
-            enabledStatus: source.enabledStatus || "启用",
+          enabledStatus: "启用",
           });
 
           const rowNo = i + 1;
 
-          if (!normalized.item) {
-            return { ok: false, message: `明细第 ${rowNo} 行请填写点检项目名称` };
-          }
-
-          if (normalized.executeMode === "状态") {
-            const options = splitStateOptions(normalized.standard);
-            if (options.length < 2) {
-              return { ok: false, message: `明细第 ${rowNo} 行执行方式为“状态”时，标准内容请至少填写2个状态（用英文逗号分隔）` };
-            }
-          }
-
-          if (normalized.executeMode === "抄表") {
-            if (!normalized.unit || normalized.unit === "-") {
-              return { ok: false, message: `明细第 ${rowNo} 行执行方式为“抄表”时，请填写参数单位` };
-            }
-            if (!parseNumericRange(normalized.standardText)) {
-              return { ok: false, message: `明细第 ${rowNo} 行执行方式为“抄表”时，判断标准请填写数值范围（如 48-80）` };
-            }
+          const validation = validateDetailRequiredFields(normalized, { rowNo });
+          if (!validation.ok) {
+            return validation;
           }
 
           output.push(normalized);
+        }
+
+        if (!output.length) {
+          return { ok: false, message: "请至少填写一条点检明细" };
         }
 
         output.forEach((row, index) => {
@@ -6023,6 +6121,38 @@
         });
 
         return { ok: true, rows: output };
+      }
+
+      function validateDetailRequiredFields(detail, { rowNo = "" } = {}) {
+        const prefix = rowNo ? `明细第 ${rowNo} 行` : "明细";
+        const executeMode = normalizeExecuteMode(detail.executeMode || "");
+        if (!String(detail.part || "").trim()) {
+          return { ok: false, message: `${prefix}请填写点检部位` };
+        }
+        if (!String(detail.item || "").trim()) {
+          return { ok: false, message: `${prefix}请填写点检项目名称` };
+        }
+        if (!executeMode) {
+          return { ok: false, message: `${prefix}请选择执行方式` };
+        }
+        if (!String(detail.standard || "").trim()) {
+          return { ok: false, message: `${prefix}请填写标准内容` };
+        }
+        if (executeMode === "状态") {
+          const options = splitStateOptions(detail.standard);
+          if (options.length < 2) {
+            return { ok: false, message: `${prefix}执行方式为“状态”时，标准内容请至少填写2个状态（用英文逗号分隔）` };
+          }
+        }
+        if (executeMode === "抄表") {
+          if (!String(detail.unit || "").trim() || String(detail.unit || "").trim() === "-") {
+            return { ok: false, message: `${prefix}执行方式为“抄表”时，请填写参数单位` };
+          }
+          if (!parseNumericRange(detail.standardText)) {
+            return { ok: false, message: `${prefix}执行方式为“抄表”时，判断标准请填写数值范围或单边条件（如 48-80、>10、>=10、<5）` };
+          }
+        }
+        return { ok: true };
       }
 
       function getSelectedStandard() {
@@ -6134,31 +6264,114 @@
       }
 
       function parseNumericRange(text) {
-        const source = String(text || "")
-          .replace(/[～~—–]/g, "-")
-          .trim();
+        const source = normalizeNumericJudgeExpression(text);
         if (!source) {
           return null;
         }
-        const match = source.match(/^(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)$/);
-        if (!match) {
-          return null;
+
+        const betweenMatch = source.match(/^(-?\d+(?:\.\d+)?)\s*(?:-|至|到)\s*(-?\d+(?:\.\d+)?)$/);
+        if (betweenMatch) {
+          let min = Number(betweenMatch[1]);
+          let max = Number(betweenMatch[2]);
+          if (!Number.isFinite(min) || !Number.isFinite(max)) {
+            return null;
+          }
+          if (min > max) {
+            const temp = min;
+            min = max;
+            max = temp;
+          }
+          return {
+            min,
+            max,
+            includeMin: true,
+            includeMax: true,
+            text: `${formatNumeric(min)}-${formatNumeric(max)}`,
+          };
         }
-        let min = Number(match[1]);
-        let max = Number(match[2]);
-        if (!Number.isFinite(min) || !Number.isFinite(max)) {
-          return null;
+
+        const comparatorMatch = source.match(/^(>=|<=|>|<|=)\s*(-?\d+(?:\.\d+)?)$/);
+        if (comparatorMatch) {
+          const operator = comparatorMatch[1];
+          const value = Number(comparatorMatch[2]);
+          if (!Number.isFinite(value)) {
+            return null;
+          }
+          if (operator === ">=" || operator === ">") {
+            return {
+              min: value,
+              max: null,
+              includeMin: operator === ">=",
+              includeMax: true,
+              text: `${operator}${formatNumeric(value)}`,
+            };
+          }
+          if (operator === "<=" || operator === "<") {
+            return {
+              min: null,
+              max: value,
+              includeMin: true,
+              includeMax: operator === "<=",
+              text: `${operator}${formatNumeric(value)}`,
+            };
+          }
+          return {
+            min: value,
+            max: value,
+            includeMin: true,
+            includeMax: true,
+            text: formatNumeric(value),
+          };
         }
-        if (min > max) {
-          const temp = min;
-          min = max;
-          max = temp;
+
+        if (/^-?\d+(?:\.\d+)?$/.test(source)) {
+          const exact = Number(source);
+          if (!Number.isFinite(exact)) {
+            return null;
+          }
+          return {
+            min: exact,
+            max: exact,
+            includeMin: true,
+            includeMax: true,
+            text: formatNumeric(exact),
+          };
         }
-        return {
-          min,
-          max,
-          text: `${formatNumeric(min)}-${formatNumeric(max)}`,
-        };
+
+        return null;
+      }
+
+      function normalizeNumericJudgeExpression(text) {
+        let source = String(text || "")
+          .replace(/[＞]/g, ">")
+          .replace(/[＜]/g, "<")
+          .replace(/[＝]/g, "=")
+          .replace(/≥/g, ">=")
+          .replace(/≤/g, "<=")
+          .replace(/[～~—–]/g, "-")
+          .replace(/，/g, ",")
+          .replace(/\s+/g, "")
+          .trim();
+
+        if (!source) {
+          return "";
+        }
+
+        const suffixMin = source.match(/^(-?\d+(?:\.\d+)?)(?:及以上|以上)$/);
+        if (suffixMin) {
+          return `>=${suffixMin[1]}`;
+        }
+        const suffixMax = source.match(/^(-?\d+(?:\.\d+)?)(?:及以下|以下)$/);
+        if (suffixMax) {
+          return `<=${suffixMax[1]}`;
+        }
+
+        return source
+          .replace(/大于等于|不小于|不少于|不低于/g, ">=")
+          .replace(/小于等于|不大于|不超过|不高于/g, "<=")
+          .replace(/大于|高于|超过/g, ">")
+          .replace(/小于|低于/g, "<")
+          .replace(/等于/g, "=");
       }
 
       function formatNumeric(value) {
@@ -6182,7 +6395,7 @@
           remark: String(detail.remark || "").trim(),
           no: toIntOrDefault(detail.no, 1),
           sortNo: toIntOrDefault(detail.sortNo || detail.no, toIntOrDefault(detail.no, 1)),
-          enabledStatus: detail.enabledStatus || "启用",
+          enabledStatus: "启用",
         };
 
         if (mode === "普通") {
@@ -6209,8 +6422,8 @@
         const range = parseNumericRange(normalized.standardText);
         if (range) {
           normalized.standardText = range.text;
-          normalized.lower = range.min;
-          normalized.upper = range.max;
+          normalized.lower = range.min !== null ? range.min : "";
+          normalized.upper = range.max !== null ? range.max : "";
         } else {
           normalized.lower = "";
           normalized.upper = "";
@@ -6225,6 +6438,7 @@
           executeMode: mode,
           inspectType: draft.inspectType || "日常点检",
           no: toIntOrDefault(draft.no, 1),
+          enabledStatus: "启用",
         };
         next.sortNo = toIntOrDefault(next.sortNo || next.no, next.no);
 
@@ -6291,7 +6505,7 @@
         window.clearTimeout(showToast.timer);
         showToast.timer = window.setTimeout(() => {
           refs.toast.classList.remove("show");
-        }, 2200);
+        }, 3200);
       }
 
       async function fetchEntryRecords(entryId) {

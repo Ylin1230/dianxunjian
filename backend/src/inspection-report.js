@@ -411,6 +411,103 @@ function registerInspectionReportRoutes(app, config) {
     });
   }));
 
+  app.get("/api/inspection-report/monthly-devices", asyncHandler(async (req, res) => {
+    const deviceRecords = await fetchEntryRecords(config, DEVICE_ENTRY_ID);
+    const devices = deviceRecords
+      .map(mapDeviceRecord)
+      .filter((row) => row.id || row.code || row.name)
+      .sort(compareDeviceOption);
+
+    res.json({
+      ok: true,
+      data: {
+        month: formatMonth(new Date()),
+        devices,
+      },
+    });
+  }));
+
+  app.get("/api/inspection-report/monthly", asyncHandler(async (req, res) => {
+    const month = normalizeMonth(req.query.month) || formatMonth(new Date());
+    const filterDeviceId = toDisplayText(req.query.deviceId);
+    const filterDeviceCode = toDisplayText(req.query.deviceCode);
+    if (!filterDeviceId && !filterDeviceCode) {
+      res.status(400).json({ ok: false, message: "请选择设备" });
+      return;
+    }
+
+    const [
+      deviceRecords,
+      standardDetailRecords,
+      reportRecords,
+      reportDetailRecords,
+      hazardRecords,
+    ] = await Promise.all([
+      fetchEntryRecords(config, DEVICE_ENTRY_ID),
+      fetchEntryRecords(config, STANDARD_DETAIL_ENTRY_ID),
+      fetchEntryRecords(config, REPORT_ENTRY_ID),
+      fetchEntryRecords(config, REPORT_DETAIL_ENTRY_ID),
+      fetchEntryRecords(config, HAZARD_ENTRY_ID),
+    ]);
+
+    const devices = deviceRecords.map(mapDeviceRecord);
+    const device = findMonthlyDevice(devices, { deviceId: filterDeviceId, deviceCode: filterDeviceCode });
+    if (!device) {
+      res.status(404).json({ ok: false, message: "未找到对应设备" });
+      return;
+    }
+
+    const monthlyReports = reportRecords
+      .map(mapReportRecord)
+      .filter((row) => isReportForMonthlyDevice(row, device))
+      .filter((row) => {
+        const reportDate = normalizeDate(row.reportDateText);
+        return reportDate && reportDate.startsWith(month);
+      })
+      .sort((a, b) => String(a.reportDateText || "").localeCompare(String(b.reportDateText || "")));
+
+    const reportById = new Map(monthlyReports.map((row) => [row.id, row]));
+    const reportIdSet = new Set(monthlyReports.map((row) => row.id).filter(Boolean));
+    const standardRefs = buildMonthlyStandardRefs(device, monthlyReports);
+    let details = standardDetailRecords
+      .map(mapStandardDetailRecord)
+      .filter((row) => isEnabledStatus(row.enableStatus))
+      .filter((row) => standardRefs.some((ref) => isDetailBelongToTask(row, ref)))
+      .sort((a, b) => Number(a.seq || 0) - Number(b.seq || 0));
+    const monthlyDetails = reportDetailRecords
+      .map(mapReportDetailRecord)
+      .filter((row) => row.reportId && reportIdSet.has(row.reportId));
+    if (!details.length && monthlyDetails.length) {
+      details = buildMonthlyDetailFallbackRows(monthlyDetails);
+    }
+
+    const gridRows = buildMonthlyGridRows(details, monthlyReports, monthlyDetails, month);
+    const hazards = hazardRecords
+      .map(mapInspectionHazardRecord)
+      .filter((row) => row.submissionId && reportIdSet.has(row.submissionId))
+      .filter((row) => isInspectionHazardSource(row.source))
+      .map((row, index) => mapMonthlyHazardRow(row, index + 1, reportById))
+      .sort((a, b) => String(a.reportDate || "").localeCompare(String(b.reportDate || "")) || a.seq - b.seq);
+
+    res.json({
+      ok: true,
+      data: {
+        month,
+        monthText: formatMonthText(month),
+        days: buildMonthDays(month),
+        device,
+        details: gridRows,
+        hazards,
+        summary: {
+          detailCount: gridRows.length,
+          reportCount: monthlyReports.length,
+          abnormalReportCount: monthlyReports.filter((row) => toDisplayText(row.result).includes("异常")).length,
+          hazardCount: hazards.length,
+        },
+      },
+    });
+  }));
+
   app.post("/api/inspection-report/scan", asyncHandler(async (req, res) => {
     const payload = req.body || {};
     const scanValue = toDisplayText(payload.scanValue || payload.code || payload.deviceCode);
@@ -924,6 +1021,12 @@ function compareDashboardTask(a, b) {
   return String(a.standardName || "").localeCompare(String(b.standardName || ""));
 }
 
+function compareDeviceOption(a, b) {
+  const left = `${a.code || ""}${a.name || ""}`;
+  const right = `${b.code || ""}${b.name || ""}`;
+  return left.localeCompare(right, "zh-Hans-CN");
+}
+
 function inferTaskCategory(task) {
   const text = `${toDisplayText(task.ruleName)} ${toDisplayText(task.standardName)} ${toDisplayText(task.standardCode)}`.toLowerCase();
   if (text.includes("周")) return "周检";
@@ -939,6 +1042,65 @@ function isTaskBoundToDevice(task, device) {
   const byId = task.deviceId && device.id && String(task.deviceId) === String(device.id);
   const byCode = task.deviceCode && device.code && String(task.deviceCode) === String(device.code);
   return Boolean(byId || byCode);
+}
+
+function findMonthlyDevice(devices, filters) {
+  const deviceId = normalizeCompareText(filters && filters.deviceId);
+  const deviceCode = normalizeCompareText(filters && filters.deviceCode);
+  return (Array.isArray(devices) ? devices : []).find((device) => {
+    const byId = deviceId && normalizeCompareText(device.id) === deviceId;
+    const byCode = deviceCode && normalizeCompareText(device.code) === deviceCode;
+    return Boolean(byId || byCode);
+  }) || null;
+}
+
+function isReportForMonthlyDevice(report, device) {
+  if (!report || !device) {
+    return false;
+  }
+  const byId = report.deviceId && device.id && normalizeCompareText(report.deviceId) === normalizeCompareText(device.id);
+  const byCode = report.deviceCode && device.code && normalizeCompareText(report.deviceCode) === normalizeCompareText(device.code);
+  return Boolean(byId || byCode);
+}
+
+function isDetailBelongToMonthlyDevice(detail, device) {
+  if (!detail || !device) {
+    return false;
+  }
+  return isDetailBelongToTask(detail, {
+    standardId: device.inspectStandardId || "",
+    standardCode: device.inspectStandardCode || "",
+    standardName: "",
+  });
+}
+
+function buildMonthlyStandardRefs(device, reports) {
+  const refs = [];
+  const addRef = (source) => {
+    const ref = {
+      standardId: toDisplayText(source && source.standardId),
+      standardCode: toDisplayText(source && source.standardCode),
+      standardName: toDisplayText(source && source.standardName),
+    };
+    const key = [ref.standardId, ref.standardCode, ref.standardName]
+      .map((item) => normalizeCompareText(item))
+      .filter(Boolean)
+      .join("|");
+    if (!key || refs.some((item) => item.key === key)) {
+      return;
+    }
+    refs.push({ ...ref, key });
+  };
+
+  (Array.isArray(reports) ? reports : []).forEach(addRef);
+  if (!refs.length) {
+    addRef({
+      standardId: device && device.inspectStandardId,
+      standardCode: device && device.inspectStandardCode,
+      standardName: "",
+    });
+  }
+  return refs.map(({ key, ...ref }) => ref);
 }
 
 function isTaskReportable(task, todayText) {
@@ -1245,11 +1407,16 @@ function mapReportRecord(record) {
     deviceId: toDisplayText(getAliasRawValue(record, REPORT_FIELD.deviceId)),
     deviceCode: toDisplayText(getAliasRawValue(record, REPORT_FIELD.deviceCode)),
     deviceName: toDisplayText(getAliasRawValue(record, REPORT_FIELD.deviceName)),
+    standardId: toDisplayText(getAliasRawValue(record, REPORT_FIELD.standardId)),
+    standardCode: toDisplayText(getAliasRawValue(record, REPORT_FIELD.standardCode)),
     standardName: toDisplayText(getAliasRawValue(record, REPORT_FIELD.standardName)),
+    taskId: toDisplayText(getAliasRawValue(record, REPORT_FIELD.taskId)),
     reporter: toDisplayText(getAliasRawValue(record, REPORT_FIELD.reporter)),
     reportDateText: reportDateRaw,
     currentStatus: toDisplayText(getAliasRawValue(record, REPORT_FIELD.currentStatus)),
     result: toDisplayText(getAliasRawValue(record, REPORT_FIELD.result)),
+    abnormalCount: toIntOrDefault(getAliasRawValue(record, REPORT_FIELD.abnormalCount), 0),
+    remark: toDisplayText(getAliasRawValue(record, REPORT_FIELD.remark)),
   };
 }
 
@@ -1260,17 +1427,200 @@ function mapReportDetailRecord(record) {
   return {
     id: extractRecordId(record),
     reportId: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.reportId)),
+    standardDetailId: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.standardDetailId)),
     seq: toIntOrDefault(getAliasRawValue(record, REPORT_DETAIL_FIELD.seq), 0),
     pointPart: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.pointPart)),
     pointItem: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.pointItem)),
+    judgeStandard: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.judgeStandard)),
     submitTime: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.submitTime)),
     mobileInputValue,
     actualOptionValue,
     actualNumericValue,
     abnormal: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.abnormal)) || "否",
     abnormalDesc: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.abnormalDesc)),
+    handling: toDisplayText(getAliasRawValue(record, REPORT_DETAIL_FIELD.handling)),
     resultValue: actualOptionValue || actualNumericValue || mobileInputValue || "",
   };
+}
+
+function mapInspectionHazardRecord(record) {
+  return {
+    id: extractRecordId(record),
+    code: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.code)),
+    submissionId: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.submissionId)),
+    submissionDetailId: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.submissionDetailId)),
+    title: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.title)),
+    description: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.description)),
+    riskLevel: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.riskLevel)),
+    target: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.target)),
+    deadline: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.deadline)),
+    requirement: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.requirement)),
+    status: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.status)) || "待整改",
+    actionDesc: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.actionDesc)),
+    verifyComment: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.verifyComment)),
+    closedAt: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.closedAt)),
+    overdue: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.overdue)),
+    source: toDisplayText(getAliasRawValue(record, HAZARD_FIELD.source)),
+  };
+}
+
+function buildMonthlyGridRows(standardDetails, reports, reportDetails, month) {
+  const days = buildMonthDays(month);
+  const reportsByDay = new Map();
+  (Array.isArray(reports) ? reports : []).forEach((report) => {
+    const day = getDayNumber(report.reportDateText);
+    if (!day) {
+      return;
+    }
+    if (!reportsByDay.has(day)) {
+      reportsByDay.set(day, []);
+    }
+    reportsByDay.get(day).push(report);
+  });
+
+  const detailsByReportId = new Map();
+  (Array.isArray(reportDetails) ? reportDetails : []).forEach((detail) => {
+    if (!detail.reportId) {
+      return;
+    }
+    if (!detailsByReportId.has(detail.reportId)) {
+      detailsByReportId.set(detail.reportId, []);
+    }
+    detailsByReportId.get(detail.reportId).push(detail);
+  });
+
+  return (Array.isArray(standardDetails) ? standardDetails : []).map((detail, index) => {
+    const standardKey = getMonthlyDetailKey(detail);
+    const cells = days.map((day) => {
+      const dayReports = reportsByDay.get(day) || [];
+      const matchedDetails = dayReports.flatMap((report) => {
+        const items = detailsByReportId.get(report.id) || [];
+        return items
+          .filter((item) => isSameMonthlyDetail(item, detail, standardKey))
+          .map((item) => ({ report, item }));
+      });
+      return buildMonthlyGridCell(day, matchedDetails);
+    });
+
+    return {
+      id: detail.id || "",
+      seq: Number(detail.seq || index + 1),
+      content: getMonthlyDetailContent(detail),
+      pointPart: detail.pointPart || "",
+      pointItem: detail.pointItem || "",
+      checkStandard: detail.checkStandard || detail.standardText || "",
+      cells,
+    };
+  });
+}
+
+function buildMonthlyDetailFallbackRows(reportDetails) {
+  const byKey = new Map();
+  (Array.isArray(reportDetails) ? reportDetails : []).forEach((detail) => {
+    const key = getMonthlyDetailKey(detail);
+    if (!key || byKey.has(key)) {
+      return;
+    }
+    byKey.set(key, {
+      id: detail.standardDetailId || detail.id || "",
+      seq: Number(detail.seq || 0),
+      pointPart: detail.pointPart || "",
+      pointItem: detail.pointItem || "",
+      checkContent: detail.pointItem || detail.pointPart || "",
+      checkStandard: detail.judgeStandard || "",
+      standardText: detail.judgeStandard || "",
+      enableStatus: "启用",
+    });
+  });
+  return Array.from(byKey.values()).sort((a, b) => Number(a.seq || 0) - Number(b.seq || 0));
+}
+
+function buildMonthlyGridCell(day, matchedDetails) {
+  const matches = Array.isArray(matchedDetails) ? matchedDetails : [];
+  if (!matches.length) {
+    return { day, mark: "", status: "none", title: "" };
+  }
+  const abnormal = matches.find(({ item }) => toYesNo(item.abnormal) === "是");
+  if (abnormal) {
+    const item = abnormal.item || {};
+    const title = [
+      "异常",
+      item.resultValue ? `结果：${item.resultValue}` : "",
+      item.abnormalDesc ? `说明：${item.abnormalDesc}` : "",
+      item.handling ? `处理：${item.handling}` : "",
+    ].filter(Boolean).join("；");
+    return { day, mark: "×", status: "abnormal", title };
+  }
+  const latest = matches[matches.length - 1] || {};
+  const item = latest.item || {};
+  const title = item.resultValue ? `正常：${item.resultValue}` : "正常";
+  return { day, mark: "√", status: "normal", title };
+}
+
+function getMonthlyDetailKey(detail) {
+  if (!detail) {
+    return "";
+  }
+  const id = toDisplayText(detail.id || detail.standardDetailId);
+  if (id) {
+    return `id:${normalizeCompareText(id)}`;
+  }
+  return [
+    "fallback",
+    normalizeCompareText(detail.seq),
+    normalizeCompareText(detail.pointPart),
+    normalizeCompareText(detail.pointItem),
+  ].join(":");
+}
+
+function isSameMonthlyDetail(reportDetail, standardDetail, standardKey) {
+  if (!reportDetail || !standardDetail) {
+    return false;
+  }
+  if (reportDetail.standardDetailId && standardDetail.id) {
+    return normalizeCompareText(reportDetail.standardDetailId) === normalizeCompareText(standardDetail.id);
+  }
+  return getMonthlyDetailKey(reportDetail) === standardKey;
+}
+
+function getMonthlyDetailContent(detail) {
+  return toDisplayText(detail.pointItem)
+    || toDisplayText(detail.pointPart)
+    || toDisplayText(detail.checkContent)
+    || toDisplayText(detail.standardText)
+    || toDisplayText(detail.checkStandard)
+    || "未命名点检内容";
+}
+
+function mapMonthlyHazardRow(hazard, seq, reportById) {
+  const report = reportById.get(hazard.submissionId) || {};
+  const action = toDisplayText(hazard.actionDesc);
+  const requirement = toDisplayText(hazard.requirement);
+  const description = toDisplayText(hazard.description);
+  const handlingText = [
+    hazard.status || "",
+    action || requirement || description || hazard.title || "",
+  ].filter(Boolean).join("：");
+
+  return {
+    id: hazard.id || "",
+    seq,
+    code: hazard.code || "",
+    reportId: hazard.submissionId || "",
+    reportDate: normalizeDate(report.reportDateText) || "",
+    title: hazard.title || "",
+    handlingText,
+    status: hazard.status || "",
+    dateText: normalizeDate(hazard.closedAt) || "",
+  };
+}
+
+function isInspectionHazardSource(value) {
+  const text = toDisplayText(value);
+  if (!text) {
+    return true;
+  }
+  return text.includes("点巡检") || text.includes("点检");
 }
 
 function mapMemberRecord(record) {
@@ -1825,6 +2175,18 @@ function normalizeDate(value) {
   return `${year}-${month}-${day}`;
 }
 
+function normalizeMonth(value) {
+  const text = toDisplayText(value);
+  if (!text) {
+    return "";
+  }
+  const matched = text.match(/(\d{4})[-/.年](\d{1,2})/);
+  if (!matched) {
+    return "";
+  }
+  return `${matched[1]}-${String(matched[2]).padStart(2, "0")}`;
+}
+
 function normalizeDateTime(value) {
   const text = toDisplayText(value);
   if (!text) {
@@ -1835,6 +2197,38 @@ function normalizeDateTime(value) {
     return "";
   }
   return formatDateTime(date);
+}
+
+function formatMonth(date) {
+  const d = date instanceof Date ? date : parseDateTimeOrNull(date);
+  if (!(d instanceof Date) || !Number.isFinite(d.getTime())) {
+    return "";
+  }
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatMonthText(month) {
+  const text = normalizeMonth(month);
+  if (!text) {
+    return "";
+  }
+  const [year, monthText] = text.split("-");
+  return `${year}年${Number(monthText)}月`;
+}
+
+function buildMonthDays(month) {
+  const text = normalizeMonth(month) || formatMonth(new Date());
+  const [year, monthText] = text.split("-").map((item) => Number(item));
+  const daysInMonth = new Date(year, monthText, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, index) => index + 1);
+}
+
+function getDayNumber(value) {
+  const dateText = normalizeDate(value);
+  if (!dateText) {
+    return 0;
+  }
+  return Number(dateText.slice(8, 10)) || 0;
 }
 
 function startOfDay(date) {

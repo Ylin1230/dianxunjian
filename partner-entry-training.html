@@ -36,7 +36,7 @@
 
       .layout {
         display: grid;
-        grid-template-columns: 330px minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
         gap: 12px;
         min-height: calc(100vh - 24px);
       }
@@ -55,7 +55,7 @@
 
       .right-panel {
         display: grid;
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
       }
 
       .panel-head {
@@ -95,6 +95,17 @@
         grid-template-columns: minmax(0, 1fr) auto auto auto;
       }
 
+      .record-toolbar {
+        grid-template-columns: minmax(260px, 1fr) auto auto;
+      }
+
+      .panel-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
       .btn {
         height: 32px;
         padding: 0 12px;
@@ -104,6 +115,10 @@
         border-radius: 4px;
         font-size: 13px;
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
       }
 
       .btn:hover:not(:disabled) {
@@ -425,53 +440,6 @@
         font-size: 12px;
       }
 
-      .qr-strip {
-        border-bottom: 1px solid var(--line-soft);
-        padding: 10px 12px;
-        background: #fbfdff;
-      }
-
-      .scan-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        height: 24px;
-        border-radius: 999px;
-        padding: 0 10px;
-        font-size: 12px;
-        color: #1f65c8;
-        background: #eaf3ff;
-        border: 1px solid #c8defc;
-        margin-bottom: 8px;
-      }
-
-      .qr-grid {
-        display: grid;
-        grid-template-columns: 190px minmax(0, 1fr);
-        gap: 12px;
-      }
-
-      .qr-box {
-        border: 1px solid #d9e4f3;
-        border-radius: 8px;
-        background: #fff;
-        padding: 8px;
-        text-align: center;
-      }
-
-      .qr-box img {
-        width: 160px;
-        height: 160px;
-        display: block;
-        margin: 0 auto;
-      }
-
-      .qr-note {
-        margin-top: 6px;
-        color: #5d6f8a;
-        font-size: 12px;
-      }
-
       .field-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -493,15 +461,14 @@
         color: #4f6078;
       }
 
-      .qr-actions {
-        margin-top: 8px;
-        display: flex;
-        gap: 8px;
-      }
-
       .table-wrap {
         overflow: auto;
         padding: 0 10px 10px;
+      }
+
+      .records-table-wrap {
+        padding-top: 10px;
+        padding-bottom: 0;
       }
 
       table {
@@ -533,9 +500,60 @@
         background: #f9fbfe;
       }
 
+      tr.selected td {
+        background: #edf4ff;
+      }
+
+      .record-pagination-bar {
+        min-height: 44px;
+        padding: 8px 12px;
+        border-top: 1px solid var(--line-soft);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: #fff;
+      }
+
+      .record-pagination-info {
+        color: var(--minor);
+        font-size: 12px;
+      }
+
+      .record-pagination-actions,
+      .record-page-buttons {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .record-pagination-size {
+        width: 104px;
+      }
+
+      .record-page-btn {
+        min-width: 30px;
+        padding: 0 8px;
+      }
+
+      .record-page-btn.is-current {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .record-page-ellipsis {
+        color: var(--minor);
+        font-size: 12px;
+        padding: 0 2px;
+      }
+
       .cell-actions {
         display: flex;
         gap: 8px;
+        justify-content: center;
+        white-space: nowrap;
       }
 
       .text-btn {
@@ -549,25 +567,6 @@
 
       .text-btn.danger {
         color: var(--danger);
-      }
-
-      .detail-wrap {
-        padding: 10px 12px;
-        overflow: auto;
-      }
-
-      .card {
-        border: 1px solid var(--line-soft);
-        border-radius: 8px;
-        background: #fff;
-        overflow: hidden;
-      }
-
-      .card-head {
-        border-bottom: 1px solid var(--line-soft);
-        padding: 8px 10px;
-        font-weight: 600;
-        font-size: 13px;
       }
 
       .kv-grid {
@@ -659,6 +658,14 @@
       .modal-body {
         overflow: auto;
         padding: 10px 12px;
+      }
+
+      .detail-modal .modal {
+        width: min(1180px, 100%);
+      }
+
+      .detail-modal .modal-body {
+        padding: 0;
       }
 
       .form-grid {
@@ -866,10 +873,6 @@
           min-height: 360px;
         }
 
-        .qr-grid {
-          grid-template-columns: 1fr;
-        }
-
         .kv-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -889,8 +892,22 @@
 
       @media (max-width: 820px) {
         .toolbar,
-        .toolbar.right-tools {
+        .toolbar.right-tools,
+        .record-toolbar {
           grid-template-columns: 1fr 1fr;
+        }
+
+        .record-toolbar .input {
+          grid-column: 1 / -1;
+        }
+
+        .record-pagination-bar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .record-pagination-actions {
+          justify-content: flex-start;
         }
 
         .field-grid,
@@ -919,77 +936,31 @@
   <body>
     <div class="page">
       <div class="layout">
-        <aside class="panel left-panel">
-          <div class="panel-head">
-            <div>
-              <h1>培训记录</h1>
-              <div class="minor">相关方安全教育培训记录</div>
-            </div>
-          </div>
-          <div class="toolbar">
-            <input id="recordKeywordInput" class="input" type="text" placeholder="标题/施工单位/施工项目" />
-            <button id="recordSearchBtn" type="button" class="btn">搜索</button>
-            <button id="recordResetBtn" type="button" class="btn">重置</button>
-          </div>
-          <div id="recordList" class="list-wrap"></div>
-          <div id="recordListFoot" class="foot">-</div>
-        </aside>
-
         <main class="panel right-panel">
           <div class="panel-head">
             <div>
-              <h1>相关方入场培训</h1>
-              <div class="minor">扫码填报 + 台账增删改同步百数云</div>
+              <h1>相关方培训记录</h1>
+              <div class="minor">相关方安全教育培训记录查询、维护和打印</div>
             </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+            <div class="panel-actions">
+              <a href="/h5/partner-training-qr" class="btn" target="_blank" rel="noopener noreferrer">二维码下载</a>
               <button id="refreshBtn" type="button" class="btn">刷新</button>
               <button id="addBtn" type="button" class="btn primary">新建</button>
               <button id="editBtn" type="button" class="btn">编辑</button>
+              <button id="printBtn" type="button" class="btn">打印</button>
               <button id="deleteBtn" type="button" class="btn danger">删除</button>
             </div>
           </div>
 
           <div id="scanEntryBanner" class="scan-entry-banner hidden"></div>
 
-          <section class="qr-strip">
-            <div class="scan-badge">扫码入口</div>
-            <div class="qr-grid">
-              <div class="qr-box">
-                <img id="entryQrImage" alt="入场培训二维码" />
-                <div class="qr-note">默认展示静态入口码</div>
-              </div>
-              <div>
-                <div class="field-grid">
-                  <div class="field full">
-                    <label for="qrModeSelect">二维码类型</label>
-                    <select id="qrModeSelect" class="select">
-                      <option value="static">静态入口码（推荐）</option>
-                      <option value="prefill">单位预填码（动态）</option>
-                    </select>
-                  </div>
-                  <div class="field full" id="qrUnitFieldWrap">
-                    <label for="qrUnitSelect">预填施工单位</label>
-                    <input id="qrUnitKeywordInput" class="input" type="text" placeholder="输入单位名称或编号搜索" autocomplete="off" />
-                    <select id="qrUnitSelect" class="select"></select>
-                  </div>
-                  <div class="field full">
-                    <label for="qrUrlInput">扫码跳转链接</label>
-                    <input id="qrUrlInput" class="input readonly" type="text" readonly />
-                  </div>
-                </div>
-                <div class="field-tip" style="margin-top:8px;">
-                  建议将静态入口码张贴在门岗或培训室，供微信扫一扫直接进入“外部填报页”；动态单位码用于施工单位入场前预填，减少现场录入时间。
-                </div>
-                <div class="qr-actions">
-                  <button id="copyQrUrlBtn" type="button" class="btn">复制链接</button>
-                  <a id="openQrImageBtn" class="btn" target="_blank" rel="noopener noreferrer">打开二维码</a>
-                  <a id="openEntryUrlBtn" class="btn" target="_blank" rel="noopener noreferrer">打开入口页</a>
-                </div>
-              </div>
-            </div>
-          </section>
+          <div class="toolbar record-toolbar">
+            <input id="recordKeywordInput" class="input" type="text" placeholder="标题/施工单位/施工项目" />
+            <button id="recordSearchBtn" type="button" class="btn">搜索</button>
+            <button id="recordResetBtn" type="button" class="btn">重置</button>
+          </div>
 
-          <div class="table-wrap" style="padding-top:8px;">
+          <div class="table-wrap records-table-wrap">
             <table>
               <thead>
                 <tr>
@@ -1001,22 +972,45 @@
                   <th style="width:180px;">施工项目</th>
                   <th style="width:130px;">授课人</th>
                   <th style="width:86px;">是否抽取</th>
-                  <th style="width:120px;">操作</th>
+                  <th style="width:190px;">操作</th>
                 </tr>
               </thead>
               <tbody id="recordTableBody"></tbody>
             </table>
           </div>
 
-          <section class="detail-wrap">
-            <div class="card">
-              <div class="card-head">记录详情</div>
-              <div id="detailBody" class="kv-grid"></div>
+          <div class="record-pagination-bar">
+            <div id="recordPaginationInfo" class="record-pagination-info">共 0 条</div>
+            <div class="record-pagination-actions">
+              <select id="recordPageSizeSelect" class="select record-pagination-size" aria-label="每页记录数量">
+                <option value="10">10 条/页</option>
+                <option value="20">20 条/页</option>
+                <option value="50">50 条/页</option>
+              </select>
+              <button id="recordPrevPageBtn" class="btn" type="button">上一页</button>
+              <div id="recordPageButtons" class="record-page-buttons" aria-label="培训记录分页"></div>
+              <button id="recordNextPageBtn" class="btn" type="button">下一页</button>
             </div>
-          </section>
+          </div>
 
           <div id="statusBar" class="status">准备就绪</div>
         </main>
+      </div>
+    </div>
+
+    <div id="detailModal" class="modal-mask detail-modal hidden">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="detailModalTitle">记录详情</h3>
+          <button id="closeDetailBtn" type="button" class="btn">关闭</button>
+        </div>
+        <div class="modal-body">
+          <div id="detailBody" class="kv-grid"></div>
+        </div>
+        <div class="modal-foot">
+          <button id="detailPrintBtn" type="button" class="btn">打印</button>
+          <button id="detailCloseFootBtn" type="button" class="btn primary">确定</button>
+        </div>
       </div>
     </div>
 
@@ -1178,6 +1172,28 @@
         signTime: "_widget_1776499479597",
       };
 
+      const PARTNER_NOTICE_ITEMS = [
+        "1、相关方人员进入厂区，应主动出示有效证件并在公司门卫处办理出入证登记手续，做好出入物资登记，自觉遵守甲方的规章制度。",
+        "2、相关方人员应听从接洽单位的安排，活动范围仅限于签署合同的指定区域内，遵守与本企业签订的安全管理协议书，认真落实相关安全环保要求。",
+        "3、多人进入公司进行服务或活动时，应有领队或指定专人负责安全。",
+        "4、两个以上相关方单位在同一作业区域内为公司开展服务或活动时，相关方单位之间必须签订《相关方安全环保管理协议书》。",
+        "5、相关方应做好对自己员工的安全教育和技术交底，接受甲方的监督和指导，做好统一协调工作。所有相关方进本公司作业之前，必须接受本公司的安全教育、告知培训，并做好记录和签字备查。",
+        "6、相关方人员进入本公司必须穿戴整齐，不准打赤膊、赤脚，不准穿背心、裙子、裙裤、短裤及拖鞋、高跟鞋等进入本公司生产现场，进入车间时要穿戴好劳保用品。",
+        "7、相关方人员进入本公司，要注意现场的地面和环境情况，以防意外事故发生。",
+        "8、相关方人员进入生产区域时，必须要有本企业接待单位人员的陪同，重点管理部位和危险场所未经许可不得入内，禁止在生产现场及安全保密重点部位或区域拍照、摄像、记录。",
+        "9、相关方人员未经许可不得随便动手触摸任何机器设备、电器设施等，如因工作需要，应事先与接待单位联系具体事宜。如有违反而发生的人身伤害事故，由相关方人员自己负责。",
+        "10．相关方人员因工作需要必须进行登高作业或动火作业及临时电源线架设时，必须按相关规定到本公司安全管理部门办理审批手续，并按审批方案做好安全防范措施后方可进行操作；特种作业人员必须持证上岗。",
+        "11、相关方自备设备、设施必须符合国家标准，其安全性能可靠，防护装置齐全有效，不具备安全条件的不得投入使用。相关方自备设备、设施进入本公司时，应自觉接受本公司有关职能部门的安全检查。",
+        "12、相关方人员应遵守公司定时定点吸烟管理规定，严禁酒后上岗，严禁在厂区内嬉戏、打闹。",
+        "13、相关方的车辆进入公司严禁超速行驶，公司内限速30公里/小时，严禁人、货混装，严禁乱停乱放，必须在指定的停车位停放。",
+        "14、相关方为本公司的服务或活动应做到安全文明，做到物品堆放定置化，安全有序，废弃物品要做到日产日清，保持工作环境整洁、畅通，及时消除各种不安全和环境危害的因素，做好警示、防护措施。",
+        "15、相关方应爱护本公司的绿地及树木，确因施工需要占用的，应事先征得同意并在施工完成后及时恢复。",
+        "16、每天工作结束后，要做好巡查工作，应做到人走灯灭，断水、断气、断电源，并做好“五防工作”。",
+        "17、相关方的服务或活动完成后，应做到工完料清、场地整洁，经验收合格后，交付甲方使用。",
+        "18、乙方有权对甲方人员的故意刁难和索贿行为进行举报。",
+        "19、其它需要补充的事项：",
+      ];
+
       const state = {
         loading: false,
         records: [],
@@ -1185,6 +1201,8 @@
         users: [],
         selectedRecordId: "",
         keyword: "",
+        recordPage: 1,
+        recordPageSize: 10,
         formMode: "add",
         formRecordId: "",
         formDraft: null,
@@ -1215,6 +1233,7 @@
         refreshBtn: document.getElementById("refreshBtn"),
         addBtn: document.getElementById("addBtn"),
         editBtn: document.getElementById("editBtn"),
+        printBtn: document.getElementById("printBtn"),
         deleteBtn: document.getElementById("deleteBtn"),
 
         scanEntryBanner: document.getElementById("scanEntryBanner"),
@@ -1229,6 +1248,17 @@
         openEntryUrlBtn: document.getElementById("openEntryUrlBtn"),
 
         recordTableBody: document.getElementById("recordTableBody"),
+        recordPaginationInfo: document.getElementById("recordPaginationInfo"),
+        recordPageSizeSelect: document.getElementById("recordPageSizeSelect"),
+        recordPrevPageBtn: document.getElementById("recordPrevPageBtn"),
+        recordPageButtons: document.getElementById("recordPageButtons"),
+        recordNextPageBtn: document.getElementById("recordNextPageBtn"),
+
+        detailModal: document.getElementById("detailModal"),
+        detailModalTitle: document.getElementById("detailModalTitle"),
+        closeDetailBtn: document.getElementById("closeDetailBtn"),
+        detailCloseFootBtn: document.getElementById("detailCloseFootBtn"),
+        detailPrintBtn: document.getElementById("detailPrintBtn"),
         detailBody: document.getElementById("detailBody"),
         statusBar: document.getElementById("statusBar"),
 
@@ -1282,8 +1312,10 @@
         });
         bindFormSignatureCanvas();
         applyScanBanner();
-        renderQrUnitOptions();
-        renderQrPanel();
+        if (hasQrPanel()) {
+          renderQrUnitOptions();
+          renderQrPanel();
+        }
         await refreshAll();
         openFromScanContextIfNeeded();
       }
@@ -1291,15 +1323,19 @@
       function bindEvents() {
         refs.recordSearchBtn.addEventListener("click", () => {
           state.keyword = refs.recordKeywordInput.value.trim();
+          state.recordPage = 1;
           renderRecordList();
           renderRecordTable();
+          renderActionDisabled();
         });
 
         refs.recordResetBtn.addEventListener("click", () => {
           state.keyword = "";
+          state.recordPage = 1;
           refs.recordKeywordInput.value = "";
           renderRecordList();
           renderRecordTable();
+          renderActionDisabled();
         });
 
         refs.recordKeywordInput.addEventListener("keydown", (event) => {
@@ -1325,7 +1361,11 @@
           void deleteSelectedRecord();
         });
 
-        refs.recordList.addEventListener("click", (event) => {
+        refs.printBtn.addEventListener("click", () => {
+          printSelectedRecord();
+        });
+
+        if (refs.recordList) refs.recordList.addEventListener("click", (event) => {
           const target = event.target;
           if (!(target instanceof HTMLElement)) {
             return;
@@ -1340,7 +1380,7 @@
           }
           state.selectedRecordId = id;
           renderRecordList();
-          renderDetail();
+          renderRecordTable();
           renderActionDisabled();
         });
 
@@ -1350,64 +1390,68 @@
             return;
           }
           const actionBtn = target.closest("[data-action]");
-          if (!actionBtn) {
+          if (actionBtn) {
+            const action = actionBtn.dataset.action;
+            const id = actionBtn.dataset.id;
+            if (!action || !id) {
+              return;
+            }
+            state.selectedRecordId = id;
+            renderRecordTable();
+            renderActionDisabled();
+            if (action === "detail") {
+              openDetailModal(getSelectedRecord());
+              return;
+            }
+            if (action === "print") {
+              printSelectedRecord();
+              return;
+            }
+            if (action === "edit") {
+              openFormModal("edit");
+              return;
+            }
+            if (action === "delete") {
+              void deleteSelectedRecord();
+            }
             return;
           }
-          const action = actionBtn.dataset.action;
-          const id = actionBtn.dataset.id;
-          if (!action || !id) {
+
+          const row = target.closest("tr[data-id]");
+          if (!row) {
+            return;
+          }
+          const id = row.dataset.id;
+          if (!id) {
             return;
           }
           state.selectedRecordId = id;
-          if (action === "edit") {
-            openFormModal("edit");
+          renderRecordTable();
+          renderActionDisabled();
+        });
+
+        bindQrPanelEvents();
+
+        refs.recordPageSizeSelect.addEventListener("change", () => {
+          state.recordPageSize = Number(refs.recordPageSizeSelect.value) || 10;
+          state.recordPage = 1;
+          renderRecordTable();
+          renderActionDisabled();
+        });
+
+        refs.closeDetailBtn.addEventListener("click", closeDetailModal);
+        refs.detailCloseFootBtn.addEventListener("click", closeDetailModal);
+        refs.detailPrintBtn.addEventListener("click", () => {
+          const record = getSelectedRecord();
+          if (!record) {
+            showToast("请先选择一条培训记录");
             return;
           }
-          if (action === "delete") {
-            void deleteSelectedRecord();
-          }
+          printTrainingNotice(record);
         });
-
-        refs.qrModeSelect.addEventListener("change", () => {
-          state.qrMode = refs.qrModeSelect.value === "prefill" ? "prefill" : "static";
-          renderQrPanel();
-        });
-
-        refs.qrUnitKeywordInput.addEventListener("input", () => {
-          const rows = filterPartnerUnits(refs.qrUnitKeywordInput.value);
-          state.qrUnitId = rows.some((item) => item.id === state.qrUnitId) ? state.qrUnitId : "";
-          renderQrUnitOptions({ selectedId: state.qrUnitId });
-          renderQrPanel();
-        });
-
-        refs.qrUnitKeywordInput.addEventListener("change", () => {
-          applyQrUnitKeywordSelection();
-        });
-
-        refs.qrUnitKeywordInput.addEventListener("keydown", (event) => {
-          if (event.key !== "Enter") {
-            return;
-          }
-          event.preventDefault();
-          applyQrUnitKeywordSelection({ preferFirst: true });
-        });
-
-        refs.qrUnitSelect.addEventListener("change", () => {
-          state.qrUnitId = String(refs.qrUnitSelect.value || "").trim();
-          syncQrUnitKeywordFromSelection();
-          renderQrPanel();
-        });
-
-        refs.copyQrUrlBtn.addEventListener("click", async () => {
-          const text = String(refs.qrUrlInput.value || "").trim();
-          if (!text) {
-            return;
-          }
-          try {
-            await navigator.clipboard.writeText(text);
-            showToast("链接已复制");
-          } catch {
-            showToast("复制失败，请手工复制");
+        refs.detailModal.addEventListener("click", (event) => {
+          if (event.target === refs.detailModal) {
+            closeDetailModal();
           }
         });
 
@@ -1677,6 +1721,68 @@
         }
       }
 
+      function hasQrPanel() {
+        return Boolean(
+          refs.qrModeSelect &&
+          refs.qrUnitKeywordInput &&
+          refs.qrUnitSelect &&
+          refs.qrUrlInput &&
+          refs.entryQrImage &&
+          refs.copyQrUrlBtn &&
+          refs.openQrImageBtn &&
+          refs.openEntryUrlBtn
+        );
+      }
+
+      function bindQrPanelEvents() {
+        if (!hasQrPanel()) {
+          return;
+        }
+
+        refs.qrModeSelect.addEventListener("change", () => {
+          state.qrMode = refs.qrModeSelect.value === "prefill" ? "prefill" : "static";
+          renderQrPanel();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("input", () => {
+          const rows = filterPartnerUnits(refs.qrUnitKeywordInput.value);
+          state.qrUnitId = rows.some((item) => item.id === state.qrUnitId) ? state.qrUnitId : "";
+          renderQrUnitOptions({ selectedId: state.qrUnitId });
+          renderQrPanel();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("change", () => {
+          applyQrUnitKeywordSelection();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") {
+            return;
+          }
+          event.preventDefault();
+          applyQrUnitKeywordSelection({ preferFirst: true });
+        });
+
+        refs.qrUnitSelect.addEventListener("change", () => {
+          state.qrUnitId = String(refs.qrUnitSelect.value || "").trim();
+          syncQrUnitKeywordFromSelection();
+          renderQrPanel();
+        });
+
+        refs.copyQrUrlBtn.addEventListener("click", async () => {
+          const text = String(refs.qrUrlInput.value || "").trim();
+          if (!text) {
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(text);
+            showToast("链接已复制");
+          } catch {
+            showToast("复制失败，请手工复制");
+          }
+        });
+      }
+
       function applyScanBanner() {
         if (!state.scanContext.fromQr) {
           refs.scanEntryBanner.classList.add("hidden");
@@ -1840,12 +1946,14 @@
           state.users = userRows;
           state.records = recordRows;
 
-          if (state.scanContext.unitId && !state.qrUnitId) {
-            state.qrUnitId = state.scanContext.unitId;
+          if (hasQrPanel()) {
+            if (state.scanContext.unitId && !state.qrUnitId) {
+              state.qrUnitId = state.scanContext.unitId;
+            }
+            renderQrUnitOptions();
+            syncQrUnitKeywordFromSelection();
+            renderQrPanel();
           }
-          renderQrUnitOptions();
-          syncQrUnitKeywordFromSelection();
-          renderQrPanel();
 
           const validIds = new Set(state.records.map((item) => item.id));
           if (previousSelectedId && validIds.has(previousSelectedId)) {
@@ -1856,7 +1964,7 @@
 
           renderRecordList();
           renderRecordTable();
-          renderDetail();
+          refreshOpenDetailModal();
           renderActionDisabled();
           setStatus(`加载完成：培训记录 ${state.records.length} 条，相关方单位 ${state.units.length} 条`);
         } catch (error) {
@@ -1870,6 +1978,7 @@
       function renderActionDisabled() {
         const hasSelected = Boolean(getSelectedRecord());
         refs.editBtn.disabled = state.loading || !hasSelected;
+        refs.printBtn.disabled = state.loading || !hasSelected;
         refs.deleteBtn.disabled = state.loading || !hasSelected;
         refs.refreshBtn.disabled = state.loading;
         refs.addBtn.disabled = state.loading;
@@ -1889,6 +1998,9 @@
       }
 
       function renderRecordList() {
+        if (!refs.recordList || !refs.recordListFoot) {
+          return;
+        }
         const rows = getFilteredRecords();
         refs.recordList.innerHTML = "";
 
@@ -1918,15 +2030,25 @@
 
       function renderRecordTable() {
         const rows = getFilteredRecords();
+        const pageState = getRecordPageState(rows);
+        const pageRows = rows.slice(pageState.startIndex, pageState.endIndex);
         refs.recordTableBody.innerHTML = "";
+        if (state.selectedRecordId && !rows.some((item) => item.id === state.selectedRecordId)) {
+          state.selectedRecordId = pageRows[0]?.id || "";
+        } else if (pageRows.length && !pageRows.some((item) => item.id === state.selectedRecordId)) {
+          state.selectedRecordId = pageRows[0].id;
+        }
 
         if (!rows.length) {
           refs.recordTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7e8a9b;padding:20px">暂无记录</td></tr>';
+          renderRecordPagination(pageState);
           return;
         }
 
-        rows.forEach((row) => {
+        pageRows.forEach((row) => {
           const tr = document.createElement("tr");
+          tr.dataset.id = row.id;
+          tr.className = row.id === state.selectedRecordId ? "selected" : "";
           tr.innerHTML = `
             <td>${escapeHtml(row.code || "-")}</td>
             <td>${escapeHtml(row.title || "-")}</td>
@@ -1938,6 +2060,8 @@
             <td>${escapeHtml(row.sampled || "否")}</td>
             <td>
               <div class="cell-actions">
+                <button class="text-btn" data-action="detail" data-id="${escapeHtml(row.id)}">详情</button>
+                <button class="text-btn" data-action="print" data-id="${escapeHtml(row.id)}">打印</button>
                 <button class="text-btn" data-action="edit" data-id="${escapeHtml(row.id)}">编辑</button>
                 <button class="text-btn danger" data-action="delete" data-id="${escapeHtml(row.id)}">删除</button>
               </div>
@@ -1945,10 +2069,101 @@
           `;
           refs.recordTableBody.appendChild(tr);
         });
+        renderRecordPagination(pageState);
       }
 
-      function renderDetail() {
-        const record = getSelectedRecord();
+      function getRecordPageState(rows) {
+        const total = rows.length;
+        const pageSize = Math.max(1, Number(state.recordPageSize) || 10);
+        const pageCount = Math.max(1, Math.ceil(total / pageSize));
+        const page = Math.min(Math.max(1, Number(state.recordPage) || 1), pageCount);
+        state.recordPage = page;
+        const startIndex = total ? (page - 1) * pageSize : 0;
+        const endIndex = total ? Math.min(total, startIndex + pageSize) : 0;
+        return { total, pageSize, pageCount, page, startIndex, endIndex };
+      }
+
+      function renderRecordPagination(pageState) {
+        const info = pageState.total
+          ? `共 ${pageState.total} 条，显示 ${pageState.startIndex + 1}-${pageState.endIndex} 条，第 ${pageState.page} / ${pageState.pageCount} 页`
+          : "共 0 条";
+        refs.recordPaginationInfo.textContent = info;
+        refs.recordPageSizeSelect.value = String(pageState.pageSize);
+
+        refs.recordPrevPageBtn.disabled = pageState.page <= 1;
+        refs.recordPrevPageBtn.onclick = () => {
+          state.recordPage = Math.max(1, pageState.page - 1);
+          renderRecordTable();
+          renderActionDisabled();
+        };
+
+        refs.recordNextPageBtn.disabled = pageState.page >= pageState.pageCount;
+        refs.recordNextPageBtn.onclick = () => {
+          state.recordPage = Math.min(pageState.pageCount, pageState.page + 1);
+          renderRecordTable();
+          renderActionDisabled();
+        };
+
+        refs.recordPageButtons.innerHTML = buildRecordPageNumbers(pageState).map((page) => (
+          page === "..."
+            ? `<span class="record-page-ellipsis">...</span>`
+            : `<button class="btn record-page-btn ${page === pageState.page ? "is-current" : ""}" type="button" data-record-page="${page}">${page}</button>`
+        )).join("");
+        refs.recordPageButtons.querySelectorAll("[data-record-page]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.recordPage = Number(button.dataset.recordPage) || 1;
+            renderRecordTable();
+            renderActionDisabled();
+          });
+        });
+      }
+
+      function buildRecordPageNumbers(pageState) {
+        const total = pageState.pageCount;
+        const current = pageState.page;
+        if (total <= 7) {
+          return Array.from({ length: total }, (_, index) => index + 1);
+        }
+        const pages = new Set([1, total, current, current - 1, current + 1]);
+        const sorted = [...pages].filter((page) => page >= 1 && page <= total).sort((a, b) => a - b);
+        const result = [];
+        sorted.forEach((page, index) => {
+          if (index > 0 && page - sorted[index - 1] > 1) {
+            result.push("...");
+          }
+          result.push(page);
+        });
+        return result;
+      }
+
+      function openDetailModal(record) {
+        if (!record) {
+          showToast("请先选择一条培训记录");
+          return;
+        }
+        state.selectedRecordId = record.id;
+        refs.detailModalTitle.textContent = `${record.code || "-"} · ${record.title || "记录详情"}`;
+        renderDetail(record);
+        refs.detailModal.classList.remove("hidden");
+      }
+
+      function closeDetailModal() {
+        refs.detailModal.classList.add("hidden");
+      }
+
+      function refreshOpenDetailModal() {
+        if (!refs.detailModal.classList.contains("hidden")) {
+          const record = getSelectedRecord();
+          if (record) {
+            refs.detailModalTitle.textContent = `${record.code || "-"} · ${record.title || "记录详情"}`;
+            renderDetail(record);
+          } else {
+            closeDetailModal();
+          }
+        }
+      }
+
+      function renderDetail(record = getSelectedRecord()) {
         if (!record) {
           refs.detailBody.innerHTML = '<div class="kv-item full"><div class="kv-v" style="color:#7e8a9b;">请选择一条培训记录查看详情</div></div>';
           return;
@@ -1968,6 +2183,212 @@
           <div class="kv-item full"><div class="kv-k">培训内容</div><div class="kv-v">${escapeHtml(record.content || "-")}</div></div>
           <div class="kv-item full"><div class="kv-k">培训效果验证</div><div class="kv-v">${escapeHtml(record.effect || "-")}</div></div>
         `;
+      }
+
+      function printSelectedRecord() {
+        const record = getSelectedRecord();
+        if (!record) {
+          showToast("请先选择一条培训记录");
+          return;
+        }
+        printTrainingNotice(record);
+      }
+
+      function printTrainingNotice(record) {
+        const printWindow = window.open("", "_blank");
+        if (!printWindow) {
+          showToast("浏览器阻止了打印窗口，请允许弹窗后重试");
+          return;
+        }
+        printWindow.document.open();
+        printWindow.document.write(buildTrainingNoticePrintHtml(record));
+        printWindow.document.close();
+        printWindow.focus();
+      }
+
+      function buildTrainingNoticePrintHtml(record) {
+        const items = PARTNER_NOTICE_ITEMS
+          .map((item) => `<p class="notice-item">${escapeHtml(item)}</p>`)
+          .join("");
+        const company = record.company || "";
+        const date = record.trainingDateText || "";
+        return `
+          <!doctype html>
+          <html lang="zh-CN">
+            <head>
+              <meta charset="UTF-8" />
+              <title>相关方入厂安全告知书</title>
+              <style>
+                body {
+                  margin: 0;
+                  color: #000;
+                  background: #fff;
+                  font-family: "SimSun", "Songti SC", "Microsoft YaHei", sans-serif;
+                }
+
+                .print-actions {
+                  width: 186mm;
+                  margin: 8mm auto 0;
+                  display: flex;
+                  justify-content: flex-end;
+                  gap: 8px;
+                  font-family: "Microsoft YaHei", sans-serif;
+                }
+
+                .print-actions button {
+                  min-height: 30px;
+                  padding: 0 12px;
+                  border: 1px solid #888;
+                  background: #fff;
+                  cursor: pointer;
+                }
+
+                .notice-page {
+                  width: 186mm;
+                  margin: 0 auto;
+                  padding: 9mm 8mm 12mm;
+                  font-size: 12pt;
+                  line-height: 1.55;
+                }
+
+                h1 {
+                  margin: 0 0 6mm;
+                  text-align: center;
+                  font-size: 20pt;
+                  line-height: 1.2;
+                  font-weight: 700;
+                }
+
+                .notice-body {
+                  margin: 0;
+                }
+
+                .notice-item {
+                  margin: 0 0 2.5mm;
+                  text-align: left;
+                  word-break: break-word;
+                }
+
+                .notice-confirm {
+                  margin: 5mm 0 0;
+                  text-indent: 2em;
+                }
+
+                .notice-sign-area {
+                  margin-top: 9mm;
+                  font-size: 12pt;
+                }
+
+                .sign-row {
+                  display: grid;
+                  grid-template-columns: 36mm minmax(0, 1fr);
+                  gap: 4mm;
+                  align-items: end;
+                  margin-top: 6mm;
+                  min-height: 13mm;
+                }
+
+                .sign-row.signatures {
+                  min-height: 28mm;
+                  align-items: start;
+                }
+
+                .sign-label {
+                  white-space: nowrap;
+                }
+
+                .sign-line {
+                  min-height: 11mm;
+                  border-bottom: 1px solid #000;
+                  display: flex;
+                  align-items: flex-end;
+                  gap: 7mm;
+                  flex-wrap: wrap;
+                  padding: 0 0 1.5mm;
+                  overflow: hidden;
+                }
+
+                .signatures .sign-line {
+                  min-height: 26mm;
+                  align-items: flex-end;
+                  overflow: visible;
+                }
+
+                .partner-sign-item {
+                  min-width: 28mm;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: flex-end;
+                }
+
+                .partner-sign-img {
+                  max-width: 38mm;
+                  max-height: 13mm;
+                  object-fit: contain;
+                  display: block;
+                }
+
+                @page {
+                  size: A4 portrait;
+                  margin: 10mm;
+                }
+
+                @media print {
+                  .print-actions {
+                    display: none;
+                  }
+
+                  .notice-page {
+                    width: auto;
+                    margin: 0;
+                    padding: 0;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="print-actions">
+                <button type="button" onclick="window.print()">打印</button>
+                <button type="button" onclick="window.close()">关闭</button>
+              </div>
+              <article class="notice-page">
+                <h1>相关方入厂安全告知书</h1>
+                <section class="notice-body">${items}</section>
+                <p class="notice-confirm">以上安全告知，请认真阅读，贯彻执行。对违反相关管理要求、本公司将按相关管理规定和合同约定给予处罚。</p>
+                <section class="notice-sign-area">
+                  <div class="sign-row signatures">
+                    <div class="sign-label">相关方人员签名：</div>
+                    <div class="sign-line">${renderParticipantPrintSignatures(record)}</div>
+                  </div>
+                  <div class="sign-row">
+                    <div class="sign-label">施工单位名称：</div>
+                    <div class="sign-line">${escapeHtml(company)}</div>
+                  </div>
+                  <div class="sign-row">
+                    <div class="sign-label">日期：</div>
+                    <div class="sign-line">${escapeHtml(date)}</div>
+                  </div>
+                </section>
+              </article>
+              <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });<\/script>
+            </body>
+          </html>
+        `;
+      }
+
+      function renderParticipantPrintSignatures(record) {
+        const participants = Array.isArray(record?.participantDetails) ? record.participantDetails : [];
+        const signed = participants
+          .map((item) => item?.signPreviewUrl || resolveFileUrl(item?.signFiles?.[0]))
+          .filter(Boolean);
+        if (!signed.length) {
+          return "";
+        }
+        return signed.map((url) => `
+          <span class="partner-sign-item">
+            <img class="partner-sign-img" src="${escapeHtml(url)}" alt="签名" />
+          </span>
+        `).join("");
       }
 
       function getSelectedRecord() {
@@ -2208,7 +2629,7 @@
             state.selectedRecordId = savedId;
             renderRecordList();
             renderRecordTable();
-            renderDetail();
+            refreshOpenDetailModal();
             renderActionDisabled();
           }
           showToast("培训记录已保存");
@@ -3607,8 +4028,9 @@
         const day = match[3].padStart(2, "0");
         const hour = (match[4] || "00").padStart(2, "0");
         const minute = (match[5] || "00").padStart(2, "0");
+        const second = (match[6] || "00").padStart(2, "0");
 
-        return `${year}-${month}-${day}T${hour}:${minute}`;
+        return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
       }
 
       function formatDateTimeForApi(localValue) {
@@ -3620,11 +4042,11 @@
         if (dateOnly) {
           return `${dateOnly[1]} 00:00:00`;
         }
-        const match = local.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/);
+        const match = local.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::(\d{2}))?$/);
         if (!match) {
           return "";
         }
-        return `${match[1]} ${match[2]}:00`;
+        return `${match[1]} ${match[2]}:${match[3] || "00"}`;
       }
 
       function toDateInputValue(date) {
@@ -3642,7 +4064,8 @@
         const day = String(d.getDate()).padStart(2, "0");
         const hour = String(d.getHours()).padStart(2, "0");
         const minute = String(d.getMinutes()).padStart(2, "0");
-        return `${year}-${month}-${day}T${hour}:${minute}`;
+        const second = String(d.getSeconds()).padStart(2, "0");
+        return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
       }
 
       function resolveApiBaseUrl() {

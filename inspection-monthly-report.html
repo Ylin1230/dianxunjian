@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>月度点检报表</title>
+    <style>
+      :root {
+        --page-bg: #eef2f7;
+        --panel: #ffffff;
+        --text: #111827;
+        --muted: #64748b;
+        --line: #cfd7e6;
+        --strong-line: #111827;
+        --primary: #1f6fd1;
+        --primary-deep: #1659aa;
+        --danger: #c24130;
+        --ok: #0f7a4f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--text);
+        font: 14px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: end;
+        gap: 12px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.96);
+        border-bottom: 1px solid var(--line);
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .control {
+        height: 38px;
+        min-width: 180px;
+        border: 1px solid #c2cede;
+        border-radius: 7px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        color: var(--text);
+        padding: 0 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .control:focus {
+        outline: none;
+        border-color: #1f6fd1;
+        box-shadow: 0 0 0 3px rgba(31, 111, 209, 0.13);
+      }
+
+      #monthInput {
+        cursor: pointer;
+      }
+
+      .month-picker {
+        position: relative;
+      }
+
+      .month-picker .control {
+        width: 100%;
+        padding-right: 42px;
+      }
+
+      .month-picker-btn {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        width: 28px;
+        height: 28px;
+        transform: translateY(-50%);
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #374151;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+      }
+
+      .month-picker-btn:hover {
+        background: #eef4ff;
+        color: var(--primary);
+      }
+
+      .month-panel {
+        position: absolute;
+        left: 0;
+        top: calc(100% + 6px);
+        z-index: 35;
+        width: 258px;
+        padding: 10px;
+        border: 1px solid #ccd6e4;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.16);
+      }
+
+      .month-panel.hidden {
+        display: none;
+      }
+
+      .month-panel-head {
+        display: grid;
+        grid-template-columns: 34px 1fr 34px;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .month-panel-head strong {
+        text-align: center;
+        font-size: 15px;
+      }
+
+      .month-nav-btn {
+        height: 30px;
+        border: 1px solid #d5deeb;
+        border-radius: 6px;
+        background: #fff;
+        color: #30445f;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .month-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .month-option {
+        height: 32px;
+        border: 1px solid #d6dfec;
+        border-radius: 6px;
+        background: #fff;
+        color: #1f2937;
+        cursor: pointer;
+      }
+
+      .month-option:hover {
+        background: #eef5ff;
+        color: #155db2;
+      }
+
+      .month-option.active {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .device-field {
+        width: 360px;
+      }
+
+      .month-field {
+        width: 200px;
+      }
+
+      .smart-select {
+        position: relative;
+        width: 100%;
+      }
+
+      .ss-display {
+        position: relative;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        border: 1px solid #c2cede;
+        border-radius: 7px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .smart-select.open .ss-display,
+      .ss-display:focus-within {
+        border-color: #1f6fd1;
+        box-shadow: 0 0 0 3px rgba(31, 111, 209, 0.13);
+      }
+
+      .ss-input {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        padding: 0 54px 0 12px;
+      }
+
+      .ss-input::placeholder {
+        color: #9aa8bb;
+      }
+
+      .ss-arrow {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #667085;
+        pointer-events: none;
+        font-size: 12px;
+      }
+
+      .ss-clear {
+        position: absolute;
+        right: 31px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        border: 0;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: #e5eaf2;
+        color: #6b7280;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1;
+        padding: 0;
+      }
+
+      .smart-select.has-value:hover .ss-clear,
+      .smart-select.open.has-value .ss-clear {
+        display: flex;
+      }
+
+      .ss-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 6px);
+        z-index: 30;
+        display: none;
+        max-height: 260px;
+        overflow: auto;
+        padding: 6px;
+        border: 1px solid #ccd6e4;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.16);
+      }
+
+      .smart-select.open .ss-panel {
+        display: block;
+      }
+
+      .ss-option {
+        min-height: 34px;
+        display: flex;
+        align-items: center;
+        padding: 7px 9px;
+        border-radius: 6px;
+        color: #1f2937;
+        cursor: pointer;
+      }
+
+      .ss-option:hover,
+      .ss-option.active {
+        background: #eef5ff;
+        color: #155db2;
+      }
+
+      .ss-empty {
+        padding: 10px 9px;
+        color: #8a98ac;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .btn {
+        height: 36px;
+        border: 1px solid #b8c5d8;
+        border-radius: 6px;
+        background: #fff;
+        color: #1f2937;
+        padding: 0 16px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .btn.primary {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn.primary:hover {
+        background: var(--primary-deep);
+      }
+
+      .btn.export {
+        border-color: #1f6fd1;
+        background: #1f6fd1;
+        color: #fff;
+      }
+
+      .btn.export:hover {
+        background: #1659aa;
+      }
+
+      .btn.print {
+        border-color: #159062;
+        background: #159062;
+        color: #fff;
+      }
+
+      .btn.print:hover {
+        background: #0f744f;
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .status {
+        min-height: 0;
+        padding: 6px 14px 0;
+        color: var(--muted);
+      }
+
+      .status.error {
+        color: var(--danger);
+      }
+
+      .status:empty {
+        display: none;
+      }
+
+      .page {
+        padding: 0;
+      }
+
+      .sheet {
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        background: var(--panel);
+        padding: 10px 14px 14px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      }
+
+      .report-message {
+        min-height: 132px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .sheet.is-message .sheet-title,
+      .sheet.is-message .report-meta,
+      .sheet.is-message .table-scroll,
+      .sheet.is-message .summary-line {
+        display: none;
+      }
+
+      .sheet.is-message .report-message {
+        display: flex;
+      }
+
+      .sheet-title {
+        margin: 0 0 8px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .report-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        border: 1px solid var(--strong-line);
+        border-bottom: 0;
+      }
+
+      .meta-item {
+        min-height: 31px;
+        padding: 6px 8px;
+        border-right: 1px solid var(--strong-line);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .meta-item:last-child {
+        border-right: 0;
+      }
+
+      .meta-label {
+        white-space: nowrap;
+        color: #111;
+      }
+
+      .meta-value {
+        font-weight: 600;
+      }
+
+      .table-scroll {
+        overflow: auto;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      .monthly-table {
+        min-width: 980px;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--strong-line);
+        padding: 4px 5px;
+        text-align: center;
+        vertical-align: middle;
+        color: #111;
+      }
+
+      th {
+        font-weight: 600;
+      }
+
+      .seq-col {
+        width: 48px;
+      }
+
+      .content-col {
+        width: 280px;
+      }
+
+      .day-col {
+        width: 28px;
+      }
+
+      .content-cell {
+        text-align: left;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .mark {
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .mark.normal {
+        color: var(--ok);
+      }
+
+      .mark.abnormal {
+        color: var(--danger);
+      }
+
+      .hazard-caption {
+        margin-top: -1px;
+        border: 1px solid var(--strong-line);
+        border-top: 0;
+        border-bottom: 0;
+        padding: 4px 8px;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .hazard-table {
+        min-width: 980px;
+      }
+
+      .hazard-seq {
+        width: 92px;
+      }
+
+      .hazard-date {
+        width: 120px;
+      }
+
+      .hazard-confirm {
+        width: 160px;
+      }
+
+      .hazard-text {
+        text-align: left;
+        min-height: 32px;
+        line-height: 1.35;
+        word-break: break-word;
+      }
+
+      .empty {
+        color: var(--muted);
+      }
+
+      .summary-line {
+        display: flex;
+        justify-content: flex-end;
+        gap: 18px;
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 760px) {
+        .toolbar {
+          position: static;
+          flex-wrap: wrap;
+          align-items: stretch;
+          padding: 10px;
+        }
+
+        .field,
+        .actions {
+          width: 100%;
+        }
+
+        .actions {
+          margin-left: 0;
+        }
+
+        .control,
+        .device-field,
+        .month-field,
+        .month-picker,
+        .smart-select,
+        .btn {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .month-panel {
+          width: 100%;
+        }
+      }
+
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+          font-size: 10px;
+        }
+
+        .toolbar,
+        .status {
+          display: none !important;
+        }
+
+        .page {
+          padding: 0;
+        }
+
+        .sheet {
+          width: 100%;
+          min-width: 0;
+          padding: 0;
+          box-shadow: none;
+        }
+
+        .table-scroll {
+          overflow: visible;
+        }
+
+        .sheet-title {
+          font-size: 16px;
+          margin-bottom: 5px;
+        }
+
+        .report-meta {
+          grid-template-columns: repeat(4, 1fr);
+        }
+
+        .meta-item {
+          min-height: 23px;
+          padding: 3px 5px;
+        }
+
+        th,
+        td {
+          padding: 2px 3px;
+        }
+
+        .monthly-table,
+        .hazard-table {
+          min-width: 0;
+        }
+
+        .seq-col {
+          width: 36px;
+        }
+
+        .content-col {
+          width: 220px;
+        }
+
+        .day-col {
+          width: auto;
+        }
+
+        .hazard-seq {
+          width: 70px;
+        }
+
+        .hazard-confirm {
+          width: 120px;
+        }
+
+        .hazard-date {
+          width: 90px;
+        }
+
+        .summary-line {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div class="field device-field">
+        <label for="deviceInput">设备</label>
+        <div id="deviceSelect" class="smart-select" data-placeholder="请选择">
+          <div class="ss-display" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+            <input id="deviceInput" class="ss-input" type="text" autocomplete="off" placeholder="请选择" />
+            <button id="deviceClearBtn" class="ss-clear" type="button" aria-label="清空设备">×</button>
+            <span class="ss-arrow">⌄</span>
+          </div>
+          <div id="devicePanel" class="ss-panel" role="listbox"></div>
+        </div>
+      </div>
+      <div class="field month-field">
+        <label for="monthInput">年月</label>
+        <div id="monthPicker" class="month-picker">
+          <input id="monthInput" class="control" type="text" readonly />
+          <button id="monthPickerBtn" class="month-picker-btn" type="button" aria-label="选择年月">▾</button>
+          <div id="monthPanel" class="month-panel hidden">
+            <div class="month-panel-head">
+              <button id="monthPrevYearBtn" class="month-nav-btn" type="button" aria-label="上一年">‹</button>
+              <strong id="monthPanelYear"></strong>
+              <button id="monthNextYearBtn" class="month-nav-btn" type="button" aria-label="下一年">›</button>
+            </div>
+            <div id="monthGrid" class="month-grid"></div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="exportBtn" class="btn export" type="button">导出</button>
+        <button id="printBtn" class="btn print" type="button">打印</button>
+      </div>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <main class="page">
+      <section id="reportSheet" class="sheet">
+        <div id="reportMessage" class="report-message">加载中...</div>
+        <h1 id="reportTitle" class="sheet-title">设备月度点检情况统计表</h1>
+        <div class="report-meta">
+          <div class="meta-item"><span class="meta-label">日期:</span><span id="metaMonth" class="meta-value"></span></div>
+          <div class="meta-item"><span class="meta-label">设备编号:</span><span id="metaDeviceCode" class="meta-value"></span></div>
+          <div class="meta-item"><span class="meta-label">设备类型:</span><span id="metaDeviceType" class="meta-value"></span></div>
+          <div class="meta-item"><span class="meta-label">所属车间:</span><span id="metaWorkshop" class="meta-value"></span></div>
+        </div>
+        <div class="table-scroll">
+          <table id="monthlyTable" class="monthly-table" aria-label="月度点检明细"></table>
+          <div class="hazard-caption">异常情况处理</div>
+          <table id="hazardTable" class="hazard-table" aria-label="异常情况处理"></table>
+        </div>
+        <div id="summaryLine" class="summary-line"></div>
+      </section>
+    </main>
+
+    <script>
+      const API_PREFIX = "/api";
+      const state = {
+        devices: [],
+        deviceValue: "",
+        monthValue: "",
+        monthPanelYear: 0,
+        report: null,
+      };
+
+      const refs = {
+        deviceSelect: document.getElementById("deviceSelect"),
+        deviceInput: document.getElementById("deviceInput"),
+        devicePanel: document.getElementById("devicePanel"),
+        deviceClearBtn: document.getElementById("deviceClearBtn"),
+        monthPicker: document.getElementById("monthPicker"),
+        monthInput: document.getElementById("monthInput"),
+        monthPickerBtn: document.getElementById("monthPickerBtn"),
+        monthPanel: document.getElementById("monthPanel"),
+        monthPanelYear: document.getElementById("monthPanelYear"),
+        monthPrevYearBtn: document.getElementById("monthPrevYearBtn"),
+        monthNextYearBtn: document.getElementById("monthNextYearBtn"),
+        monthGrid: document.getElementById("monthGrid"),
+        exportBtn: document.getElementById("exportBtn"),
+        printBtn: document.getElementById("printBtn"),
+        status: document.getElementById("status"),
+        reportSheet: document.getElementById("reportSheet"),
+        reportMessage: document.getElementById("reportMessage"),
+        reportTitle: document.getElementById("reportTitle"),
+        metaMonth: document.getElementById("metaMonth"),
+        metaDeviceCode: document.getElementById("metaDeviceCode"),
+        metaDeviceType: document.getElementById("metaDeviceType"),
+        metaWorkshop: document.getElementById("metaWorkshop"),
+        monthlyTable: document.getElementById("monthlyTable"),
+        hazardTable: document.getElementById("hazardTable"),
+        summaryLine: document.getElementById("summaryLine"),
+      };
+
+      init();
+
+      function init() {
+        setMonthValue(getCurrentMonth());
+        refs.exportBtn.addEventListener("click", exportReport);
+        refs.printBtn.addEventListener("click", () => window.print());
+        refs.deviceSelect.addEventListener("change", () => loadReport());
+        refs.monthInput.addEventListener("change", () => loadReport());
+        initDeviceSelect();
+        initMonthPicker();
+        loadDevices();
+      }
+
+      async function loadDevices() {
+        setBusy(true);
+        showReportMessage("加载中...");
+        try {
+          const resp = await requestJson("/inspection-report/monthly-devices");
+          state.devices = Array.isArray(resp?.data?.devices) ? resp.data.devices : [];
+          renderDeviceOptions();
+          const query = new URLSearchParams(window.location.search);
+          const deviceCode = query.get("deviceCode") || query.get("code") || "";
+          const month = query.get("month") || "";
+          if (month) setMonthValue(normalizeMonthInput(month) || getSelectedMonth(), { trigger: false });
+          if (deviceCode) {
+            const matched = state.devices.find((item) => normalizeText(item.code) === normalizeText(deviceCode));
+            if (matched) setDeviceValue(getDeviceValue(matched));
+          }
+          if (!state.deviceValue && state.devices[0]) {
+            setDeviceValue(getDeviceValue(state.devices[0]));
+          }
+          await loadReport();
+        } catch (error) {
+          setBusy(false);
+          setStatus(error.message || "设备加载失败", true);
+          showReportMessage("数据加载失败，请稍后重试");
+        }
+      }
+
+      function renderDeviceOptions() {
+        if (!state.devices.length) {
+          refs.devicePanel.innerHTML = '<div class="ss-empty">暂无设备</div>';
+          setDeviceValue("");
+          return;
+        }
+        renderDeviceDropdownOptions("");
+      }
+
+      function initDeviceSelect() {
+        refs.deviceSelect.addEventListener("click", (event) => {
+          if (event.target === refs.deviceClearBtn) {
+            return;
+          }
+          if (event.target.closest(".ss-panel")) {
+            return;
+          }
+          openDeviceSelect({ keepText: refs.deviceSelect.classList.contains("open") });
+        });
+        refs.deviceInput.addEventListener("focus", () => {
+          openDeviceSelect({ keepText: refs.deviceSelect.classList.contains("open") });
+        });
+        refs.deviceInput.addEventListener("input", () => {
+          openDeviceSelect({ keepText: true });
+          renderDeviceDropdownOptions(refs.deviceInput.value);
+        });
+        refs.deviceInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            const matches = getFilteredDevices(refs.deviceInput.value);
+            if (matches.length === 1) {
+              event.preventDefault();
+              selectDevice(matches[0]);
+            }
+          }
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closeDeviceSelect({ restore: true });
+          }
+        });
+        refs.deviceClearBtn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setDeviceValue("", { trigger: true });
+          closeDeviceSelect({ restore: true });
+        });
+        document.addEventListener("click", (event) => {
+          if (!refs.deviceSelect.contains(event.target)) {
+            closeDeviceSelect({ restore: true });
+          }
+        });
+      }
+
+      function openDeviceSelect(options = {}) {
+        if (!options.keepText) {
+          refs.deviceInput.value = "";
+          refs.deviceInput.placeholder = state.deviceValue ? getSelectedDeviceLabel() : "请选择";
+          renderDeviceDropdownOptions("");
+        }
+        refs.deviceSelect.classList.add("open");
+        refs.deviceSelect.querySelector(".ss-display").setAttribute("aria-expanded", "true");
+        requestAnimationFrame(() => refs.deviceInput.focus());
+      }
+
+      function closeDeviceSelect(options = {}) {
+        refs.deviceSelect.classList.remove("open");
+        refs.deviceSelect.querySelector(".ss-display").setAttribute("aria-expanded", "false");
+        if (options.restore) {
+          syncDeviceDisplay();
+        }
+      }
+
+      function renderDeviceDropdownOptions(keyword) {
+        const matches = getFilteredDevices(keyword);
+        if (!matches.length) {
+          refs.devicePanel.innerHTML = '<div class="ss-empty">无匹配设备</div>';
+          return;
+        }
+        refs.devicePanel.innerHTML = matches.map((device) => {
+          const value = escapeAttr(getDeviceValue(device));
+          const label = escapeHtml(getDeviceLabel(device));
+          const active = getDeviceValue(device) === state.deviceValue ? " active" : "";
+          return `<div class="ss-option${active}" role="option" data-value="${value}">${label}</div>`;
+        }).join("");
+        refs.devicePanel.querySelectorAll(".ss-option").forEach((node) => {
+          node.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const device = state.devices.find((item) => getDeviceValue(item) === node.dataset.value);
+            if (device) selectDevice(device);
+          });
+        });
+      }
+
+      function getFilteredDevices(keyword) {
+        const key = normalizeText(keyword);
+        return state.devices.filter((device) => {
+          if (!key) return true;
+          return normalizeText(getDeviceLabel(device)).includes(key)
+            || normalizeText(device.code).includes(key)
+            || normalizeText(device.name).includes(key)
+            || normalizeText(device.type).includes(key)
+            || normalizeText(device.workshop).includes(key);
+        });
+      }
+
+      function selectDevice(device) {
+        setDeviceValue(getDeviceValue(device), { trigger: true });
+        closeDeviceSelect({ restore: true });
+      }
+
+      function setDeviceValue(value, options = {}) {
+        state.deviceValue = String(value || "");
+        syncDeviceDisplay();
+        if (options.trigger) {
+          refs.deviceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      }
+
+      function syncDeviceDisplay() {
+        const label = getSelectedDeviceLabel();
+        refs.deviceInput.value = label;
+        refs.deviceInput.placeholder = "请选择";
+        refs.deviceSelect.classList.toggle("has-value", Boolean(state.deviceValue));
+      }
+
+      function getSelectedDeviceLabel() {
+        const device = getSelectedDevice();
+        return device ? getDeviceLabel(device) : "";
+      }
+
+      function getDeviceValue(device) {
+        return String((device && (device.id || device.code)) || "");
+      }
+
+      function getDeviceLabel(device) {
+        if (!device) return "";
+        const code = device.code || "无编号";
+        const name = device.name ? ` - ${device.name}` : "";
+        return `${code}${name}`;
+      }
+
+      function initMonthPicker() {
+        refs.monthPicker.addEventListener("click", (event) => {
+          event.stopPropagation();
+          if (event.target.closest(".month-panel")) {
+            return;
+          }
+          openMonthPicker();
+        });
+        refs.monthInput.addEventListener("focus", openMonthPicker);
+        refs.monthPickerBtn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openMonthPicker();
+        });
+        refs.monthPrevYearBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          state.monthPanelYear -= 1;
+          renderMonthPanel();
+        });
+        refs.monthNextYearBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          state.monthPanelYear += 1;
+          renderMonthPanel();
+        });
+        refs.monthGrid.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const btn = event.target.closest("[data-month-value]");
+          if (!btn) {
+            return;
+          }
+          setMonthValue(btn.dataset.monthValue, { trigger: true });
+          closeMonthPicker();
+        });
+        document.addEventListener("click", (event) => {
+          if (!refs.monthPicker.contains(event.target)) {
+            closeMonthPicker();
+          }
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeMonthPicker();
+          }
+        });
+      }
+
+      function openMonthPicker() {
+        const [year] = getSelectedMonth().split("-").map((item) => Number(item));
+        state.monthPanelYear = year || new Date().getFullYear();
+        renderMonthPanel();
+        refs.monthPanel.classList.remove("hidden");
+      }
+
+      function closeMonthPicker() {
+        refs.monthPanel.classList.add("hidden");
+      }
+
+      function renderMonthPanel() {
+        const selected = getSelectedMonth();
+        const year = state.monthPanelYear || new Date().getFullYear();
+        refs.monthPanelYear.textContent = `${year}年`;
+        refs.monthGrid.innerHTML = Array.from({ length: 12 }, (_, index) => {
+          const month = String(index + 1).padStart(2, "0");
+          const value = `${year}-${month}`;
+          const active = value === selected ? " active" : "";
+          return `<button class="month-option${active}" type="button" data-month-value="${value}">${index + 1}月</button>`;
+        }).join("");
+      }
+
+      function setMonthValue(value, options = {}) {
+        const normalized = normalizeMonthInput(value) || getCurrentMonth();
+        state.monthValue = normalized;
+        refs.monthInput.dataset.value = normalized;
+        refs.monthInput.value = formatMonthText(normalized, true);
+        if (options.trigger) {
+          refs.monthInput.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      }
+
+      function getSelectedMonth() {
+        return normalizeMonthInput(state.monthValue || refs.monthInput.dataset.value || refs.monthInput.value) || getCurrentMonth();
+      }
+
+      async function loadReport() {
+        const device = getSelectedDevice();
+        const month = getSelectedMonth();
+        if (!device) {
+          state.report = null;
+          showReportMessage("请选择设备后查看报表");
+          setStatus("");
+          return;
+        }
+        setBusy(true);
+        showReportMessage("加载中...");
+        try {
+          const query = new URLSearchParams({
+            deviceId: device.id || "",
+            deviceCode: device.code || "",
+            month,
+          });
+          const resp = await requestJson(`/inspection-report/monthly?${query.toString()}`);
+          state.report = resp.data || null;
+          renderReport();
+          setBusy(false);
+          setStatus("");
+        } catch (error) {
+          setBusy(false);
+          setStatus(error.message || "报表生成失败", true);
+          showReportMessage("数据加载失败，请稍后重试");
+        }
+      }
+
+      async function requestJson(path) {
+        const resp = await fetch(`${API_PREFIX}${path}`, {
+          headers: { Accept: "application/json" },
+        });
+        const data = await resp.json().catch(() => null);
+        if (!resp.ok || !data || data.ok === false) {
+          throw new Error(data?.message || `接口请求失败：${resp.status}`);
+        }
+        return data;
+      }
+
+      function renderReport() {
+        hideReportMessage();
+        const report = state.report || {};
+        const device = report.device || {};
+        refs.reportTitle.textContent = getReportTitle(device);
+        refs.metaMonth.textContent = report.monthText || formatMonthText(getSelectedMonth());
+        refs.metaDeviceCode.textContent = device.code || "";
+        refs.metaDeviceType.textContent = device.type || "";
+        refs.metaWorkshop.textContent = device.workshop || "";
+        renderMonthlyTable(report.days || [], report.details || []);
+        renderHazardTable(report.hazards || []);
+        const summary = report.summary || {};
+        refs.summaryLine.textContent = `点检内容 ${summary.detailCount || 0} 项，报工 ${summary.reportCount || 0} 次，异常报工 ${summary.abnormalReportCount || 0} 次，隐患工单 ${summary.hazardCount || 0} 条`;
+      }
+
+      function renderMonthlyTable(days, details) {
+        const dayHeaders = days.map((day) => `<th class="day-col">${day}</th>`).join("");
+        const rows = details.length ? details.map((row, index) => {
+          const cells = (row.cells || []).map((cell) => {
+            const cls = cell.status === "abnormal" ? "abnormal" : cell.status === "normal" ? "normal" : "";
+            return `<td class="mark ${cls}" title="${escapeAttr(cell.title || "")}">${escapeHtml(cell.mark || "")}</td>`;
+          }).join("");
+          return `
+            <tr>
+              <td>${escapeHtml(row.seq || index + 1)}</td>
+              <td class="content-cell">${escapeHtml(row.content || "")}</td>
+              ${cells}
+            </tr>
+          `;
+        }).join("") : `
+          <tr>
+            <td colspan="${2 + days.length}" class="empty">未找到该设备绑定的点检内容</td>
+          </tr>
+        `;
+        refs.monthlyTable.innerHTML = `
+          <thead>
+            <tr>
+              <th class="seq-col">序号</th>
+              <th class="content-col">点检内容</th>
+              ${dayHeaders}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        `;
+      }
+
+      function renderHazardTable(hazards) {
+        const rows = hazards.length ? hazards.map((row) => `
+          <tr>
+            <td>${escapeHtml(row.seq)}</td>
+            <td class="hazard-text">${escapeHtml(row.handlingText || row.title || "")}</td>
+            <td></td>
+            <td>${escapeHtml(row.dateText || "")}</td>
+          </tr>
+        `).join("") : `
+          <tr>
+            <td colspan="4" class="empty">本月暂无异常处理记录</td>
+          </tr>
+        `;
+        refs.hazardTable.innerHTML = `
+          <thead>
+            <tr>
+              <th class="hazard-seq">异常序号</th>
+              <th>处理情况</th>
+              <th class="hazard-confirm">整改确认</th>
+              <th class="hazard-date">日期</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        `;
+      }
+
+      function renderEmptyReport() {
+        hideReportMessage();
+        refs.reportTitle.textContent = "设备月度点检情况统计表";
+        refs.metaMonth.textContent = formatMonthText(getSelectedMonth());
+        refs.metaDeviceCode.textContent = "";
+        refs.metaDeviceType.textContent = "";
+        refs.metaWorkshop.textContent = "";
+        renderMonthlyTable(buildDays(getSelectedMonth()), []);
+        renderHazardTable([]);
+        refs.summaryLine.textContent = "";
+      }
+
+      function showReportMessage(message) {
+        state.report = null;
+        refs.reportMessage.textContent = message || "加载中...";
+        refs.reportSheet.classList.add("is-message");
+        refs.summaryLine.textContent = "";
+      }
+
+      function hideReportMessage() {
+        refs.reportSheet.classList.remove("is-message");
+      }
+
+      function exportReport() {
+        if (!state.report) {
+          setStatus("请先生成报表再导出", true);
+          return;
+        }
+        const report = state.report;
+        const device = report.device || {};
+        const filename = `${sanitizeFilename(device.code || device.name || "设备")}_${report.month || getSelectedMonth()}_月度点检报表.xls`;
+        const html = buildExportHtml(report);
+        const blob = new Blob(["\ufeff", html], { type: "application/vnd.ms-excel;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setStatus("");
+      }
+
+      function buildExportHtml(report) {
+        const device = report.device || {};
+        const days = Array.isArray(report.days) ? report.days : [];
+        const details = Array.isArray(report.details) ? report.details : [];
+        const hazards = Array.isArray(report.hazards) ? report.hazards : [];
+        const totalCols = Math.max(2 + days.length, 10);
+        const metaSpans = splitSpan(totalCols, 4);
+        const hazardSpans = splitHazardSpan(totalCols);
+        const border = "border:1px solid #000;";
+        const center = `${border} text-align:center; vertical-align:middle;`;
+        const left = `${border} text-align:left; vertical-align:middle;`;
+        const colgroup = [
+          '<col style="width:52px" />',
+          '<col style="width:300px" />',
+          ...days.map(() => '<col style="width:30px" />'),
+        ].join("");
+        const dayHeaders = days.map((day) => `<th style="${center}">${day}</th>`).join("");
+        const detailRows = details.length ? details.map((row, index) => {
+          const cells = days.map((day, dayIndex) => {
+            const cell = (row.cells || [])[dayIndex] || {};
+            return `<td style="${center} font-size:12pt; color:${cell.status === "abnormal" ? "#c24130" : "#0f7a4f"};">${escapeHtml(cell.mark || "")}</td>`;
+          }).join("");
+          return `<tr><td style="${center}">${escapeHtml(row.seq || index + 1)}</td><td style="${left}">${escapeHtml(row.content || "")}</td>${cells}</tr>`;
+        }).join("") : `<tr><td colspan="${totalCols}" style="${center} color:#64748b;">未找到该设备绑定的点检内容</td></tr>`;
+        const hazardRows = hazards.length ? hazards.map((row) => `
+          <tr>
+            <td colspan="${hazardSpans.seq}" style="${center}">${escapeHtml(row.seq)}</td>
+            <td colspan="${hazardSpans.handling}" style="${left}">${escapeHtml(row.handlingText || row.title || "")}</td>
+            <td colspan="${hazardSpans.confirm}" style="${center}"></td>
+            <td colspan="${hazardSpans.date}" style="${center}">${escapeHtml(row.dateText || "")}</td>
+          </tr>
+        `).join("") : `<tr><td colspan="${totalCols}" style="${center} color:#64748b;">本月暂无异常处理记录</td></tr>`;
+        const summary = report.summary || {};
+        const summaryText = `点检内容 ${summary.detailCount || 0} 项，报工 ${summary.reportCount || 0} 次，异常报工 ${summary.abnormalReportCount || 0} 次，隐患工单 ${summary.hazardCount || 0} 条`;
+
+        return `<!doctype html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <style>
+                body { font-family: SimSun, "Microsoft YaHei", Arial, sans-serif; font-size: 11pt; }
+                table { border-collapse: collapse; table-layout: fixed; }
+                th, td { mso-number-format:"\\@"; }
+              </style>
+            </head>
+            <body>
+              <table>
+                ${colgroup}
+                <tr><th colspan="${totalCols}" style="text-align:center; font-size:16pt; font-weight:bold; height:32px;">${escapeHtml(getReportTitle(device))}</th></tr>
+                <tr>
+                  <td colspan="${metaSpans[0]}" style="${left}">日期: <strong>${escapeHtml(report.monthText || formatMonthText(getSelectedMonth()))}</strong></td>
+                  <td colspan="${metaSpans[1]}" style="${left}">设备编号: <strong>${escapeHtml(device.code || "")}</strong></td>
+                  <td colspan="${metaSpans[2]}" style="${left}">设备类型: <strong>${escapeHtml(device.type || "")}</strong></td>
+                  <td colspan="${metaSpans[3]}" style="${left}">所属车间: <strong>${escapeHtml(device.workshop || "")}</strong></td>
+                </tr>
+                <tr><th style="${center}">序号</th><th style="${center}">点检内容</th>${dayHeaders}</tr>
+                ${detailRows}
+                <tr><th colspan="${totalCols}" style="${center} font-weight:bold;">异常情况处理</th></tr>
+                <tr>
+                  <th colspan="${hazardSpans.seq}" style="${center}">异常序号</th>
+                  <th colspan="${hazardSpans.handling}" style="${center}">处理情况</th>
+                  <th colspan="${hazardSpans.confirm}" style="${center}">整改确认</th>
+                  <th colspan="${hazardSpans.date}" style="${center}">日期</th>
+                </tr>
+                ${hazardRows}
+                <tr><td colspan="${totalCols}" style="text-align:right; color:#64748b;">${escapeHtml(summaryText)}</td></tr>
+              </table>
+            </body>
+          </html>`;
+      }
+
+      function getSelectedDevice() {
+        const value = state.deviceValue;
+        return state.devices.find((item) => getDeviceValue(item) === value) || null;
+      }
+
+      function setBusy(loading, message) {
+        refs.exportBtn.disabled = loading;
+        refs.printBtn.disabled = loading;
+        if (message) setStatus(message);
+      }
+
+      function getReportTitle(device) {
+        const reportName = getDeviceReportName(device);
+        return `${reportName}月度点检情况统计表`;
+      }
+
+      function getDeviceReportName(device) {
+        const source = device || {};
+        const type = String(source.type || "").trim();
+        if (type) {
+          return type;
+        }
+        const name = String(source.name || "").trim();
+        if (name) {
+          return name;
+        }
+        return "设备";
+      }
+
+      function splitSpan(total, count) {
+        const base = Math.floor(total / count);
+        let rest = total - base * count;
+        return Array.from({ length: count }, () => base + (rest-- > 0 ? 1 : 0));
+      }
+
+      function splitHazardSpan(total) {
+        const seq = Math.max(2, Math.round(total * 0.08));
+        const confirm = Math.max(3, Math.round(total * 0.1));
+        const date = Math.max(3, Math.round(total * 0.1));
+        const handling = Math.max(1, total - seq - confirm - date);
+        return { seq, handling, confirm, date };
+      }
+
+      function setStatus(message, error = false) {
+        refs.status.textContent = message || "";
+        refs.status.classList.toggle("error", Boolean(error));
+      }
+
+      function getCurrentMonth() {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      }
+
+      function normalizeMonthInput(value) {
+        const matched = String(value || "").match(/(\d{4})[-/.年](\d{1,2})/);
+        return matched ? `${matched[1]}-${String(matched[2]).padStart(2, "0")}` : "";
+      }
+
+      function formatMonthText(month, padMonth = false) {
+        const text = normalizeMonthInput(month) || getCurrentMonth();
+        const [year, monthPart] = text.split("-");
+        return `${year}年${padMonth ? String(monthPart).padStart(2, "0") : Number(monthPart)}月`;
+      }
+
+      function buildDays(month) {
+        const text = normalizeMonthInput(month) || getCurrentMonth();
+        const [year, monthPart] = text.split("-").map((item) => Number(item));
+        const count = new Date(year, monthPart, 0).getDate();
+        return Array.from({ length: count }, (_, index) => index + 1);
+      }
+
+      function normalizeText(value) {
+        return String(value || "").replace(/\s+/g, "").toLowerCase();
+      }
+
+      function sanitizeFilename(value) {
+        return String(value || "报表").replace(/[\\/:*?"<>|]+/g, "_");
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value).replace(/`/g, "&#96;");
+      }
+    </script>
+  </body>
+</html>

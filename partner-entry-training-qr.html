@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>相关方入场二维码下载</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --panel: #ffffff;
+        --line: #d7deea;
+        --line-soft: #e5ebf4;
+        --text: #1f2a3a;
+        --minor: #6f7d93;
+        --primary: #2c79ea;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      }
+
+      .page {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        overflow: hidden;
+      }
+
+      .panel-head {
+        border-bottom: 1px solid var(--line);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .minor {
+        color: var(--minor);
+        font-size: 12px;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        min-height: 32px;
+        padding: 0 12px;
+        border: 1px solid #b7c4d8;
+        border-radius: 4px;
+        background: #fff;
+        color: #30445f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .btn.primary {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .qr-layout {
+        display: grid;
+        grid-template-columns: 340px minmax(0, 1fr);
+        gap: 16px;
+        padding: 16px;
+      }
+
+      .qr-card {
+        border: 1px solid var(--line-soft);
+        border-radius: 8px;
+        background: #fbfdff;
+        padding: 16px;
+        text-align: center;
+      }
+
+      .qr-card img {
+        width: 280px;
+        height: 280px;
+        max-width: 100%;
+        display: block;
+        margin: 0 auto;
+        border: 8px solid #fff;
+        background: #fff;
+      }
+
+      .qr-name {
+        margin-top: 10px;
+        font-weight: 600;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .field label {
+        color: #4f6078;
+        font-size: 12px;
+      }
+
+      .input,
+      .select {
+        width: 100%;
+        height: 34px;
+        border: 1px solid #cad3e1;
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 9px;
+        font: inherit;
+      }
+
+      .readonly {
+        background: #f6f8fb;
+        color: #5f708a;
+      }
+
+      .button-row {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .status {
+        border-top: 1px solid var(--line-soft);
+        padding: 9px 14px;
+        color: var(--minor);
+        font-size: 12px;
+      }
+
+      .status.error {
+        color: #d24b4b;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        max-width: 360px;
+        min-width: 220px;
+        border-radius: 8px;
+        background: rgba(17, 25, 40, 0.92);
+        color: #fff;
+        padding: 10px 12px;
+        font-size: 13px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition: opacity 0.18s ease, transform 0.18s ease;
+        z-index: 100;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 820px) {
+        .qr-layout,
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .panel-head {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h1>相关方入场二维码下载</h1>
+            <div class="minor">生成入场填报入口二维码</div>
+          </div>
+          <div class="actions">
+            <a class="btn" href="/h5/partner-training-admin">返回培训记录</a>
+            <a id="openEntryUrlBtn" class="btn" target="_blank" rel="noopener noreferrer">打开入口页</a>
+          </div>
+        </div>
+
+        <div class="qr-layout">
+          <div class="qr-card">
+            <img id="entryQrImage" alt="相关方入场二维码" />
+            <div id="qrName" class="qr-name">静态入口码</div>
+          </div>
+
+          <div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="qrModeSelect">二维码类型</label>
+                <select id="qrModeSelect" class="select">
+                  <option value="static">静态入口码</option>
+                  <option value="prefill">单位预填码</option>
+                </select>
+              </div>
+
+              <div id="qrUnitFieldWrap" class="field">
+                <label for="qrUnitSelect">预填施工单位</label>
+                <input id="qrUnitKeywordInput" class="input" type="text" placeholder="输入单位名称或编号搜索" autocomplete="off" />
+                <select id="qrUnitSelect" class="select"></select>
+              </div>
+
+              <div class="field full">
+                <label for="qrUrlInput">扫码跳转链接</label>
+                <input id="qrUrlInput" class="input readonly" type="text" readonly />
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button id="downloadQrBtn" type="button" class="btn primary">下载二维码</button>
+              <button id="copyQrUrlBtn" type="button" class="btn">复制链接</button>
+              <a id="openQrImageBtn" class="btn" target="_blank" rel="noopener noreferrer">打开二维码</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="statusBar" class="status">准备就绪</div>
+      </section>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_CONFIG = {
+        baseUrl: resolveApiBaseUrl(),
+        appId: "59b376f42fee5822c6ac906a",
+        partnerEntryId: "e909400e8837d7f8cc75482b",
+      };
+
+      const PARTNER_FIELD = {
+        code: "_widget_1776687063504",
+        name: "_widget_1776687063598",
+      };
+
+      const PARTNER_FIELD_TITLE_MATCHER = {
+        code: ["相关方编号", "单位编号", "编号", "编码", "代码"],
+        name: ["外来单位名称", "相关方名称", "单位名称", "施工单位", "单位", "名称"],
+      };
+
+      const state = {
+        units: [],
+        qrMode: "static",
+        qrUnitId: "",
+        partnerFieldAliasMap: {
+          codeAliases: [PARTNER_FIELD.code],
+          nameAliases: [PARTNER_FIELD.name],
+        },
+      };
+
+      const refs = {
+        qrModeSelect: document.getElementById("qrModeSelect"),
+        qrUnitFieldWrap: document.getElementById("qrUnitFieldWrap"),
+        qrUnitKeywordInput: document.getElementById("qrUnitKeywordInput"),
+        qrUnitSelect: document.getElementById("qrUnitSelect"),
+        qrUrlInput: document.getElementById("qrUrlInput"),
+        entryQrImage: document.getElementById("entryQrImage"),
+        qrName: document.getElementById("qrName"),
+        downloadQrBtn: document.getElementById("downloadQrBtn"),
+        copyQrUrlBtn: document.getElementById("copyQrUrlBtn"),
+        openQrImageBtn: document.getElementById("openQrImageBtn"),
+        openEntryUrlBtn: document.getElementById("openEntryUrlBtn"),
+        statusBar: document.getElementById("statusBar"),
+        toast: document.getElementById("toast"),
+      };
+
+      init();
+
+      async function init() {
+        bindEvents();
+        renderQrPanel();
+        await refreshUnits();
+      }
+
+      function bindEvents() {
+        refs.qrModeSelect.addEventListener("change", () => {
+          state.qrMode = refs.qrModeSelect.value === "prefill" ? "prefill" : "static";
+          renderQrPanel();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("input", () => {
+          const rows = filterPartnerUnits(refs.qrUnitKeywordInput.value);
+          state.qrUnitId = rows.some((item) => item.id === state.qrUnitId) ? state.qrUnitId : "";
+          renderQrUnitOptions({ selectedId: state.qrUnitId });
+          renderQrPanel();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("change", () => {
+          applyQrUnitKeywordSelection();
+        });
+
+        refs.qrUnitKeywordInput.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") {
+            return;
+          }
+          event.preventDefault();
+          applyQrUnitKeywordSelection({ preferFirst: true });
+        });
+
+        refs.qrUnitSelect.addEventListener("change", () => {
+          state.qrUnitId = String(refs.qrUnitSelect.value || "").trim();
+          syncQrUnitKeywordFromSelection();
+          renderQrPanel();
+        });
+
+        refs.copyQrUrlBtn.addEventListener("click", async () => {
+          const text = String(refs.qrUrlInput.value || "").trim();
+          if (!text) {
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(text);
+            showToast("链接已复制");
+          } catch {
+            showToast("复制失败，请手工复制");
+          }
+        });
+
+        refs.downloadQrBtn.addEventListener("click", () => {
+          void downloadQrImage();
+        });
+      }
+
+      async function refreshUnits() {
+        setStatus("正在加载相关方单位...");
+        try {
+          state.units = await fetchPartnerUnits();
+          renderQrUnitOptions();
+          renderQrPanel();
+          setStatus(`已加载相关方单位 ${state.units.length} 个`);
+        } catch (error) {
+          setStatus(`加载失败：${error.message}`, true);
+          showToast(`加载失败：${error.message}`);
+        }
+      }
+
+      function renderQrPanel() {
+        refs.qrModeSelect.value = state.qrMode;
+        const prefillMode = state.qrMode === "prefill";
+        refs.qrUnitFieldWrap.classList.toggle("hidden", !prefillMode);
+
+        const unit = getSelectedQrUnit();
+        const url = prefillMode
+          ? buildEntryUrl({ unitId: unit?.id || "", unitName: unit?.name || refs.qrUnitKeywordInput.value.trim() })
+          : buildEntryUrl();
+        const qrUrl = buildQrImageUrl(url);
+
+        refs.qrUrlInput.value = url;
+        refs.entryQrImage.src = qrUrl;
+        refs.openQrImageBtn.href = qrUrl || "#";
+        refs.openEntryUrlBtn.href = url || "#";
+        refs.downloadQrBtn.disabled = !qrUrl;
+        refs.qrName.textContent = prefillMode && unit?.name ? `${unit.name} 预填码` : "静态入口码";
+      }
+
+      function renderQrUnitOptions({ selectedId = state.qrUnitId || "" } = {}) {
+        const rows = filterPartnerUnits(refs.qrUnitKeywordInput.value);
+        const options = ['<option value="">请选择施工单位</option>'];
+        rows.forEach((item) => {
+          const label = item.code ? `${item.name}（${item.code}）` : item.name;
+          options.push(`<option value="${escapeHtml(item.id)}">${escapeHtml(label)}</option>`);
+        });
+        refs.qrUnitSelect.innerHTML = options.join("");
+        refs.qrUnitSelect.value = rows.some((item) => item.id === selectedId) ? selectedId : "";
+      }
+
+      function filterPartnerUnits(keyword) {
+        const key = normalizeCompareText(keyword);
+        if (!key) {
+          return state.units.slice(0, 200);
+        }
+        return state.units
+          .filter((item) => normalizeCompareText([item.code, item.name].join(" ")).includes(key))
+          .slice(0, 200);
+      }
+
+      function syncQrUnitKeywordFromSelection() {
+        const unit = getSelectedQrUnit();
+        if (unit) {
+          refs.qrUnitKeywordInput.value = unit.name;
+        }
+      }
+
+      function applyQrUnitKeywordSelection({ preferFirst = false } = {}) {
+        const keyword = refs.qrUnitKeywordInput.value.trim();
+        if (!keyword) {
+          state.qrUnitId = "";
+          refs.qrUnitSelect.value = "";
+          renderQrPanel();
+          return;
+        }
+
+        const rows = filterPartnerUnits(keyword);
+        const matched = rows.find((item) => normalizeCompareText(item.name) === normalizeCompareText(keyword));
+        const target = matched || (preferFirst ? rows[0] : null);
+        if (target) {
+          state.qrUnitId = target.id;
+          refs.qrUnitKeywordInput.value = target.name;
+          renderQrUnitOptions({ selectedId: target.id });
+          renderQrPanel();
+          return;
+        }
+
+        if (!rows.some((item) => item.id === state.qrUnitId)) {
+          state.qrUnitId = "";
+          refs.qrUnitSelect.value = "";
+        }
+        renderQrPanel();
+      }
+
+      function getSelectedQrUnit() {
+        return state.units.find((item) => item.id === state.qrUnitId) || null;
+      }
+
+      function buildEntryUrl({ unitId = "", unitName = "" } = {}) {
+        const current = new URL(resolvePublicFormUrl(), window.location.href);
+        current.search = "";
+        current.hash = "";
+        const params = new URLSearchParams();
+        params.set("from", "qr");
+        params.set("new", "1");
+        params.set("source", "wechat");
+        params.set("mode", state.qrMode === "prefill" ? "prefill" : "static");
+        if (unitId) {
+          params.set("unit_id", unitId);
+        }
+        if (unitName) {
+          params.set("unit_name", unitName);
+        }
+        current.search = params.toString();
+        return current.toString();
+      }
+
+      function resolvePublicFormUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/h5/partner-training`;
+        }
+        return "partner-entry-training-form.html";
+      }
+
+      function buildQrImageUrl(text) {
+        return `https://quickchart.io/qr?size=420&margin=2&text=${encodeURIComponent(text)}`;
+      }
+
+      async function downloadQrImage() {
+        const imageUrl = String(refs.entryQrImage.src || "").trim();
+        if (!imageUrl) {
+          return;
+        }
+        const fileName = `${sanitizeFilename(refs.qrName.textContent || "相关方入场二维码")}.png`;
+        try {
+          const response = await fetch(imageUrl, { mode: "cors" });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          triggerDownload(objectUrl, fileName);
+          window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+          showToast("二维码已下载");
+        } catch {
+          triggerDownload(imageUrl, fileName);
+          showToast("已打开二维码图片，可另存为图片");
+        }
+      }
+
+      function triggerDownload(url, fileName) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      async function fetchPartnerUnits() {
+        state.partnerFieldAliasMap = await resolvePartnerFieldAliasMap();
+        const records = await fetchEntryRecords(API_CONFIG.partnerEntryId);
+        const mapped = records.map((row) => mapPartnerUnitRecord(row, state.partnerFieldAliasMap)).filter((item) => Boolean(item.name));
+        const deduped = [];
+        const seen = new Set();
+        mapped.forEach((item) => {
+          const key = `${normalizeCompareText(item.name)}|${item.id}`;
+          if (!key || seen.has(key)) {
+            return;
+          }
+          seen.add(key);
+          deduped.push(item);
+        });
+        deduped.sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-Hans-CN"));
+        return deduped;
+      }
+
+      async function resolvePartnerFieldAliasMap() {
+        const map = {
+          codeAliases: [PARTNER_FIELD.code],
+          nameAliases: [PARTNER_FIELD.name],
+        };
+
+        try {
+          const widgetsResult = await fetchEntryWidgets(API_CONFIG.partnerEntryId);
+          const widgets = extractWidgetList(widgetsResult);
+          if (!widgets.length) {
+            return map;
+          }
+
+          const codeAliases = new Set(map.codeAliases);
+          const nameAliases = new Set(map.nameAliases);
+          widgets.forEach((widget) => {
+            const alias = String(widget.alias || "").trim();
+            const titleText = String(widget.title || "").trim();
+            if (!alias || !titleText) {
+              return;
+            }
+            if (matchesWidgetTitle(titleText, PARTNER_FIELD_TITLE_MATCHER.code)) {
+              codeAliases.add(alias);
+            }
+            if (matchesWidgetTitle(titleText, PARTNER_FIELD_TITLE_MATCHER.name)) {
+              nameAliases.add(alias);
+            }
+          });
+          map.codeAliases = Array.from(codeAliases);
+          map.nameAliases = Array.from(nameAliases);
+          return map;
+        } catch {
+          return map;
+        }
+      }
+
+      function mapPartnerUnitRecord(record, aliasMap) {
+        const codeValue = getAliasByCandidates(record, aliasMap?.codeAliases || [PARTNER_FIELD.code]);
+        const nameValue = getAliasByCandidates(record, aliasMap?.nameAliases || [PARTNER_FIELD.name]);
+        return {
+          id: extractRecordId(record),
+          code: toDisplayText(codeValue),
+          name: toDisplayText(nameValue),
+        };
+      }
+
+      function matchesWidgetTitle(title, keywords) {
+        const text = normalizeCompareText(title);
+        return (keywords || []).some((keyword) => text.includes(normalizeCompareText(keyword)));
+      }
+
+      async function fetchEntryWidgets(entryId) {
+        try {
+          return await requestEntry(entryId, "widgets", {}, "POST");
+        } catch {
+          return requestEntry(entryId, "widgets", {}, "GET");
+        }
+      }
+
+      async function fetchEntryRecords(entryId) {
+        const actionCandidates = ["data", "data_search", "data_list", "data_query", "data_find"];
+        const payloadCandidates = [{ page: 1, limit: 1000 }, { page_no: 1, page_size: 1000 }, { limit: 1000 }, {}];
+        const errors = [];
+
+        for (const action of actionCandidates) {
+          for (const payload of payloadCandidates) {
+            try {
+              const response = await requestEntry(entryId, action, payload, "POST");
+              const records = extractRecordArray(response);
+              if (Array.isArray(records)) {
+                return records;
+              }
+            } catch (error) {
+              errors.push(`${action}(${JSON.stringify(payload)}): ${error.message}`);
+            }
+          }
+        }
+
+        throw new Error(errors[errors.length - 1] || "未能获取列表数据");
+      }
+
+      async function requestEntry(entryId, action, body = {}, method = "POST") {
+        const url = `${API_CONFIG.baseUrl}/app/${API_CONFIG.appId}/entry/${entryId}/${action}`;
+        const options = {
+          method,
+          headers: { "Content-Type": "application/json" },
+        };
+        if (method !== "GET") {
+          options.body = JSON.stringify(body || {});
+        }
+
+        const response = await fetch(url, options);
+        const text = await response.text();
+        const result = safeJsonParse(text);
+        if (!response.ok) {
+          throw new Error(extractApiMessage(result) || text || `HTTP ${response.status}`);
+        }
+        if (!isApiSuccess(result)) {
+          throw new Error(extractApiMessage(result) || "接口返回失败");
+        }
+        return result;
+      }
+
+      function extractRecordArray(result) {
+        const queue = [result];
+        const visited = new Set();
+
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object" || visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            if (!current.length || typeof current[0] === "object") {
+              return current;
+            }
+            continue;
+          }
+
+          const keys = ["data_list", "data", "list", "rows", "items", "result", "records", "entry_data_list"];
+          for (const key of keys) {
+            const value = current[key];
+            if (Array.isArray(value) && (!value.length || typeof value[0] === "object")) {
+              return value;
+            }
+            const fromObjectValues = objectValuesAsObjectArray(value);
+            if (fromObjectValues) {
+              return fromObjectValues;
+            }
+          }
+
+          const topFromValues = objectValuesAsObjectArray(current);
+          if (topFromValues && topFromValues.length) {
+            return topFromValues;
+          }
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        return [];
+      }
+
+      function objectValuesAsObjectArray(value) {
+        if (!value || Array.isArray(value) || typeof value !== "object") {
+          return null;
+        }
+        const rows = Object.values(value).filter((item) => item && typeof item === "object" && !Array.isArray(item));
+        return rows.length ? rows : null;
+      }
+
+      function extractWidgetList(result) {
+        const roots = [];
+        const visited = new Set();
+        const queue = [result];
+        while (queue.length) {
+          const current = queue.shift();
+          if (!current || typeof current !== "object" || visited.has(current)) {
+            continue;
+          }
+          visited.add(current);
+
+          if (Array.isArray(current)) {
+            current.forEach((item) => {
+              if (item && typeof item === "object") {
+                queue.push(item);
+              }
+            });
+            continue;
+          }
+
+          [current.widgets, current.data, current.list, current.rows, current.items].forEach((candidate) => {
+            if (Array.isArray(candidate)) {
+              candidate.forEach((item) => {
+                if (item && typeof item === "object") {
+                  roots.push(item);
+                }
+              });
+            }
+          });
+
+          Object.values(current).forEach((value) => {
+            if (value && typeof value === "object") {
+              queue.push(value);
+            }
+          });
+        }
+
+        const output = [];
+        roots.forEach((item) => collectWidgetList(item, output));
+        return output;
+      }
+
+      function collectWidgetList(widget, output) {
+        if (!widget || typeof widget !== "object") {
+          return;
+        }
+        const alias = String(widget.alias || widget.name || widget.widget_alias || widget.widget_name || "").trim();
+        const title = String(widget.title || widget.label || widget.widget_title || "").trim();
+        if (alias) {
+          output.push({ alias, title, type: String(widget.type || widget.widget_type || "").trim() });
+        }
+        []
+          .concat(Array.isArray(widget.widgets) ? widget.widgets : [])
+          .concat(Array.isArray(widget.sub_widgets) ? widget.sub_widgets : [])
+          .concat(Array.isArray(widget.children) ? widget.children : [])
+          .forEach((item) => collectWidgetList(item, output));
+      }
+
+      function getAliasByCandidates(record, aliases) {
+        const list = Array.isArray(aliases) ? aliases : [];
+        for (const alias of list) {
+          const key = String(alias || "").trim();
+          if (!key) {
+            continue;
+          }
+          const raw = getAliasRawValue(record, key);
+          if (raw !== undefined && raw !== null && String(toDisplayText(raw)).trim()) {
+            return raw;
+          }
+        }
+        return "";
+      }
+
+      function getAliasRawValue(record, alias) {
+        if (!record || !alias) {
+          return undefined;
+        }
+        if (Object.prototype.hasOwnProperty.call(record, alias)) {
+          return record[alias];
+        }
+        const containers = [record.data, record.entry_data, record.values, record.form_data, record.widget_value, record.widgets];
+        for (const container of containers) {
+          if (container && typeof container === "object" && Object.prototype.hasOwnProperty.call(container, alias)) {
+            return container[alias];
+          }
+        }
+        return undefined;
+      }
+
+      function extractRecordId(record) {
+        if (!record || typeof record !== "object") {
+          return "";
+        }
+        return String(record._id || record.id || record.data_id || record.dataId || record.entry_data_id || "").trim();
+      }
+
+      function toDisplayText(value) {
+        if (value === undefined || value === null) {
+          return "";
+        }
+        if (Array.isArray(value)) {
+          return value.map(toDisplayText).filter(Boolean).join("、");
+        }
+        if (typeof value === "object") {
+          return String(
+            value.name ||
+            value.title ||
+            value.label ||
+            value.text ||
+            value.value ||
+            value.display_value ||
+            value.displayValue ||
+            value.username ||
+            value.userName ||
+            value.nickname ||
+            ""
+          ).trim();
+        }
+        return String(value).trim();
+      }
+
+      function normalizeCompareText(value) {
+        return String(value || "").replace(/\s+/g, "").toLowerCase();
+      }
+
+      function safeJsonParse(text) {
+        try {
+          return text ? JSON.parse(text) : null;
+        } catch {
+          return { raw: text };
+        }
+      }
+
+      function isApiSuccess(result) {
+        if (!result || typeof result !== "object") {
+          return true;
+        }
+        const code = result.code ?? result.errcode ?? result.status;
+        if (code === undefined || code === null || code === "" || code === 0 || code === "0" || code === 200 || code === "200") {
+          return result.ok !== false && result.success !== false;
+        }
+        return false;
+      }
+
+      function extractApiMessage(result) {
+        if (!result || typeof result !== "object") {
+          return "";
+        }
+        return String(result.message || result.msg || result.error || result.errmsg || result.raw || "").trim();
+      }
+
+      function setStatus(message, isError = false) {
+        refs.statusBar.textContent = message;
+        refs.statusBar.classList.toggle("error", Boolean(isError));
+      }
+
+      function showToast(message) {
+        refs.toast.textContent = message;
+        refs.toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => {
+          refs.toast.classList.remove("show");
+        }, 2300);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function sanitizeFilename(value) {
+        return String(value || "")
+          .replace(/[\\/:*?"<>|]+/g, "_")
+          .replace(/\s+/g, "_")
+          .replace(/^_+|_+$/g, "")
+          .slice(0, 80) || "相关方入场二维码";
+      }
+
+      function resolveApiBaseUrl() {
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          return `${window.location.origin}/api`;
+        }
+        return "http://localhost:3001/api";
+      }
+    </script>
+  </body>
+</html>

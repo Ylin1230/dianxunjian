@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>点巡检系统流程图演示版</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --text: #1f2937;
+        --muted: #667085;
+        --line: #d0d7e2;
+        --brand: #175cd3;
+        --brand-2: #0f766e;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      header {
+        padding: 32px 48px 24px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 30px;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      section {
+        margin-bottom: 24px;
+        padding: 24px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 21px;
+        letter-spacing: 0;
+      }
+
+      .note {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .mermaid {
+        width: 100%;
+        overflow-x: auto;
+        padding: 8px 0;
+      }
+
+      .talk-track {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .talk-track div {
+        padding: 14px;
+        border: 1px solid #d9e2ef;
+        border-radius: 6px;
+        background: #f9fbff;
+        line-height: 1.6;
+        font-size: 14px;
+      }
+
+      footer {
+        padding: 20px 48px 32px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        header,
+        main,
+        footer {
+          padding-left: 12mm;
+          padding-right: 12mm;
+        }
+
+        section {
+          break-inside: avoid;
+          border-color: #c7ced8;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>点巡检系统流程图</h1>
+      <p class="subtitle">用于客户演示：从百数云入口、基础台账、标准规则、现场报工、安全检查、隐患整改到培训留痕，展示系统整体闭环。</p>
+    </header>
+
+    <main>
+      <section>
+        <h2>1. 系统总览</h2>
+        <p class="note">百数云负责统一入口、底表和流程，自定义页面负责业务操作体验，后端服务负责接口代理、任务同步、二维码和附件。</p>
+        <pre class="mermaid">
+flowchart LR
+  U["用户/测试人员/现场人员"] --> P["百数云门户<br/>左侧菜单入口"]
+  P --> D["基础台账页面<br/>设备台账、危化品台账"]
+  P --> S["点检配置页面<br/>点检标准、点检规则"]
+  P --> R["点检报工页面<br/>扫码、填写、提交"]
+  P --> C["安全检查页面<br/>模板、任务、移动端执行、记录"]
+  P --> T["相关方培训页面<br/>记录管理、二维码下载、扫码填报端"]
+  D --> API["后端服务<br/>接口代理、二维码、附件、任务同步"]
+  S --> API
+  R --> API
+  C --> API
+  T --> API
+  API --> BES["百数云 OpenAPI<br/>主表、明细表、流程、附件"]
+  API --> DB["点检任务底表<br/>百数云或 MySQL"]
+  BES --> FLOW["百数云流程中心<br/>隐患整改、验收闭环"]
+        </pre>
+      </section>
+
+      <section>
+        <h2>2. 点检业务闭环</h2>
+        <p class="note">适合讲清楚“为什么能自动生成任务、为什么扫码就能报工”。</p>
+        <pre class="mermaid">
+flowchart TD
+  A["基础数据准备"] --> A1["设备台账<br/>编号、类型、位置、责任人、二维码"]
+  A --> A2["危化品台账<br/>编号、存放位置、事故类型、二维码"]
+  A1 --> B["点检标准配置"]
+  A2 --> B
+  B --> B1["标准主表<br/>名称、规则、版本、生效日期"]
+  B --> B2["标准明细<br/>普通项、状态项、抄表项、异常要求"]
+  B --> B3["适用范围<br/>关联设备或危化品"]
+  B1 --> C["点检规则配置"]
+  B2 --> C
+  B3 --> C
+  C --> D["自动生成点检任务"]
+  D --> E["现场扫码报工"]
+  E --> F{"是否存在异常"}
+  F -- "否" --> G["报工完成<br/>任务状态=已完成"]
+  F -- "是" --> H["生成隐患整改工单"]
+  H --> I["整改、验收、关闭"]
+  G --> J["完整追溯<br/>任务、报工、明细、隐患"]
+  I --> J
+        </pre>
+      </section>
+
+      <section>
+        <h2>3. 安全检查闭环</h2>
+        <p class="note">安全检查从模板和任务出发，移动端执行，异常项进入整改流程。</p>
+        <pre class="mermaid">
+flowchart TD
+  A["安全检查模板"] --> A1["模板主表<br/>检查类型、区域、默认部门/检查人"]
+  A --> A2["检查项明细<br/>检查项目、标准要求、结果类型、整改期限"]
+  A1 --> B["创建检查任务"]
+  A2 --> B
+  B --> C["移动端执行安全检查"]
+  C --> C1["选择检查人"]
+  C --> C2["逐项选择正常/异常/不适用"]
+  C --> C3["异常项填写说明、整改要求、照片"]
+  C2 --> D{"是否有异常"}
+  C3 --> D
+  D -- "否" --> E["生成检查记录<br/>任务状态=已完成"]
+  D -- "是" --> F["生成检查记录<br/>任务状态=异常待整改"]
+  F --> G["生成隐患整改工单"]
+  G --> H["流程中心办理<br/>整改、验收、关闭"]
+  E --> I["检查记录可追溯"]
+  H --> I
+        </pre>
+      </section>
+
+      <section>
+        <h2>4. 相关方培训闭环</h2>
+        <p class="note">承包商或外来人员扫码填报，阅读安全告知后签字提交，管理端可查询、维护和打印。</p>
+        <pre class="mermaid">
+flowchart TD
+  A["相关方单位台账"] --> B["培训记录管理端<br/>查询、维护、打印"]
+  B --> C["二维码下载页<br/>生成入口二维码"]
+  C --> C1["静态入口码"]
+  C --> C2["单位预填码"]
+  C1 --> D["参训人员扫码填报"]
+  C2 --> D
+  D --> E["阅读安全告知<br/>倒计时后进入表单"]
+  E --> F["选择单位、日期、授课人"]
+  F --> G["录入参训人员并手写签字"]
+  G --> H["提交培训记录"]
+  H --> I["培训记录主表"]
+  H --> J["签字图片/参训明细"]
+  I --> K["管理端查询、编辑、打印"]
+  J --> K
+        </pre>
+      </section>
+
+      <section>
+        <h2>5. 客户演示顺序</h2>
+        <p class="note">建议演示时按这条路线讲，客户更容易看到完整价值。</p>
+        <pre class="mermaid">
+flowchart LR
+  A["1. 基础台账<br/>设备、危化品、相关方"] --> B["2. 点检标准<br/>检查什么、怎么判定"]
+  B --> C["3. 点检规则<br/>日检/周检/月检自动生成任务"]
+  C --> D["4. 现场扫码报工<br/>正常和异常各演示一次"]
+  D --> E["5. 隐患整改<br/>流程中心闭环"]
+  E --> F["6. 安全检查<br/>模板、任务、移动端提交"]
+  F --> G["7. 相关方培训<br/>扫码、签字、记录留痕"]
+  G --> H["8. 记录追溯<br/>回到底表和记录查看"]
+        </pre>
+        <div class="talk-track">
+          <div>系统入口在百数云，用户从熟悉的左侧菜单进入，不需要单独记地址。</div>
+          <div>标准决定检查内容和判定规则，规则决定任务生成周期。</div>
+          <div>现场人员扫码后自动匹配当天任务，减少找表和手工录入。</div>
+          <div>异常自动进入隐患整改，整改和验收在百数云流程中心闭环。</div>
+        </div>
+      </section>
+    </main>
+
+    <footer>说明：本页面使用 Mermaid 渲染流程图，首次打开如无法显示，请确认浏览器可以访问 jsdelivr CDN。</footer>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: "loose",
+        theme: "base",
+        themeVariables: {
+          fontFamily: "Microsoft YaHei, PingFang SC, Arial",
+          primaryColor: "#e8f1ff",
+          primaryTextColor: "#1f2937",
+          primaryBorderColor: "#175cd3",
+          lineColor: "#667085",
+          secondaryColor: "#e8faf7",
+          tertiaryColor: "#fff7ed",
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -277,7 +277,7 @@
 
       .main-panel {
         display: grid;
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto minmax(0, 1fr) auto auto;
         min-width: 0;
         min-height: 0;
         overflow: hidden;
@@ -771,6 +771,51 @@
         overflow: auto;
       }
 
+      .pagination-bar {
+        min-height: 42px;
+        padding: 7px 12px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-top: 1px solid var(--line-soft);
+        background: #fff;
+      }
+
+      .pagination-info {
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .pagination-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .pagination-page-btn {
+        min-width: 30px;
+        height: 28px;
+        min-height: 28px;
+        padding: 0 8px;
+        border-radius: 4px;
+      }
+
+      .pagination-page-btn.is-current {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .pagination-size {
+        width: 92px;
+        min-height: 28px;
+        font-size: 12px;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
@@ -1037,7 +1082,20 @@
       }
 
       .detail-fields .section-card {
+        margin-bottom: 12px;
+      }
+
+      .detail-fields .section-card:last-child {
         margin-bottom: 0;
+      }
+
+      .detail-fields .readonly {
+        background: #fff;
+        color: var(--text);
+      }
+
+      .detail-fields textarea.readonly {
+        resize: none;
       }
 
       .toast {
@@ -1200,7 +1258,6 @@
             <table>
               <thead>
                 <tr>
-                  <th style="width: 62px">序</th>
                   <th style="width: 130px">危化品编号</th>
                   <th style="width: 120px">危化品名称</th>
                   <th style="width: 90px">状态</th>
@@ -1215,6 +1272,21 @@
               </thead>
               <tbody id="tableBody"></tbody>
             </table>
+          </div>
+          <div class="pagination-bar">
+            <div id="paginationInfo" class="pagination-info">第 1 / 1 页</div>
+            <div class="pagination-actions">
+              <select id="pageSizeSelect" class="control pagination-size" aria-label="每页危化品数量">
+                <option value="10">10 条/页</option>
+                <option value="15">15 条/页</option>
+                <option value="20" selected>20 条/页</option>
+                <option value="30">30 条/页</option>
+                <option value="50">50 条/页</option>
+              </select>
+              <button id="prevPageBtn" class="btn pagination-page-btn" type="button">上一页</button>
+              <div id="pageButtons" class="pagination-actions" aria-label="危化品分页"></div>
+              <button id="nextPageBtn" class="btn pagination-page-btn" type="button">下一页</button>
+            </div>
           </div>
           <div class="table-foot">
             <span id="tableFoot">准备就绪</span>
@@ -1322,10 +1394,6 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label for="usageLocationInput">使用地点</label>
-                  <input id="usageLocationInput" class="input" />
-                </div>
-                <div class="field">
                   <label for="maxStorageInput">最大存放量</label>
                   <input id="maxStorageInput" class="input" inputmode="decimal" />
                 </div>
@@ -1350,6 +1418,10 @@
                   <select id="packageFormInput" class="control native-hidden" tabindex="-1" aria-hidden="true">
                     <option value="">请选择包装形式</option>
                   </select>
+                </div>
+                <div class="field full">
+                  <label for="usageLocationInput">使用地点</label>
+                  <textarea id="usageLocationInput" class="textarea" rows="3"></textarea>
                 </div>
               </div>
             </section>
@@ -1473,6 +1545,8 @@
         detailRecordId: "",
         keyword: "",
         status: "",
+        tablePage: 1,
+        tablePageSize: 20,
         loading: false,
         formMode: "add",
         publicBaseUrl: "",
@@ -1493,6 +1567,11 @@
         tableBody: document.getElementById("tableBody"),
         tableFoot: document.getElementById("tableFoot"),
         statusBar: document.getElementById("statusBar"),
+        paginationInfo: document.getElementById("paginationInfo"),
+        pageSizeSelect: document.getElementById("pageSizeSelect"),
+        prevPageBtn: document.getElementById("prevPageBtn"),
+        nextPageBtn: document.getElementById("nextPageBtn"),
+        pageButtons: document.getElementById("pageButtons"),
         locationTree: document.getElementById("locationTree"),
         formModal: document.getElementById("formModal"),
         modalTitle: document.getElementById("modalTitle"),
@@ -1732,16 +1811,19 @@
         refs.searchBtn.addEventListener("click", () => {
           state.keyword = refs.keywordInput.value.trim();
           state.status = refs.statusFilter.value.trim();
+          resetTablePage();
           renderAll();
         });
         refs.statusFilter.addEventListener("change", () => {
           state.keyword = refs.keywordInput.value.trim();
           state.status = refs.statusFilter.value.trim();
+          resetTablePage();
           renderAll();
         });
         refs.resetBtn.addEventListener("click", () => {
           state.keyword = "";
           state.status = "";
+          resetTablePage();
           refs.keywordInput.value = "";
           refs.statusFilter.value = "";
           refreshSelectProxies(document);
@@ -1765,7 +1847,38 @@
           }
           state.selectedLocationKey = label.dataset.locationKey || "__all__";
           state.selectedId = "";
+          resetTablePage();
           renderAll();
+        });
+        refs.pageSizeSelect.addEventListener("change", () => {
+          const nextSize = Number(refs.pageSizeSelect.value) || 20;
+          state.tablePageSize = nextSize;
+          resetTablePage();
+          renderTable();
+        });
+        refs.prevPageBtn.addEventListener("click", () => {
+          state.tablePage = Math.max(1, state.tablePage - 1);
+          renderTable();
+        });
+        refs.nextPageBtn.addEventListener("click", () => {
+          state.tablePage += 1;
+          renderTable();
+        });
+        refs.pageButtons.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          const button = target.closest("[data-page]");
+          if (!button) {
+            return;
+          }
+          const page = Number(button.getAttribute("data-page"));
+          if (!Number.isFinite(page) || page < 1 || page === state.tablePage) {
+            return;
+          }
+          state.tablePage = page;
+          renderTable();
         });
         refs.storageLocationInput.addEventListener("change", () => {
           const site = getSiteByStorageLocation(refs.storageLocationInput.value);
@@ -2530,18 +2643,73 @@
         }
       }
 
+      function getPaginationState(filtered) {
+        const total = Array.isArray(filtered) ? filtered.length : 0;
+        const pageSize = Math.max(1, Number(state.tablePageSize) || 20);
+        const pageCount = Math.max(1, Math.ceil(total / pageSize));
+        const page = Math.min(Math.max(1, Number(state.tablePage) || 1), pageCount);
+        if (state.tablePage !== page) {
+          state.tablePage = page;
+        }
+        const startIndex = total ? (page - 1) * pageSize : 0;
+        const endIndex = total ? Math.min(total, startIndex + pageSize) : 0;
+        const rows = total ? filtered.slice(startIndex, endIndex) : [];
+        return {
+          total,
+          pageSize,
+          pageCount,
+          page,
+          startIndex,
+          endIndex,
+          rows,
+        };
+      }
+
+      function resetTablePage() {
+        state.tablePage = 1;
+      }
+
+      function renderPagination(pageState) {
+        const info = pageState.total
+          ? `第 ${pageState.page} / ${pageState.pageCount} 页，显示 ${pageState.startIndex + 1}-${pageState.endIndex} 条`
+          : "暂无危化品数据";
+        refs.paginationInfo.textContent = info;
+        refs.prevPageBtn.disabled = pageState.page <= 1;
+        refs.nextPageBtn.disabled = pageState.page >= pageState.pageCount;
+        refs.pageSizeSelect.value = String(pageState.pageSize);
+
+        const maxButtons = 7;
+        let start = Math.max(1, pageState.page - Math.floor(maxButtons / 2));
+        let end = Math.min(pageState.pageCount, start + maxButtons - 1);
+        start = Math.max(1, end - maxButtons + 1);
+
+        const buttons = [];
+        for (let page = start; page <= end; page += 1) {
+          buttons.push(`
+            <button
+              class="btn pagination-page-btn${page === pageState.page ? " is-current" : ""}"
+              type="button"
+              data-page="${page}"
+              aria-current="${page === pageState.page ? "page" : "false"}"
+            >${page}</button>
+          `);
+        }
+        refs.pageButtons.innerHTML = buttons.join("");
+      }
+
       function renderTable() {
         const rows = filterRecords();
+        const pageState = getPaginationState(rows);
+        const pageRows = pageState.rows;
         refs.tableBody.innerHTML = "";
-        if (!rows.length) {
-          refs.tableBody.innerHTML = '<tr><td colspan="11" class="empty">暂无危化品数据</td></tr>';
+        if (!pageRows.length) {
+          refs.tableBody.innerHTML = '<tr><td colspan="10" class="empty">暂无危化品数据</td></tr>';
         } else {
-          rows.forEach((row, index) => {
+          pageRows.forEach((row) => {
             const tr = document.createElement("tr");
             tr.dataset.id = row.id;
             tr.className = row.id === state.selectedId ? "active" : "";
             tr.innerHTML = `
-              <td>${index + 1}</td>
               <td>${escapeHtml(row.code || "-")}</td>
               <td>${escapeHtml(row.name || "-")}</td>
               <td>${renderStatusTag(row.status)}</td>
@@ -2562,7 +2730,9 @@
             refs.tableBody.appendChild(tr);
           });
         }
-        refs.tableFoot.textContent = `危化品共 ${state.records.length} 条，当前 ${rows.length} 条`;
+        renderPagination(pageState);
+        const pageRange = pageState.total ? `，当前页 ${pageState.startIndex + 1}-${pageState.endIndex} 条` : "";
+        refs.tableFoot.textContent = `危化品共 ${state.records.length} 条，当前筛选 ${rows.length} 条${pageRange}`;
       }
 
       function openDetailModal(id) {
@@ -2579,19 +2749,23 @@
         refs.detailReportLinkInput.value = qr.reportLink || "";
         refs.detailQrImage.src = buildQrImageUrl(qr.reportLink || qr.qrCode || row.code || row.id, 220);
         refs.detailQrImage.alt = `${row.storageLocation || row.name || "危化品地点"} 二维码`;
-        const fields = [
+        const basicFields = [
           ["危化品编号", row.code],
           ["危化品名称", row.name],
           ["状态", row.status],
           ["是否纳入点检", row.included],
           ["点检标准", getStandardLabel(row.standardId)],
-          ["使用地点", row.usageLocation],
+          ["责任人", row.owner],
+          ["事故类型", row.accidentType],
+        ];
+        const storageFields = [
           ["存放位置", row.storageLocation],
           ["最大存放量", row.maxStorage],
           ["使用量", row.usageAmount],
           ["包装形式", row.packageForm],
-          ["事故类型", row.accidentType],
-          ["责任人", row.owner],
+          ["使用地点", row.usageLocation],
+        ];
+        const riskFields = [
           ["主要危险有害性辨识分析", row.hazardAnalysis],
           ["备注", row.remark],
         ];
@@ -2599,7 +2773,19 @@
           <section class="section-card">
             <h4>基本信息</h4>
             <div class="form-grid">
-              ${fields.map(([label, value]) => renderDetailReadonlyField(label, value)).join("")}
+              ${basicFields.map(([label, value]) => renderDetailReadonlyField(label, value)).join("")}
+            </div>
+          </section>
+          <section class="section-card">
+            <h4>存放与用量</h4>
+            <div class="form-grid">
+              ${storageFields.map(([label, value]) => renderDetailReadonlyField(label, value)).join("")}
+            </div>
+          </section>
+          <section class="section-card">
+            <h4>风险辨识与备注</h4>
+            <div class="form-grid">
+              ${riskFields.map(([label, value]) => renderDetailReadonlyField(label, value)).join("")}
             </div>
           </section>
         `;
@@ -2614,7 +2800,7 @@
           return `
             <div class="field full">
               <label>${escapeHtml(label)}</label>
-              <textarea class="input readonly" readonly style="min-height:72px">${escapeHtml(text)}</textarea>
+              <textarea class="textarea readonly" readonly rows="${label === "主要危险有害性辨识分析" ? 4 : 3}">${escapeHtml(text)}</textarea>
             </div>
           `;
         }

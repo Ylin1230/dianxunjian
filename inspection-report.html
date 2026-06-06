@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>点检报工</title>
     <style>
       :root {
@@ -23,6 +23,12 @@
         box-sizing: border-box;
       }
 
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        touch-action: manipulation;
+      }
+
       body {
         margin: 0;
         background:
@@ -30,6 +36,7 @@
           linear-gradient(180deg, #eef3fb 0%, #f7faff 100%);
         color: var(--text);
         font: 14px/1.45 "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+        touch-action: manipulation;
       }
 
       .app {
@@ -279,6 +286,18 @@
         padding: 8px 10px;
         font-size: 13px;
         resize: vertical;
+      }
+
+      @media (max-width: 520px), (pointer: coarse) {
+        input,
+        select,
+        textarea,
+        .input,
+        .select,
+        .textarea,
+        .reporter-select {
+          font-size: 16px;
+        }
       }
 
       .input:focus,
@@ -827,6 +846,12 @@
         padding: 0 26px 0 10px;
         font-size: 13px;
         background-color: rgba(255, 255, 255, 0.86);
+      }
+
+      @media (max-width: 520px), (pointer: coarse) {
+        .reporter-select {
+          font-size: 16px;
+        }
       }
 
       .exec-reporter-row {
@@ -1544,7 +1569,6 @@
 
         <div id="executeFoot" class="exec-foot hidden">
           <div class="exec-foot-row">
-            <button id="nextPendingBtn" class="btn">下一项</button>
             <button id="submitTaskBtn" class="btn primary">提交汇总</button>
           </div>
         </div>
@@ -1748,7 +1772,6 @@
         reporterSelect: document.getElementById("reporterSelect"),
         chooseReporterBtn: document.getElementById("chooseReporterBtn"),
         reporterHint: document.getElementById("reporterHint"),
-        nextPendingBtn: document.getElementById("nextPendingBtn"),
         submitTaskBtn: document.getElementById("submitTaskBtn"),
         executeStatus: document.getElementById("executeStatus"),
         summaryMainText: document.getElementById("summaryMainText"),
@@ -1785,6 +1808,7 @@
       init();
 
       async function init() {
+        preventMobileZoomGestures();
         bindEvents();
         restoreBoundMemberFromStorage();
         state.memberName = String(localStorage.getItem("inspection_member_name") || localStorage.getItem("inspection_report_reporter") || "").trim();
@@ -1793,6 +1817,37 @@
         await loadCurrentMember();
         await loadDashboard();
         applyScanFromUrl();
+      }
+
+      function preventMobileZoomGestures() {
+        let lastTouchEnd = 0;
+        document.addEventListener(
+          "touchmove",
+          (event) => {
+            if (event.touches && event.touches.length > 1) {
+              event.preventDefault();
+            }
+          },
+          { passive: false }
+        );
+        document.addEventListener(
+          "touchend",
+          (event) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+              event.preventDefault();
+            }
+            lastTouchEnd = now;
+          },
+          { passive: false }
+        );
+        document.addEventListener(
+          "gesturestart",
+          (event) => {
+            event.preventDefault();
+          },
+          { passive: false }
+        );
       }
 
       function bindEvents() {
@@ -2043,10 +2098,6 @@
             return;
           }
           closeStatusSelects();
-        });
-
-        refs.nextPendingBtn.addEventListener("click", () => {
-          scrollToNextPendingItem();
         });
 
         refs.submitTaskBtn.addEventListener("click", () => {
@@ -4412,7 +4463,6 @@
         refs.scanBtn.disabled = flag;
         refs.cameraScanBtn.disabled = flag;
         refs.submitTaskBtn.disabled = flag;
-        refs.nextPendingBtn.disabled = flag;
         refs.headerActionBtn.disabled = flag;
       }
 
@@ -4571,7 +4621,7 @@
           return null;
         }
 
-        const normalized = text.replace(/，/g, ",").replace(/\s+/g, "");
+        const normalized = normalizeJudgeRangeText(text);
         const betweenMatch = normalized.match(/(-?\d+(?:\.\d+)?)\s*(?:~|～|—|–|-|至|到)\s*(-?\d+(?:\.\d+)?)/);
         if (betweenMatch) {
           const min = Number(betweenMatch[1]);
@@ -4629,6 +4679,38 @@
         }
 
         return null;
+      }
+
+      function normalizeJudgeRangeText(text) {
+        const source = String(text || "")
+          .replace(/[＞]/g, ">")
+          .replace(/[＜]/g, "<")
+          .replace(/[＝]/g, "=")
+          .replace(/≥/g, ">=")
+          .replace(/≤/g, "<=")
+          .replace(/，/g, ",")
+          .replace(/\s+/g, "")
+          .trim();
+
+        if (!source) {
+          return "";
+        }
+
+        const suffixMin = source.match(/^(-?\d+(?:\.\d+)?)(?:及以上|以上)$/);
+        if (suffixMin) {
+          return `>=${suffixMin[1]}`;
+        }
+        const suffixMax = source.match(/^(-?\d+(?:\.\d+)?)(?:及以下|以下)$/);
+        if (suffixMax) {
+          return `<=${suffixMax[1]}`;
+        }
+
+        return source
+          .replace(/大于等于|不小于|不少于|不低于/g, ">=")
+          .replace(/小于等于|不大于|不超过|不高于/g, "<=")
+          .replace(/大于|高于|超过/g, ">")
+          .replace(/小于|低于/g, "<")
+          .replace(/等于/g, "=");
       }
 
       function buildRangeLabel(min, max, includeMin, includeMax) {

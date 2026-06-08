@@ -1881,9 +1881,13 @@
           renderTable();
         });
         refs.storageLocationInput.addEventListener("change", () => {
-          const site = getSiteByStorageLocation(refs.storageLocationInput.value);
+          const selected = normalizeStorageLocationValue(refs.storageLocationInput.value);
+          refs.storageLocationInput.value = selected;
+          const site = getSiteByStorageLocation(selected);
           if (site) {
             refs.usageLocationInput.value = site.area || "";
+          } else if (isKnownLocationArea(selected)) {
+            refs.usageLocationInput.value = selected;
           }
         });
         refs.tableBody.addEventListener("click", (event) => {
@@ -2440,6 +2444,7 @@
       }
 
       function renderStorageLocationOptions(selectedValue = refs.storageLocationInput.value) {
+        const selected = normalizeStorageLocationValue(selectedValue);
         const grouped = new Map();
         state.sites.forEach((site) => {
           const area = site.area || "未配置区域";
@@ -2450,20 +2455,23 @@
         });
 
         const options = ['<option value="">请选择存放位置</option>'];
-        grouped.forEach((sites, area) => {
-          options.push(`<optgroup label="${escapeHtml(area)}">`);
-          sites.forEach((site) => {
-            options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(site.name)}</option>`);
-          });
-          options.push("</optgroup>");
+        Array.from(grouped.keys()).sort((a, b) => String(a).localeCompare(String(b), "zh-Hans-CN")).forEach((area) => {
+          options.push(`<option value="${escapeHtml(area)}" data-level="1">${escapeHtml(area)}</option>`);
+          grouped
+            .get(area)
+            .filter((site) => String(site.name || "").trim() !== area)
+            .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "zh-Hans-CN"))
+            .forEach((site) => {
+              const label = getSiteDisplayName(site);
+              options.push(`<option value="${escapeHtml(label)}" data-level="2">${escapeHtml(label)}</option>`);
+            });
         });
 
-        const text = String(selectedValue || "").trim();
-        if (text && !state.sites.some((site) => site.name === text)) {
-          options.push(`<option value="${escapeHtml(text)}">${escapeHtml(text)}（历史值）</option>`);
+        if (selected && !isKnownLocationArea(selected) && !state.sites.some((site) => isSameStorageLocationValue(selected, site))) {
+          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}（历史值）</option>`);
         }
         refs.storageLocationInput.innerHTML = options.join("");
-        refs.storageLocationInput.value = text || "";
+        refs.storageLocationInput.value = selected || "";
       }
 
       function mapChemicalRecord(record) {
@@ -2544,7 +2552,7 @@
                     selected: selectedKey === site.key,
                     hasChildren: false,
                     expanded: false,
-                    title: site.code || site.name,
+                    title: site.name,
                   })
                 );
               });
@@ -2895,7 +2903,7 @@
         refs.qrInput.value = row.qrCode || "";
         refs.usageLocationInput.value = row.usageLocation || "";
         renderStorageLocationOptions(row.storageLocation || "");
-        refs.storageLocationInput.value = row.storageLocation || "";
+        refs.storageLocationInput.value = normalizeStorageLocationValue(row.storageLocation || "");
         renderOwnerOptions({ selectedId: state.users.some((user) => user.userId === row.ownerId) ? row.ownerId : "" });
         refs.maxStorageInput.value = row.maxStorage || "";
         refs.usageAmountInput.value = row.usageAmount || "";
@@ -2960,7 +2968,7 @@
           [FIELD.standardId]: refs.standardInput.value.trim(),
           [FIELD.qrCode]: refs.qrInput.value.trim(),
           [FIELD.usageLocation]: refs.usageLocationInput.value.trim(),
-          [FIELD.storageLocation]: refs.storageLocationInput.value.trim(),
+          [FIELD.storageLocation]: normalizeStorageLocationValue(refs.storageLocationInput.value),
           [FIELD.maxStorage]: sanitizeNonNegativeText(refs.maxStorageInput.value).trim(),
           [FIELD.usageAmount]: sanitizeNonNegativeText(refs.usageAmountInput.value).trim(),
           [FIELD.packageForm]: refs.packageFormInput.value.trim(),
@@ -3237,10 +3245,9 @@
                 <div class="label-qr">
                   <img src="${escapeHtml(imageUrl)}" alt="二维码" />
                 </div>
-                <div class="label-info">
-                  <h2>${escapeHtml(row.name || "危化品地点")}</h2>
-                  <p class="label-sub">场地编码：${escapeHtml(row.code || "-")}</p>
-                  <dl>
+	                <div class="label-info">
+	                  <h2>${escapeHtml(row.name || "危化品地点")}</h2>
+	                  <dl>
                     <div><dt>所属区域</dt><dd>${escapeHtml(row.area || "-")}</dd></div>
                     <div><dt>危化品数</dt><dd>${escapeHtml(row.count ?? "-")}</dd></div>
                     <div><dt>扫码码值</dt><dd>${escapeHtml(qr.qrCode || "-")}</dd></div>
@@ -3611,9 +3618,36 @@
         return text.includes("危") || text.includes("化") ? "危化品" : "设备";
       }
 
+      function getSiteDisplayName(site) {
+        const area = String(site?.area || "").trim();
+        const name = String(site?.name || "").trim();
+        if (!name) return area || "";
+        return area && area !== "未配置区域" && area !== name ? `${area}-${name}` : name;
+      }
+
+      function isKnownLocationArea(value) {
+        const text = String(value || "").trim();
+        return Boolean(text) && state.sites.some((site) => String(site.area || "").trim() === text);
+      }
+
+      function isSameStorageLocationValue(value, site) {
+        const key = getLocationKey(value);
+        if (!key || key === "__empty__" || !site) return false;
+        return [site.name, site.code, getSiteDisplayName(site)]
+          .map((item) => getLocationKey(item))
+          .some((item) => item && item !== "__empty__" && item === key);
+      }
+
+      function normalizeStorageLocationValue(value) {
+        const text = toDisplayText(value).trim();
+        if (!text) return "";
+        const site = getSiteByStorageLocation(text);
+        return site ? getSiteDisplayName(site) : text;
+      }
+
       function getSiteByStorageLocation(value) {
         const key = getLocationKey(value);
-        return state.sites.find((site) => getLocationKey(site.name) === key || normalizeCompareText(site.code) === key) || null;
+        return state.sites.find((site) => isSameStorageLocationValue(key, site)) || null;
       }
 
       function resolveStorageLocationMeta(value) {
@@ -3645,7 +3679,7 @@
       }
 
       function normalizeCompareText(value) {
-        return toDisplayText(value).replace(/\s+/g, "").toLowerCase();
+        return toDisplayText(value).replace(/\s+/g, "").replace(/[－—–]/g, "-").toLowerCase();
       }
 
       function sanitizeNonNegativeText(value) {

@@ -55,7 +55,7 @@
 
       .right-panel {
         display: grid;
-        grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
       }
 
       .panel-head {
@@ -96,7 +96,8 @@
       }
 
       .record-toolbar {
-        grid-template-columns: minmax(260px, 1fr) auto auto;
+        grid-template-columns: auto minmax(280px, 1fr);
+        gap: 12px;
       }
 
       .panel-actions {
@@ -104,6 +105,19 @@
         gap: 8px;
         flex-wrap: wrap;
         justify-content: flex-end;
+      }
+
+      .record-toolbar .panel-actions {
+        justify-content: flex-start;
+      }
+
+      .record-filter-group {
+        width: min(820px, 100%);
+        justify-self: end;
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) auto auto;
+        gap: 8px;
+        align-items: center;
       }
 
       .btn {
@@ -473,7 +487,7 @@
 
       table {
         width: 100%;
-        min-width: 1080px;
+        min-width: 820px;
         border-collapse: collapse;
       }
 
@@ -502,6 +516,18 @@
 
       tr.selected td {
         background: #edf4ff;
+      }
+
+      .select-col {
+        width: 42px;
+        text-align: center;
+      }
+
+      .record-check {
+        width: 14px;
+        height: 14px;
+        margin: 0;
+        vertical-align: middle;
       }
 
       .record-pagination-bar {
@@ -853,16 +879,6 @@
         transform: translateY(0);
       }
 
-      .scan-entry-banner {
-        margin: 10px 12px 0;
-        border: 1px solid #cfe1fb;
-        background: #edf5ff;
-        color: #28548f;
-        border-radius: 6px;
-        padding: 8px 10px;
-        font-size: 12px;
-      }
-
       @media (max-width: 1180px) {
         .layout {
           grid-template-columns: 1fr;
@@ -892,12 +908,21 @@
 
       @media (max-width: 820px) {
         .toolbar,
-        .toolbar.right-tools,
-        .record-toolbar {
+        .toolbar.right-tools {
           grid-template-columns: 1fr 1fr;
         }
 
-        .record-toolbar .input {
+        .record-toolbar {
+          grid-template-columns: 1fr;
+        }
+
+        .record-filter-group {
+          width: 100%;
+          justify-self: stretch;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .record-filter-group .input {
           grid-column: 1 / -1;
         }
 
@@ -940,39 +965,35 @@
           <div class="panel-head">
             <div>
               <h1>相关方培训记录</h1>
-              <div class="minor">相关方安全教育培训记录查询、维护和打印</div>
-            </div>
-            <div class="panel-actions">
-              <a href="/h5/partner-training-qr" class="btn" target="_blank" rel="noopener noreferrer">二维码下载</a>
-              <button id="refreshBtn" type="button" class="btn">刷新</button>
-              <button id="addBtn" type="button" class="btn primary">新建</button>
-              <button id="editBtn" type="button" class="btn">编辑</button>
-              <button id="printBtn" type="button" class="btn">打印</button>
-              <button id="deleteBtn" type="button" class="btn danger">删除</button>
             </div>
           </div>
 
-          <div id="scanEntryBanner" class="scan-entry-banner hidden"></div>
-
           <div class="toolbar record-toolbar">
-            <input id="recordKeywordInput" class="input" type="text" placeholder="标题/施工单位/施工项目" />
-            <button id="recordSearchBtn" type="button" class="btn">搜索</button>
-            <button id="recordResetBtn" type="button" class="btn">重置</button>
+            <div class="panel-actions">
+              <a href="/h5/partner-training-qr" class="btn" target="_blank" rel="noopener noreferrer">二维码下载</a>
+              <button id="printBtn" type="button" class="btn">打印</button>
+              <button id="deleteBtn" type="button" class="btn danger">删除</button>
+            </div>
+            <div class="record-filter-group">
+              <input id="recordKeywordInput" class="input" type="text" placeholder="培训日期/施工单位/授课人" />
+              <button id="recordSearchBtn" type="button" class="btn">搜索</button>
+              <button id="recordResetBtn" type="button" class="btn">重置</button>
+            </div>
           </div>
 
           <div class="table-wrap records-table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th style="width:90px;">编号</th>
-                  <th style="width:220px;">标题</th>
+                  <th class="select-col">
+                    <input id="recordSelectAllCurrentPage" class="record-check" type="checkbox" aria-label="选择当前页记录" />
+                  </th>
                   <th style="width:150px;">培训日期</th>
                   <th style="width:180px;">施工单位</th>
                   <th style="width:86px;">培训人数</th>
-                  <th style="width:180px;">施工项目</th>
                   <th style="width:130px;">授课人</th>
                   <th style="width:86px;">是否抽取</th>
-                  <th style="width:190px;">操作</th>
+                  <th style="width:100px;">操作</th>
                 </tr>
               </thead>
               <tbody id="recordTableBody"></tbody>
@@ -993,7 +1014,6 @@
             </div>
           </div>
 
-          <div id="statusBar" class="status">准备就绪</div>
         </main>
       </div>
     </div>
@@ -1200,6 +1220,7 @@
         units: [],
         users: [],
         selectedRecordId: "",
+        selectedRecordIds: new Set(),
         keyword: "",
         recordPage: 1,
         recordPageSize: 10,
@@ -1236,7 +1257,6 @@
         printBtn: document.getElementById("printBtn"),
         deleteBtn: document.getElementById("deleteBtn"),
 
-        scanEntryBanner: document.getElementById("scanEntryBanner"),
         qrModeSelect: document.getElementById("qrModeSelect"),
         qrUnitFieldWrap: document.getElementById("qrUnitFieldWrap"),
         qrUnitKeywordInput: document.getElementById("qrUnitKeywordInput"),
@@ -1248,6 +1268,7 @@
         openEntryUrlBtn: document.getElementById("openEntryUrlBtn"),
 
         recordTableBody: document.getElementById("recordTableBody"),
+        recordSelectAllCurrentPage: document.getElementById("recordSelectAllCurrentPage"),
         recordPaginationInfo: document.getElementById("recordPaginationInfo"),
         recordPageSizeSelect: document.getElementById("recordPageSizeSelect"),
         recordPrevPageBtn: document.getElementById("recordPrevPageBtn"),
@@ -1311,7 +1332,6 @@
           valueInput: refs.formTrainingDateInput,
         });
         bindFormSignatureCanvas();
-        applyScanBanner();
         if (hasQrPanel()) {
           renderQrUnitOptions();
           renderQrPanel();
@@ -1324,6 +1344,7 @@
         refs.recordSearchBtn.addEventListener("click", () => {
           state.keyword = refs.recordKeywordInput.value.trim();
           state.recordPage = 1;
+          state.selectedRecordIds.clear();
           renderRecordList();
           renderRecordTable();
           renderActionDisabled();
@@ -1332,6 +1353,7 @@
         refs.recordResetBtn.addEventListener("click", () => {
           state.keyword = "";
           state.recordPage = 1;
+          state.selectedRecordIds.clear();
           refs.recordKeywordInput.value = "";
           renderRecordList();
           renderRecordTable();
@@ -1345,24 +1367,24 @@
           }
         });
 
-        refs.refreshBtn.addEventListener("click", () => {
+        if (refs.refreshBtn) refs.refreshBtn.addEventListener("click", () => {
           void refreshAll({ preserveSelection: true });
         });
 
-        refs.addBtn.addEventListener("click", () => {
+        if (refs.addBtn) refs.addBtn.addEventListener("click", () => {
           openFormModal("add");
         });
 
-        refs.editBtn.addEventListener("click", () => {
+        if (refs.editBtn) refs.editBtn.addEventListener("click", () => {
           openFormModal("edit");
         });
 
         refs.deleteBtn.addEventListener("click", () => {
-          void deleteSelectedRecord();
+          void deleteCheckedRecords();
         });
 
         refs.printBtn.addEventListener("click", () => {
-          printSelectedRecord();
+          printCheckedRecords();
         });
 
         if (refs.recordList) refs.recordList.addEventListener("click", (event) => {
@@ -1389,6 +1411,9 @@
           if (!(target instanceof HTMLElement)) {
             return;
           }
+          if (target.closest(".record-check")) {
+            return;
+          }
           const actionBtn = target.closest("[data-action]");
           if (actionBtn) {
             const action = actionBtn.dataset.action;
@@ -1402,17 +1427,6 @@
             if (action === "detail") {
               openDetailModal(getSelectedRecord());
               return;
-            }
-            if (action === "print") {
-              printSelectedRecord();
-              return;
-            }
-            if (action === "edit") {
-              openFormModal("edit");
-              return;
-            }
-            if (action === "delete") {
-              void deleteSelectedRecord();
             }
             return;
           }
@@ -1430,11 +1444,43 @@
           renderActionDisabled();
         });
 
+        refs.recordTableBody.addEventListener("change", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLInputElement) || !target.classList.contains("record-check")) {
+            return;
+          }
+          const id = target.dataset.id;
+          if (!id) {
+            return;
+          }
+          if (target.checked) {
+            state.selectedRecordIds.add(id);
+            state.selectedRecordId = id;
+          } else {
+            state.selectedRecordIds.delete(id);
+          }
+          renderRecordTable();
+          renderActionDisabled();
+        });
+
         bindQrPanelEvents();
 
         refs.recordPageSizeSelect.addEventListener("change", () => {
           state.recordPageSize = Number(refs.recordPageSizeSelect.value) || 10;
           state.recordPage = 1;
+          renderRecordTable();
+          renderActionDisabled();
+        });
+
+        refs.recordSelectAllCurrentPage.addEventListener("change", () => {
+          const checked = refs.recordSelectAllCurrentPage.checked;
+          getCurrentRecordPageRows().forEach((row) => {
+            if (checked) {
+              state.selectedRecordIds.add(row.id);
+            } else {
+              state.selectedRecordIds.delete(row.id);
+            }
+          });
           renderRecordTable();
           renderActionDisabled();
         });
@@ -1783,18 +1829,6 @@
         });
       }
 
-      function applyScanBanner() {
-        if (!state.scanContext.fromQr) {
-          refs.scanEntryBanner.classList.add("hidden");
-          refs.scanEntryBanner.textContent = "";
-          return;
-        }
-
-        refs.scanEntryBanner.classList.remove("hidden");
-        refs.scanEntryBanner.textContent =
-          "当前为扫码进入模式：建议现场完成培训后直接保存记录，系统会同步写入相关方安全教育培训记录底表。";
-      }
-
       function buildEntryUrl({ unitId = "", unitName = "" } = {}) {
         const current = new URL(resolvePublicFormUrl(), window.location.href);
         current.search = "";
@@ -1956,6 +1990,11 @@
           }
 
           const validIds = new Set(state.records.map((item) => item.id));
+          state.selectedRecordIds.forEach((id) => {
+            if (!validIds.has(id)) {
+              state.selectedRecordIds.delete(id);
+            }
+          });
           if (previousSelectedId && validIds.has(previousSelectedId)) {
             state.selectedRecordId = previousSelectedId;
           } else if (!validIds.has(state.selectedRecordId)) {
@@ -1976,12 +2015,15 @@
       }
 
       function renderActionDisabled() {
-        const hasSelected = Boolean(getSelectedRecord());
-        refs.editBtn.disabled = state.loading || !hasSelected;
-        refs.printBtn.disabled = state.loading || !hasSelected;
-        refs.deleteBtn.disabled = state.loading || !hasSelected;
-        refs.refreshBtn.disabled = state.loading;
-        refs.addBtn.disabled = state.loading;
+        const checkedCount = getCheckedRecords().length;
+        if (refs.editBtn) refs.editBtn.disabled = state.loading || !getSelectedRecord();
+        refs.printBtn.disabled = state.loading;
+        refs.deleteBtn.disabled = state.loading;
+        refs.printBtn.textContent = "打印";
+        refs.deleteBtn.textContent = "删除";
+        if (refs.recordSelectAllCurrentPage) syncRecordSelectAllState();
+        if (refs.refreshBtn) refs.refreshBtn.disabled = state.loading;
+        if (refs.addBtn) refs.addBtn.disabled = state.loading;
       }
 
       function getFilteredRecords() {
@@ -1990,7 +2032,7 @@
           return state.records;
         }
         return state.records.filter((item) => {
-          const haystack = [item.code, item.title, item.company, item.project, item.lecturerName]
+          const haystack = [item.trainingDateText, item.company, item.lecturerName]
             .map((part) => normalizeCompareText(part))
             .join("|");
           return haystack.includes(keyword);
@@ -2040,8 +2082,9 @@
         }
 
         if (!rows.length) {
-          refs.recordTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#7e8a9b;padding:20px">暂无记录</td></tr>';
+          refs.recordTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#7e8a9b;padding:20px">暂无记录</td></tr>';
           renderRecordPagination(pageState);
+          syncRecordSelectAllState(pageRows);
           return;
         }
 
@@ -2050,26 +2093,38 @@
           tr.dataset.id = row.id;
           tr.className = row.id === state.selectedRecordId ? "selected" : "";
           tr.innerHTML = `
-            <td>${escapeHtml(row.code || "-")}</td>
-            <td>${escapeHtml(row.title || "-")}</td>
+            <td class="select-col">
+              <input class="record-check" type="checkbox" data-id="${escapeHtml(row.id)}" aria-label="选择培训记录" ${state.selectedRecordIds.has(row.id) ? "checked" : ""} />
+            </td>
             <td>${escapeHtml(row.trainingDateText || "-")}</td>
             <td>${escapeHtml(row.company || "-")}</td>
             <td>${escapeHtml(row.attendeeCountText || "-")}</td>
-            <td>${escapeHtml(row.project || "-")}</td>
             <td>${escapeHtml(row.lecturerName || "-")}</td>
             <td>${escapeHtml(row.sampled || "否")}</td>
             <td>
               <div class="cell-actions">
                 <button class="text-btn" data-action="detail" data-id="${escapeHtml(row.id)}">详情</button>
-                <button class="text-btn" data-action="print" data-id="${escapeHtml(row.id)}">打印</button>
-                <button class="text-btn" data-action="edit" data-id="${escapeHtml(row.id)}">编辑</button>
-                <button class="text-btn danger" data-action="delete" data-id="${escapeHtml(row.id)}">删除</button>
               </div>
             </td>
           `;
           refs.recordTableBody.appendChild(tr);
         });
         renderRecordPagination(pageState);
+        syncRecordSelectAllState(pageRows);
+      }
+
+      function getCurrentRecordPageRows() {
+        const rows = getFilteredRecords();
+        const pageState = getRecordPageState(rows);
+        return rows.slice(pageState.startIndex, pageState.endIndex);
+      }
+
+      function syncRecordSelectAllState(pageRows = getCurrentRecordPageRows()) {
+        const selectableIds = pageRows.map((row) => row.id).filter(Boolean);
+        const checkedCount = selectableIds.filter((id) => state.selectedRecordIds.has(id)).length;
+        refs.recordSelectAllCurrentPage.checked = Boolean(selectableIds.length && checkedCount === selectableIds.length);
+        refs.recordSelectAllCurrentPage.indeterminate = Boolean(checkedCount && checkedCount < selectableIds.length);
+        refs.recordSelectAllCurrentPage.disabled = state.loading || !selectableIds.length;
       }
 
       function getRecordPageState(rows) {
@@ -2175,7 +2230,6 @@
           <div class="kv-item"><div class="kv-k">培训日期</div><div class="kv-v">${escapeHtml(record.trainingDateText || "-")}</div></div>
           <div class="kv-item"><div class="kv-k">施工单位</div><div class="kv-v">${escapeHtml(record.company || "-")}</div></div>
           <div class="kv-item"><div class="kv-k">培训人数</div><div class="kv-v">${escapeHtml(record.attendeeCountText || "-")}</div></div>
-          <div class="kv-item"><div class="kv-k">施工项目</div><div class="kv-v">${escapeHtml(record.project || "-")}</div></div>
           <div class="kv-item"><div class="kv-k">授课人</div><div class="kv-v">${escapeHtml(record.lecturerName || "-")}</div></div>
           <div class="kv-item"><div class="kv-k">是否抽取</div><div class="kv-v">${escapeHtml(record.sampled || "否")}</div></div>
           <div class="kv-item"><div class="kv-k">最后一次抽取时间</div><div class="kv-v">${escapeHtml(record.lastExtractTimeText || "-")}</div></div>
@@ -2194,24 +2248,38 @@
         printTrainingNotice(record);
       }
 
-      function printTrainingNotice(record) {
+      function printCheckedRecords() {
+        const records = getCheckedRecords();
+        if (!records.length) {
+          showToast("请先勾选需要打印的培训记录");
+          return;
+        }
+        printTrainingNotice(records);
+      }
+
+      function printTrainingNotice(recordOrRecords) {
+        const records = Array.isArray(recordOrRecords) ? recordOrRecords.filter(Boolean) : [recordOrRecords].filter(Boolean);
+        if (!records.length) {
+          showToast("请先选择需要打印的培训记录");
+          return;
+        }
         const printWindow = window.open("", "_blank");
         if (!printWindow) {
           showToast("浏览器阻止了打印窗口，请允许弹窗后重试");
           return;
         }
         printWindow.document.open();
-        printWindow.document.write(buildTrainingNoticePrintHtml(record));
+        printWindow.document.write(buildTrainingNoticePrintHtml(records));
         printWindow.document.close();
         printWindow.focus();
       }
 
-      function buildTrainingNoticePrintHtml(record) {
+      function buildTrainingNoticePrintHtml(records) {
+        const list = Array.isArray(records) ? records.filter(Boolean) : [records].filter(Boolean);
         const items = PARTNER_NOTICE_ITEMS
           .map((item) => `<p class="notice-item">${escapeHtml(item)}</p>`)
           .join("");
-        const company = record.company || "";
-        const date = record.trainingDateText || "";
+        const pages = list.map((record) => buildTrainingNoticePrintPage(record, items)).join("");
         return `
           <!doctype html>
           <html lang="zh-CN">
@@ -2249,6 +2317,11 @@
                   padding: 9mm 8mm 12mm;
                   font-size: 12pt;
                   line-height: 1.55;
+                }
+
+                .notice-page + .notice-page {
+                  break-before: page;
+                  page-break-before: always;
                 }
 
                 h1 {
@@ -2351,28 +2424,36 @@
                 <button type="button" onclick="window.print()">打印</button>
                 <button type="button" onclick="window.close()">关闭</button>
               </div>
-              <article class="notice-page">
-                <h1>相关方入厂安全告知书</h1>
-                <section class="notice-body">${items}</section>
-                <p class="notice-confirm">以上安全告知，请认真阅读，贯彻执行。对违反相关管理要求、本公司将按相关管理规定和合同约定给予处罚。</p>
-                <section class="notice-sign-area">
-                  <div class="sign-row signatures">
-                    <div class="sign-label">相关方人员签名：</div>
-                    <div class="sign-line">${renderParticipantPrintSignatures(record)}</div>
-                  </div>
-                  <div class="sign-row">
-                    <div class="sign-label">施工单位名称：</div>
-                    <div class="sign-line">${escapeHtml(company)}</div>
-                  </div>
-                  <div class="sign-row">
-                    <div class="sign-label">日期：</div>
-                    <div class="sign-line">${escapeHtml(date)}</div>
-                  </div>
-                </section>
-              </article>
+              ${pages}
               <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 300); });<\/script>
             </body>
           </html>
+        `;
+      }
+
+      function buildTrainingNoticePrintPage(record, items) {
+        const company = record.company || "";
+        const date = record.trainingDateText || "";
+        return `
+          <article class="notice-page">
+            <h1>相关方入厂安全告知书</h1>
+            <section class="notice-body">${items}</section>
+            <p class="notice-confirm">以上安全告知，请认真阅读，贯彻执行。对违反相关管理要求、本公司将按相关管理规定和合同约定给予处罚。</p>
+            <section class="notice-sign-area">
+              <div class="sign-row signatures">
+                <div class="sign-label">相关方人员签名：</div>
+                <div class="sign-line">${renderParticipantPrintSignatures(record)}</div>
+              </div>
+              <div class="sign-row">
+                <div class="sign-label">施工单位名称：</div>
+                <div class="sign-line">${escapeHtml(company)}</div>
+              </div>
+              <div class="sign-row">
+                <div class="sign-label">日期：</div>
+                <div class="sign-line">${escapeHtml(date)}</div>
+              </div>
+            </section>
+          </article>
         `;
       }
 
@@ -2393,6 +2474,11 @@
 
       function getSelectedRecord() {
         return state.records.find((item) => item.id === state.selectedRecordId) || null;
+      }
+
+      function getCheckedRecords() {
+        const selectedIds = state.selectedRecordIds || new Set();
+        return state.records.filter((item) => selectedIds.has(item.id));
       }
 
       function openFormModal(mode) {
@@ -2660,6 +2746,41 @@
           await requestEntry(API_CONFIG.trainingEntryId, "data_delete", {
             data_id: current.cloudId,
           });
+          await refreshAll({ preserveSelection: false });
+          showToast("培训记录已删除");
+        } catch (error) {
+          setStatus(`删除失败：${error.message}`, true);
+          showToast(`删除失败：${error.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      async function deleteCheckedRecords() {
+        const records = getCheckedRecords();
+        if (!records.length) {
+          showToast("请先勾选需要删除的培训记录");
+          return;
+        }
+
+        const confirmed = window.confirm(`确认删除已勾选的 ${records.length} 条培训记录吗？`);
+        if (!confirmed) {
+          return;
+        }
+
+        setLoading(true);
+        setStatus(`正在删除 ${records.length} 条培训记录...`);
+
+        try {
+          for (const record of records) {
+            if (!record.cloudId) {
+              continue;
+            }
+            await requestEntry(API_CONFIG.trainingEntryId, "data_delete", {
+              data_id: record.cloudId,
+            });
+          }
+          state.selectedRecordIds.clear();
           await refreshAll({ preserveSelection: false });
           showToast("培训记录已删除");
         } catch (error) {
@@ -3571,14 +3692,17 @@
 
       function setLoading(flag) {
         state.loading = Boolean(flag);
-        refs.formAddParticipantBtn.disabled = state.loading;
-        refs.saveFormBtn.disabled = state.loading;
-        refs.closeFormBtn.disabled = state.loading;
-        refs.cancelFormBtn.disabled = state.loading;
+        if (refs.formAddParticipantBtn) refs.formAddParticipantBtn.disabled = state.loading;
+        if (refs.saveFormBtn) refs.saveFormBtn.disabled = state.loading;
+        if (refs.closeFormBtn) refs.closeFormBtn.disabled = state.loading;
+        if (refs.cancelFormBtn) refs.cancelFormBtn.disabled = state.loading;
         renderActionDisabled();
       }
 
       function setStatus(message, isError = false) {
+        if (!refs.statusBar) {
+          return;
+        }
         refs.statusBar.textContent = message;
         refs.statusBar.classList.toggle("error", Boolean(isError));
       }

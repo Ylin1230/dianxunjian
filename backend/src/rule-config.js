@@ -1059,12 +1059,9 @@ function isChemicalInStore(chemical, site) {
   if (!chemical || !site) {
     return false;
   }
-  return (
-    isSameStoreName(chemical.location, site.name) ||
-    isSameStoreName(chemical.storageLocation, site.name) ||
-    isSameStoreName(chemical.location, site.code) ||
-    isSameStoreName(chemical.storageLocation, site.code)
-  );
+  const chemicalCandidates = [chemical.location, chemical.storageLocation, chemical.usageLocation, chemical.workshop];
+  const siteCandidates = [site.name, site.code, site.displayName, getSiteDisplayName(site)];
+  return chemicalCandidates.some((left) => siteCandidates.some((right) => isSameStoreName(left, right)));
 }
 
 function isSameStoreName(left, right) {
@@ -1073,8 +1070,17 @@ function isSameStoreName(left, right) {
   return Boolean(a && b && a === b);
 }
 
+function getSiteDisplayName(site) {
+  const area = toDisplayText(site?.area || site?.workshop);
+  const name = toDisplayText(site?.name);
+  if (!name) {
+    return area || "";
+  }
+  return area && area !== "未配置区域" && area !== name ? `${area}-${name}` : name;
+}
+
 function normalizeCompareText(value) {
-  return toDisplayText(value).replace(/\s+/g, "").trim().toLowerCase();
+  return toDisplayText(value).replace(/\s+/g, "").replace(/[－—–]/g, "-").trim().toLowerCase();
 }
 
 function buildTaskPayload({ rule, standard, device, plannedDate, detailCount, batchId }) {
@@ -1186,13 +1192,15 @@ function mapSiteRecord(record) {
   const area = toDisplayText(getAliasRawValue(record, SITE_FIELD.area)) || "未配置区域";
   const name = toDisplayText(getAliasRawValue(record, SITE_FIELD.name));
   const code = toDisplayText(getAliasRawValue(record, SITE_FIELD.code));
+  const displayName = getSiteDisplayName({ area, name });
   return {
     id: extractRecordId(record) || code || name,
     code,
     name,
+    displayName,
     area,
     workshop: area,
-    location: name,
+    location: displayName || name,
     owner: toDisplayText(getAliasRawValue(record, SITE_FIELD.owner)),
   };
 }

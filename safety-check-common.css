@@ -742,6 +742,17 @@ table {
   overflow-wrap: anywhere;
 }
 
+.record-summary-item .record-time-input {
+  width: min(220px, 100%);
+  min-height: 30px;
+  margin-top: 3px;
+  padding: 4px 8px;
+}
+
+.record-summary-item .is-hidden {
+  display: none !important;
+}
+
 .record-summary-item.full {
   grid-column: span 2;
 }

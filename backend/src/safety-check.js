@@ -78,6 +78,7 @@ const SUBMISSION_FIELD = {
   reviewer: "_widget_1776820784547",
   status: "_widget_1776820784566",
   signature: "_widget_1779262802768",
+  principalSignature: "_widget_1780728739295",
 };
 
 const SUBMISSION_SIGNATURE_FIELD = {
@@ -305,6 +306,7 @@ function registerSafetyCheckRoutes(app, config) {
     await attachSubmitItemPhotos(config, req, items);
     const submissionPhotos = await attachSubmissionPhotos(config, req, payload.photos);
     const signatureRows = await buildSubmissionSignatureRows(config, req, payload.signature || payload.signatures);
+    const principalSignatureFiles = await buildSubmissionPrincipalSignatureFiles(config, req, payload.principalSignature || payload.principal_signature);
 
     let task = null;
     if (taskId) {
@@ -345,6 +347,7 @@ function registerSafetyCheckRoutes(app, config) {
         [SUBMISSION_FIELD.reviewer]: normalizeMemberValue(payload.reviewerId || payload.reviewer),
         [SUBMISSION_FIELD.status]: status,
         ...(signatureRows.length ? { [SUBMISSION_FIELD.signature]: signatureRows } : {}),
+        ...(principalSignatureFiles.length ? { [SUBMISSION_FIELD.principalSignature]: principalSignatureFiles } : {}),
       },
     });
 
@@ -441,6 +444,29 @@ function registerSafetyCheckRoutes(app, config) {
         taskStatus: task ? (pendingAbnormalCount > 0 ? "异常待整改" : "已完成") : "",
       },
     });
+  }));
+
+  app.post("/api/safety-check/submission/update-time", asyncHandler(async (req, res) => {
+    const body = req.body || {};
+    const id = toDisplayText(body.id || body.submissionId || body.data_id);
+    const inspectionTime = normalizeDateTime(body.inspectionTime || body.endTime || body.checkTime);
+    if (!id) {
+      res.status(400).json({ ok: false, message: "缺少检查记录ID" });
+      return;
+    }
+    if (!inspectionTime) {
+      res.status(400).json({ ok: false, message: "请填写检查时间" });
+      return;
+    }
+
+    await requestEntry(config, SUBMISSION_ENTRY_ID, "data_update", {
+      data_id: id,
+      data: {
+        [SUBMISSION_FIELD.endTime]: inspectionTime,
+      },
+    });
+    const record = mapSubmissionRecord(await fetchRecordById(config, SUBMISSION_ENTRY_ID, id));
+    res.json({ ok: true, data: { record } });
   }));
 
   app.post("/api/safety-check/hazard/save", asyncHandler(async (req, res) => {
@@ -669,6 +695,19 @@ async function buildSubmissionSignatureRows(config, req, value) {
     });
   }
   return result;
+}
+
+async function buildSubmissionPrincipalSignatureFiles(config, req, value) {
+  const source = value && typeof value === "object"
+    ? (value.sign || value.signature || value.files || value.file || value)
+    : value;
+  const files = await resolveSafetyCheckFiles(config, req, source, {
+    entryId: SUBMISSION_ENTRY_ID,
+    directory: "__safety-check-submission-signatures",
+    label: "主要负责人签字",
+    defaultName: "safety-check-principal-signature",
+  });
+  return files.filter((item) => item && typeof item === "object");
 }
 
 async function resolveSafetyCheckFiles(config, req, value, options = {}) {
@@ -1158,6 +1197,7 @@ function mapSubmissionRecord(record) {
   const rawInspector = getAliasRawValue(record, SUBMISSION_FIELD.inspector);
   const rawReviewer = getAliasRawValue(record, SUBMISSION_FIELD.reviewer);
   const rawSignature = getAliasRawValue(record, SUBMISSION_FIELD.signature);
+  const rawPrincipalSignature = getAliasRawValue(record, SUBMISSION_FIELD.principalSignature);
   const rawPhotos = getAliasRawValue(record, SUBMISSION_FIELD.photos);
   return {
     id: extractRecordId(record),
@@ -1181,6 +1221,7 @@ function mapSubmissionRecord(record) {
     reviewerId: extractComplexId(rawReviewer),
     status: toDisplayText(getAliasRawValue(record, SUBMISSION_FIELD.status)),
     signatures: normalizeSubmissionSignatures(rawSignature),
+    principalSignatureFiles: normalizeSignatureFiles(rawPrincipalSignature),
   };
 }
 

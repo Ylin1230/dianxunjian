@@ -1303,7 +1303,7 @@
               </div>
 
               <div class="field full hazard-attachment-field">
-                <label for="hazardAttachmentInput"><span id="hazardAttachmentRequiredMark" class="required is-hidden">*</span> 危险作业附件上传</label>
+                <label for="hazardAttachmentInput"><span id="hazardAttachmentRequiredMark" class="required is-hidden">*</span> 特种作业附件上传</label>
                 <div class="hazard-attachment-panel">
                   <div class="hazard-attachment-actions">
                     <label for="hazardAttachmentInput" class="btn hazard-attachment-add-btn">上传附件</label>
@@ -2004,7 +2004,7 @@
       }
 
       function renderWorkshopOptions(selectedValue = refs.workshopSelect.value) {
-        const selected = String(selectedValue || "").trim();
+        const selected = normalizeSiteSelectValue(selectedValue);
         const options = ['<option value="">请选择车间</option>'];
         const grouped = new Map();
 
@@ -2017,15 +2017,18 @@
         });
 
         Array.from(grouped.keys()).sort(compareText).forEach((area) => {
-          options.push(`<optgroup label="${escapeHtml(area)}">`);
-          grouped.get(area).sort((a, b) => compareText(a.name, b.name)).forEach((site) => {
-            const label = site.code ? `${site.name}（${site.code}）` : site.name;
-            options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(label)}</option>`);
-          });
-          options.push("</optgroup>");
+          options.push(`<option value="${escapeHtml(area)}" data-level="1">${escapeHtml(area)}</option>`);
+          grouped
+            .get(area)
+            .filter((site) => String(site.name || "").trim() !== area)
+            .sort((a, b) => compareText(a.name, b.name))
+            .forEach((site) => {
+              const label = getSiteDisplayName(site);
+              options.push(`<option value="${escapeHtml(label)}" data-level="2">${escapeHtml(label)}</option>`);
+            });
         });
 
-        if (selected && !state.sites.some((site) => site.name === selected)) {
+        if (selected && !isKnownSiteArea(selected) && !state.sites.some((site) => isSameSiteValue(selected, site))) {
           options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
         }
 
@@ -2066,7 +2069,34 @@
         if (!text) {
           return null;
         }
-        return state.sites.find((site) => site.name === text || site.code === text) || null;
+        return state.sites.find((site) => isSameSiteValue(text, site)) || null;
+      }
+
+      function getSiteDisplayName(site) {
+        const area = String(site?.area || "").trim();
+        const name = String(site?.name || "").trim();
+        if (!name) return area || "";
+        return area && area !== "未配置区域" && area !== name ? `${area}-${name}` : name;
+      }
+
+      function isKnownSiteArea(value) {
+        const text = String(value || "").trim();
+        return Boolean(text) && state.sites.some((site) => String(site.area || "").trim() === text);
+      }
+
+      function isSameSiteValue(value, site) {
+        const text = normalizeCompareText(value);
+        if (!text || !site) return false;
+        return [site.name, site.code, getSiteDisplayName(site)]
+          .map((item) => normalizeCompareText(item))
+          .some((item) => item && item === text);
+      }
+
+      function normalizeSiteSelectValue(value) {
+        const text = String(value || "").trim();
+        if (!text) return "";
+        const site = getSiteByName(text);
+        return site ? getSiteDisplayName(site) : text;
       }
 
       function resolveSiteOwnerUserId(site) {
@@ -3583,6 +3613,7 @@
       function normalizeCompareText(value) {
         return String(value || "")
           .replace(/\s+/g, "")
+          .replace(/[－—–]/g, "-")
           .toLowerCase();
       }
 

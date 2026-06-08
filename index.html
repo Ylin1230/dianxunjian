@@ -3112,7 +3112,7 @@
           refs.innerCodeInput.value = target.innerCode || "";
           refs.nameInput.value = target.name || "";
           refs.modelInput.value = target.model || "";
-          refs.workshopInput.value = target.workshop || "";
+          refs.workshopInput.value = normalizeSiteSelectValue(target.workshop || "");
           refs.statusInput.value = normalizeStatusLabel(target.status);
           refs.assetCategoryInput.value = target.assetCategory || "";
           refs.vendorInput.value = target.vendor || "";
@@ -3191,18 +3191,49 @@
         refs.deviceTypeInput.value = children[0]?.name || "";
       }
 
+      function getSiteDisplayName(site) {
+        const area = String(site?.area || "").trim();
+        const name = String(site?.name || "").trim();
+        if (!name) return area || "";
+        return area && area !== "未配置区域" && area !== name ? `${area}-${name}` : name;
+      }
+
+      function normalizeSiteText(value) {
+        return String(value || "").trim().replace(/[－—–]/g, "-");
+      }
+
+      function isSameSiteValue(value, site) {
+        const text = normalizeSiteText(value);
+        if (!text || !site) return false;
+        return [site.name, site.code, getSiteDisplayName(site)]
+          .map((item) => normalizeSiteText(item))
+          .some((item) => item && item === text);
+      }
+
       function getSiteByName(name) {
         const text = String(name || "").trim();
         if (!text) return null;
-        return state.sites.find((site) => site.name === text || site.code === text) || null;
+        return state.sites.find((site) => isSameSiteValue(text, site)) || null;
+      }
+
+      function normalizeSiteSelectValue(value) {
+        const text = String(value || "").trim();
+        if (!text) return "";
+        const site = getSiteByName(text);
+        return site ? getSiteDisplayName(site) : text;
       }
 
       function getUniqueSiteAreas() {
         return Array.from(new Set(state.sites.map((site) => site.area).filter(Boolean))).sort(compareText);
       }
 
+      function isKnownSiteArea(value) {
+        const text = String(value || "").trim();
+        return Boolean(text) && getUniqueSiteAreas().includes(text);
+      }
+
       function renderWorkshopOptions(selectedValue = refs.workshopInput.value) {
-        const selected = String(selectedValue || "").trim();
+        const selected = normalizeSiteSelectValue(selectedValue);
         const options = ['<option value="">请选择所属车间</option>'];
         const grouped = new Map();
 
@@ -3215,15 +3246,18 @@
         });
 
         Array.from(grouped.keys()).sort(compareText).forEach((area) => {
-          options.push(`<optgroup label="${escapeHtml(area)}">`);
-          grouped.get(area).sort((a, b) => compareText(a.name, b.name)).forEach((site) => {
-            const label = site.code ? `${site.name}（${site.code}）` : site.name;
-            options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(label)}</option>`);
+          options.push(`<option value="${escapeHtml(area)}" data-level="1">${escapeHtml(area)}</option>`);
+          const childSites = grouped
+            .get(area)
+            .filter((site) => String(site.name || "").trim() !== area)
+            .sort((a, b) => compareText(a.name, b.name));
+          childSites.forEach((site) => {
+            const label = getSiteDisplayName(site);
+            options.push(`<option value="${escapeHtml(label)}" data-level="2">${escapeHtml(label)}</option>`);
           });
-          options.push("</optgroup>");
         });
 
-        if (selected && !state.sites.some((site) => site.name === selected)) {
+        if (selected && !isKnownSiteArea(selected) && !state.sites.some((site) => isSameSiteValue(selected, site))) {
           options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
         }
 
@@ -3267,7 +3301,7 @@
 
       function fillAreaByWorkshop() {
         const site = getSiteByName(refs.workshopInput.value);
-        const area = site?.area || "";
+        const area = site?.area || (isKnownSiteArea(refs.workshopInput.value) ? refs.workshopInput.value.trim() : "");
         renderAreaOptions(area);
       }
 
@@ -5838,7 +5872,8 @@
           if (smart && !matchesSelectProxyKeyword(option, keyword)) return;
           const item = document.createElement("button");
           item.type = "button";
-          item.className = `select-proxy-option${grouped ? " is-grouped" : ""}${option.value === select.value ? " is-selected" : ""}`;
+          const optionGrouped = grouped || option.dataset.level === "2";
+          item.className = `select-proxy-option${optionGrouped ? " is-grouped" : ""}${option.value === select.value ? " is-selected" : ""}`;
           item.textContent = option.textContent || "请选择";
           item.disabled = option.disabled;
           item.setAttribute("role", "option");

@@ -1070,22 +1070,49 @@
       }
 
       .summary-hero {
+        border: 1px solid #d9e4f2;
         border-radius: 12px;
-        padding: 16px;
-        color: #fff;
-        background: linear-gradient(135deg, #2c72ee 0%, #194cc0 100%);
-        box-shadow: 0 18px 38px rgba(31, 95, 198, 0.22);
+        padding: 26px 18px 22px;
+        color: #1e314d;
+        background: #ffffff;
+        text-align: center;
+        box-shadow: var(--soft-shadow);
+      }
+
+      .summary-badge {
+        display: inline-flex;
+        min-width: 56px;
+        min-height: 34px;
+        border-radius: 8px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        background: #eaf2ff;
+        color: #2878ee;
+        font-weight: 700;
+      }
+
+      .summary-badge.normal {
+        background: #eaf8f0;
+        color: #1f9a5b;
+      }
+
+      .summary-badge.abnormal {
+        background: #fff1f1;
+        color: #d84b4b;
       }
 
       .summary-hero h2 {
-        margin: 6px 0 0;
-        font-size: 30px;
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.25;
       }
 
       .summary-hero p {
         margin: 8px 0 0;
         font-size: 14px;
-        color: rgba(255, 255, 255, 0.92);
+        line-height: 1.6;
+        color: #667893;
       }
 
       .summary-grid {
@@ -1097,31 +1124,6 @@
 
       .summary-grid .metric {
         margin: 0;
-      }
-
-      .abnormal-list {
-        margin-top: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .abnormal-item {
-        border: 1px solid #edc5c5;
-        background: #fff7f7;
-        border-radius: 10px;
-        padding: 10px;
-      }
-
-      .abnormal-item h4 {
-        margin: 0;
-        font-size: 15px;
-      }
-
-      .abnormal-item p {
-        margin: 6px 0 0;
-        font-size: 13px;
-        color: #7b5a5a;
       }
 
       .summary-actions {
@@ -1578,7 +1580,7 @@
 
       <section id="summaryView" class="view hidden">
         <div class="summary-hero">
-          <div style="font-size:54px;line-height:1">✔</div>
+          <div id="summaryResultTag" class="summary-badge normal">正常</div>
           <h2>点检完成</h2>
           <p id="summaryMainText">任务已提交</p>
         </div>
@@ -1600,15 +1602,11 @@
             </div>
           </div>
 
-          <div id="summaryAbnormalWrap" class="abnormal-list"></div>
-
           <div class="summary-actions">
             <button id="summaryBackBtn" class="btn">返回任务首页</button>
             <button id="summaryNextBtn" class="btn primary">执行下一任务</button>
           </div>
         </div>
-
-        <div id="summaryStatus" class="statusbar">提交完成</div>
       </section>
     </div>
 
@@ -1775,10 +1773,10 @@
         submitTaskBtn: document.getElementById("submitTaskBtn"),
         executeStatus: document.getElementById("executeStatus"),
         summaryMainText: document.getElementById("summaryMainText"),
+        summaryResultTag: document.getElementById("summaryResultTag"),
         summaryNormalCount: document.getElementById("summaryNormalCount"),
         summaryAbnormalCount: document.getElementById("summaryAbnormalCount"),
         summaryTotalCount: document.getElementById("summaryTotalCount"),
-        summaryAbnormalWrap: document.getElementById("summaryAbnormalWrap"),
         summaryBackBtn: document.getElementById("summaryBackBtn"),
         summaryNextBtn: document.getElementById("summaryNextBtn"),
         summaryStatus: document.getElementById("summaryStatus"),
@@ -2154,7 +2152,7 @@
           refs.headerActionBtn.classList.add("hidden");
         } else {
           refs.navBackBtn.classList.remove("hidden");
-          refs.headerTitle.textContent = "检查完成 · 汇总";
+          refs.headerTitle.textContent = "点检完成";
           refs.headerActionBtn.textContent = "";
           refs.headerActionBtn.classList.add("hidden");
         }
@@ -3812,6 +3810,13 @@
               <textarea class="textarea" data-index="${index}" data-field="handling" placeholder="可填写处理措施">${escapeHtml(item.handling || "")}</textarea>
             </div>
             <div class="field">
+              <label><span class="required">*</span>处理情况</label>
+              <select class="select" data-index="${index}" data-field="handlingStatus">
+                <option value="待处理" ${normalizeHandlingStatus(item.handlingStatus) === "待处理" ? "selected" : ""}>待处理</option>
+                <option value="已处理" ${normalizeHandlingStatus(item.handlingStatus) === "已处理" ? "selected" : ""}>已处理</option>
+              </select>
+            </div>
+            <div class="field">
               <div class="photo-head">
                 <label>${item.requirePhotoOnAbnormal ? '<span class="required">*</span>' : ""}异常照片</label>
                 <label class="photo-add-btn" title="添加照片">
@@ -3927,6 +3932,7 @@
           item.resultState = "normal";
         } else if (result === "abnormal") {
           item.resultState = "abnormal";
+          item.handlingStatus = normalizeHandlingStatus(item.handlingStatus);
         } else {
           return;
         }
@@ -4042,6 +4048,7 @@
               isAbnormal,
               abnormalDesc: item.abnormalDesc || "",
               handling: item.handling || "",
+              handlingStatus: isAbnormal ? normalizeHandlingStatus(item.handlingStatus) : "",
               photos: isAbnormal ? normalizePhotoList(item.photos).map((photo) => photo.name).filter(Boolean) : [],
             };
           }),
@@ -4088,6 +4095,14 @@
               index: i,
               field: "photoInput",
               message: `第 ${i + 1} 项异常照片必填`,
+            };
+          }
+          const handlingStatus = String(item.handlingStatus || "待处理").trim();
+          if (item.resultState === "abnormal" && !["待处理", "已处理"].includes(handlingStatus)) {
+            return {
+              index: i,
+              field: "handlingStatus",
+              message: `第 ${i + 1} 项请选择处理情况`,
             };
           }
         }
@@ -4179,25 +4194,22 @@
       }
 
       function buildSummary(submitData) {
-        const abnormalItems = state.selectedItems
-          .map((item, index) => ({ item, index }))
-          .filter(({ item }) => item.resultState === "abnormal")
-          .map(({ item, index }) => ({
-            index: index + 1,
-            title: item.pointItem || item.pointPart || "-",
-            desc: item.abnormalDesc || "未填写异常描述",
-          }));
-
         const normalCount = state.selectedItems.filter((item) => item.resultState === "normal").length;
         const abnormalCount = state.selectedItems.filter((item) => item.resultState === "abnormal").length;
+        const flowCount = Number(submitData.flowStartCount || (Array.isArray(submitData.flowIds) ? submitData.flowIds.length : 0));
+        const closedCount = Number((Array.isArray(submitData.closedHazardIds) ? submitData.closedHazardIds.length : 0) || submitData.closedHazardCount || 0);
+        const pendingAbnormalCount = Number(submitData.pendingAbnormalCount || Math.max(abnormalCount - closedCount, 0));
 
         state.lastSummary = {
           reportId: submitData.reportId || "",
+          reportResult: submitData.reportResult || (abnormalCount > 0 ? "异常" : "正常"),
           task: state.selectedTask,
           total: state.selectedItems.length,
           normalCount,
           abnormalCount,
-          abnormalItems,
+          pendingAbnormalCount,
+          flowCount,
+          closedCount,
           reporter: refs.reporterInput.value.trim(),
           durationMinutes: estimateMinutes(state.reportStartAt, nowDateTimeText()),
           submitTime: nowDateTimeText(),
@@ -4208,39 +4220,34 @@
         const summary = state.lastSummary;
         if (!summary || !summary.task) {
           refs.summaryMainText.textContent = "任务已提交";
+          refs.summaryResultTag.textContent = "正常";
+          refs.summaryResultTag.className = "summary-badge normal";
           refs.summaryNormalCount.textContent = "0";
           refs.summaryAbnormalCount.textContent = "0";
           refs.summaryTotalCount.textContent = "0";
-          refs.summaryAbnormalWrap.innerHTML = "";
-          setStatus("summary", "提交完成");
           return;
         }
 
-        refs.summaryMainText.textContent = `${summary.task.deviceName || summary.task.deviceCode || "设备"} · ${summary.task.standardName || "点检"} · 用时 ${summary.durationMinutes} 分钟`;
+        const resultText = summary.reportResult || (summary.abnormalCount > 0 ? "异常" : "正常");
+        const flowText = [
+          summary.flowCount ? `已发起 ${summary.flowCount} 条整改流程` : "",
+          summary.closedCount ? `已关闭 ${summary.closedCount} 条隐患工单` : "",
+        ].filter(Boolean).join(" · ");
+        refs.summaryResultTag.textContent = resultText;
+        refs.summaryResultTag.className = `summary-badge ${resultText.includes("异常") ? "abnormal" : "normal"}`;
+        refs.summaryMainText.textContent = [
+          `${summary.task.deviceName || summary.task.deviceCode || "设备"} · ${summary.task.standardName || "点检"}`,
+          `${summary.total} 项 · ${summary.abnormalCount} 异常`,
+          `用时 ${summary.durationMinutes} 分钟`,
+          flowText,
+        ].filter(Boolean).join(" · ");
         refs.summaryNormalCount.textContent = String(summary.normalCount);
         refs.summaryAbnormalCount.textContent = String(summary.abnormalCount);
         refs.summaryTotalCount.textContent = String(summary.total);
 
-        refs.summaryAbnormalWrap.innerHTML = "";
-        if (!summary.abnormalItems.length) {
-          refs.summaryAbnormalWrap.innerHTML = '<div class="empty">本次未发现异常</div>';
-        } else {
-          summary.abnormalItems.forEach((item) => {
-            const div = document.createElement("div");
-            div.className = "abnormal-item";
-            div.innerHTML = `
-              <h4>项 ${escapeHtml(item.index)} · ${escapeHtml(item.title)}</h4>
-              <p>${escapeHtml(item.desc)}</p>
-            `;
-            refs.summaryAbnormalWrap.appendChild(div);
-          });
-        }
-
         const nextTask = findNextPendingTask();
         refs.summaryNextBtn.disabled = !nextTask;
         refs.summaryNextBtn.textContent = nextTask ? "执行下一任务" : "无下一任务";
-
-        setStatus("summary", `报工已提交：${summary.reportId || "-"}`);
       }
 
       function findNextPendingTask() {
@@ -4281,6 +4288,7 @@
           numericValue: carryNumericValue,
           abnormalDesc: "",
           handling: "",
+          handlingStatus: "待处理",
           photos: [],
         };
       }
@@ -4321,6 +4329,7 @@
               numericValue: item.numericValue === undefined || item.numericValue === null ? "" : item.numericValue,
               abnormalDesc: item.abnormalDesc || "",
               handling: item.handling || "",
+              handlingStatus: item.resultState === "abnormal" ? normalizeHandlingStatus(item.handlingStatus) : "",
               photos: normalizePhotoList(item.photos),
             })),
           };
@@ -4363,6 +4372,7 @@
               numericValue: matched.numericValue === undefined || matched.numericValue === null ? "" : String(matched.numericValue),
               abnormalDesc: String(matched.abnormalDesc || ""),
               handling: String(matched.handling || ""),
+              handlingStatus: normalizeHandlingStatus(matched.handlingStatus),
               photos: normalizePhotoList(matched.photos),
             };
             if (getItemExecuteMode(merged) === "meter" && !String(merged.numericValue || "").trim() && String(merged.inputValue || "").trim()) {
@@ -4468,6 +4478,9 @@
 
       function setStatus(scope, message, error = false) {
         const target = scope === "execute" ? refs.executeStatus : scope === "summary" ? refs.summaryStatus : refs.dashboardStatus;
+        if (!(target instanceof HTMLElement)) {
+          return;
+        }
         target.textContent = message;
         target.classList.toggle("error", Boolean(error));
       }
@@ -4555,6 +4568,11 @@
 
       function normalizeResultState(value) {
         return value === "abnormal" || value === "normal" ? value : "pending";
+      }
+
+      function normalizeHandlingStatus(value) {
+        const text = String(value || "").trim();
+        return text.includes("已") ? "已处理" : "待处理";
       }
 
       function resolveItemResultState(item, fallbackFilled = isItemFilled(item)) {

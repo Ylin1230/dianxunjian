@@ -1144,6 +1144,19 @@
         font-size: 12px;
       }
 
+      .principal-signature-panel {
+        border: 1px solid #d8e3f5;
+        border-radius: 10px;
+        background: #fbfdff;
+        padding: 10px;
+      }
+
+      .principal-signature-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+      }
+
       .sign-canvas-wrap {
         padding: 12px;
         background: #f7faff;
@@ -1194,7 +1207,7 @@
         border-top: 1px solid var(--border);
         padding: 10px 12px;
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 8px;
         box-shadow: 0 -8px 18px rgba(31, 42, 58, 0.08);
       }
@@ -1407,13 +1420,17 @@
             <div id="submitPhotoStatus" class="extra-status"></div>
           </div>
           <div class="field">
-            <label>签名</label>
+            <label>现场人员签名</label>
             <div class="signature-subform">
               <div id="signatureList" class="signature-list"></div>
               <div class="signature-foot">
                 <button id="addSignatureBtn" class="btn signature-add-btn" type="button">新增一项</button>
               </div>
             </div>
+          </div>
+          <div class="field">
+            <label>主要负责人签字（选填）</label>
+            <div id="principalSignatureBox" class="principal-signature-panel"></div>
           </div>
         </section>
       </section>
@@ -1430,6 +1447,7 @@
 
       <div id="bottomBar" class="bottom-bar hidden">
         <button id="backBtn" class="btn">返回</button>
+        <button id="saveDraftBtn" class="btn" type="button">暂存</button>
         <button id="submitBtn" class="btn primary">提交检查</button>
       </div>
     </div>
@@ -1449,7 +1467,7 @@
     <div id="signatureModal" class="modal-mask hidden">
       <div class="sheet">
         <div class="sheet-head">
-          <h3>手写签名</h3>
+          <h3 id="signatureModalTitle">手写签名</h3>
           <button id="closeSignatureBtn" class="btn link" type="button">关闭</button>
         </div>
         <div class="sign-canvas-wrap">
@@ -1467,6 +1485,7 @@
 
     <script>
       const API_BASE = resolveApiBaseUrl();
+      const DRAFT_STORAGE_PREFIX = "safety_check_mobile_draft_v1:";
 
       const state = {
         templates: [],
@@ -1481,7 +1500,9 @@
         selectedItems: [],
         submitPhotos: [],
         signatures: [],
+        principalSignature: null,
         activeSignatureIndex: -1,
+        activeSignatureTarget: "personnel",
         signaturePad: {
           drawing: false,
           dirty: false,
@@ -1519,10 +1540,10 @@
           "overviewDate", "overviewMeta", "statOverdue", "statPending", "statTemplates",
           "inspectorInput", "inspectorPickerBtn", "inspectorPickerText", "inspectorPickerPanel", "keywordInput", "taskCards", "taskModePendingBtn", "taskModeCheckedBtn",
           "executeTitle", "executeMeta", "abnormalCountTag", "progressText", "progressBar", "markAllNormalBtn", "itemCards",
-          "submitPhotoInput", "submitPhotoList", "submitPhotoStatus", "signatureList", "addSignatureBtn",
-          "signatureModal", "signatureCanvas", "signatureStatus",
+          "submitPhotoInput", "submitPhotoList", "submitPhotoStatus", "signatureList", "addSignatureBtn", "principalSignatureBox",
+          "signatureModal", "signatureModalTitle", "signatureCanvas", "signatureStatus",
           "closeSignatureBtn", "clearSignatureBtn", "saveSignatureBtn", "cancelSignatureBtn",
-          "backBtn", "submitBtn", "summaryResultTag", "summaryText", "summaryAbnormalList",
+          "backBtn", "saveDraftBtn", "submitBtn", "summaryResultTag", "summaryText", "summaryAbnormalList",
         ].forEach((id) => {
           refs[id] = document.getElementById(id);
         });
@@ -1556,6 +1577,7 @@
         });
         refs.markAllNormalBtn.addEventListener("click", markAllNormal);
         refs.backBtn.addEventListener("click", () => switchView("home"));
+        refs.saveDraftBtn.addEventListener("click", saveInspectionDraft);
         refs.submitBtn.addEventListener("click", submitInspection);
         refs.itemCards.addEventListener("click", (event) => {
           const removePhotoBtn = event.target.closest("[data-action='remove-photo']");
@@ -1629,6 +1651,22 @@
           const removeBtn = event.target.closest("[data-action='remove-signature']");
           if (removeBtn) {
             removeSignatureRow(Number(removeBtn.dataset.index));
+          }
+        });
+        refs.principalSignatureBox.addEventListener("click", (event) => {
+          const openBtn = event.target.closest("[data-action='open-principal-signature']");
+          if (openBtn) {
+            openPrincipalSignatureModal();
+            return;
+          }
+          const previewBtn = event.target.closest("[data-action='preview-principal-signature']");
+          if (previewBtn) {
+            previewPrincipalSignature();
+            return;
+          }
+          const clearBtn = event.target.closest("[data-action='clear-principal-signature']");
+          if (clearBtn) {
+            clearPrincipalSignature();
           }
         });
         refs.closeSignatureBtn.addEventListener("click", closeSignatureModal);
@@ -1934,8 +1972,11 @@
         }));
         state.submitPhotos = [];
         state.signatures = [createSignatureRow()];
+        state.principalSignature = createSignatureRow();
         state.activeSignatureIndex = -1;
+        state.activeSignatureTarget = "personnel";
         resetSignaturePadState();
+        restoreInspectionDraftIfAvailable();
         renderExecute();
         switchView("execute");
       }
@@ -2160,6 +2201,30 @@
             </div>
           `;
         }).join("");
+
+        if (!state.principalSignature) {
+          state.principalSignature = createSignatureRow();
+        }
+        refs.principalSignatureBox.innerHTML = renderPrincipalSignature();
+      }
+
+      function renderPrincipalSignature() {
+        const signature = state.principalSignature || {};
+        const hasSign = Boolean(signature && signature.dataUrl);
+        const previewUrl = hasSign ? String(signature.previewUrl || signature.dataUrl || "").trim() : "";
+        const signTimeText = signature.signTime ? String(signature.signTime).slice(0, 16) : "";
+        return `
+          <div class="principal-signature-row">
+            <div class="signature-sign-cell">
+              ${previewUrl ? `<button type="button" class="sign-thumb-btn" data-action="preview-principal-signature" aria-label="查看主要负责人签字"><img class="sign-preview-img" src="${escapeHtml(previewUrl)}" alt="主要负责人签字预览" /></button>` : ""}
+              <button class="btn signature-sign-btn" type="button" data-action="open-principal-signature">${hasSign ? "重签" : "点击签字"}</button>
+              <span class="sign-state${hasSign ? " done" : ""}">${hasSign ? "已签" : "未签名"}</span>
+              ${hasSign ? `<button type="button" class="sign-preview-link" data-action="preview-principal-signature">预览</button>` : ""}
+              ${hasSign ? `<button type="button" class="sign-preview-link" data-action="clear-principal-signature">清除</button>` : ""}
+              ${signTimeText ? `<span class="signature-time">${escapeHtml(signTimeText)}</span>` : ""}
+            </div>
+          </div>
+        `;
       }
 
       function createSignatureRow() {
@@ -2199,6 +2264,18 @@
           name: `签名${index + 1}`,
           url: signature.previewUrl || signature.dataUrl,
         }, "当前签名暂无可预览内容");
+      }
+
+      function previewPrincipalSignature() {
+        const signature = state.principalSignature;
+        if (!signature || !signature.dataUrl) {
+          showToast("主要负责人签字暂无可预览内容");
+          return;
+        }
+        openPhotoPreviewByPhoto({
+          name: "主要负责人签字",
+          url: signature.previewUrl || signature.dataUrl,
+        }, "主要负责人签字暂无可预览内容");
       }
 
       async function addSubmitPhotos(fileList, inputEl) {
@@ -2319,20 +2396,34 @@
         });
       }
 
-      function openSignatureModal(index) {
-        if (!Number.isFinite(index) || !state.signatures[index]) {
+      function openSignatureModal(index, target = "personnel") {
+        const isPrincipal = target === "principal";
+        if (isPrincipal) {
+          if (!state.principalSignature) {
+            state.principalSignature = createSignatureRow();
+          }
+        } else if (!Number.isFinite(index) || !state.signatures[index]) {
           showToast("当前签名行不存在");
           return;
         }
-        state.activeSignatureIndex = index;
+        state.activeSignatureTarget = isPrincipal ? "principal" : "personnel";
+        state.activeSignatureIndex = isPrincipal ? -1 : index;
+        refs.signatureModalTitle.textContent = isPrincipal ? "主要负责人签字" : "现场人员签名";
         refs.signatureModal.classList.remove("hidden");
         resizeSignatureCanvas();
         clearSignatureCanvas();
-        refs.signatureStatus.textContent = `请在签名区书写后点击保存（签名 ${index + 1}）`;
+        refs.signatureStatus.textContent = isPrincipal
+          ? "请在签名区书写后点击保存（主要负责人签字）"
+          : `请在签名区书写后点击保存（签名 ${index + 1}）`;
+      }
+
+      function openPrincipalSignatureModal() {
+        openSignatureModal(-1, "principal");
       }
 
       function closeSignatureModal() {
         state.activeSignatureIndex = -1;
+        state.activeSignatureTarget = "personnel";
         refs.signatureModal.classList.add("hidden");
         clearSignatureCanvas();
       }
@@ -2481,7 +2572,8 @@
           return;
         }
         const index = state.activeSignatureIndex;
-        if (!Number.isFinite(index) || !state.signatures[index]) {
+        const isPrincipal = state.activeSignatureTarget === "principal";
+        if (!isPrincipal && (!Number.isFinite(index) || !state.signatures[index])) {
           refs.signatureStatus.textContent = "当前签名行不存在，请关闭后重试";
           return;
         }
@@ -2491,13 +2583,23 @@
           return;
         }
         const dataUrl = canvas.toDataURL("image/png");
-        state.signatures[index] = {
-          ...state.signatures[index],
-          name: `safety-check-signature-${Date.now()}.png`,
-          dataUrl,
-          previewUrl: dataUrl,
-          signTime: nowDateTimeText(),
-        };
+        if (isPrincipal) {
+          state.principalSignature = {
+            ...(state.principalSignature || createSignatureRow()),
+            name: `safety-check-principal-signature-${Date.now()}.png`,
+            dataUrl,
+            previewUrl: dataUrl,
+            signTime: nowDateTimeText(),
+          };
+        } else {
+          state.signatures[index] = {
+            ...state.signatures[index],
+            name: `safety-check-signature-${Date.now()}.png`,
+            dataUrl,
+            previewUrl: dataUrl,
+            signTime: nowDateTimeText(),
+          };
+        }
         renderSubmitExtras();
         showToast("签名已保存");
         closeSignatureModal();
@@ -2518,6 +2620,18 @@
         showToast("签名已清空");
       }
 
+      function clearPrincipalSignature() {
+        state.principalSignature = {
+          ...(state.principalSignature || createSignatureRow()),
+          name: "",
+          dataUrl: "",
+          previewUrl: "",
+          signTime: "",
+        };
+        renderSubmitExtras();
+        showToast("主要负责人签字已清空");
+      }
+
       function updateProgress() {
         const total = state.selectedItems.length;
         const done = state.selectedItems.filter(isItemDone).length;
@@ -2533,6 +2647,162 @@
           if (!item.result) item.result = "正常";
         });
         renderExecute();
+      }
+
+      function saveInspectionDraft() {
+        if (!state.selectedTemplate || !state.selectedItems.length) {
+          showToast("当前没有可暂存的检查内容");
+          return;
+        }
+        const draft = buildInspectionDraft();
+        try {
+          localStorage.setItem(getInspectionDraftKey(), JSON.stringify(draft));
+          renderHome();
+          switchView("home");
+          showToast("已暂存，已返回任务列表，下次打开该任务可继续填写");
+        } catch (error) {
+          showToast("暂存失败：照片或签名内容较大，请删除部分图片后重试");
+        }
+      }
+
+      function restoreInspectionDraftIfAvailable() {
+        const draft = readInspectionDraft();
+        if (!draft) {
+          return;
+        }
+        const savedAt = draft.savedAt ? shortDateTime(draft.savedAt) : "";
+        const shouldRestore = window.confirm(`检测到该任务有暂存内容${savedAt ? `（${savedAt}）` : ""}，是否继续填写？`);
+        if (!shouldRestore) {
+          return;
+        }
+        applyInspectionDraft(draft);
+        showToast("已恢复暂存内容");
+      }
+
+      function buildInspectionDraft() {
+        const inspector = selectedInspector();
+        return {
+          version: 1,
+          savedAt: nowDateTimeText(),
+          taskId: state.selectedTask?.id || "",
+          templateId: state.selectedTemplate?.id || "",
+          templateName: state.selectedTemplate?.name || "",
+          target: state.target || "",
+          inspectorId: inspector.id || "",
+          inspectorName: inspector.label || "",
+          startTime: state.startTime || nowDateTimeText(),
+          submitPhotos: serializeDraftPhotos(state.submitPhotos),
+          signatures: (Array.isArray(state.signatures) ? state.signatures : []).map(serializeDraftSignature),
+          principalSignature: serializeDraftSignature(state.principalSignature),
+          items: state.selectedItems.map((item) => ({
+            id: item.id || "",
+            seq: item.seq || "",
+            result: item.result || "",
+            inputValue: item.inputValue || "",
+            abnormalDesc: item.abnormalDesc || "",
+            handling: item.handling || "",
+            handlingStatus: item.handlingStatus || "待处理",
+            photos: serializeDraftPhotos(item.photos),
+          })),
+        };
+      }
+
+      function applyInspectionDraft(draft) {
+        if (!draft || typeof draft !== "object") {
+          return;
+        }
+        if (draft.startTime) {
+          state.startTime = draft.startTime;
+        }
+        if (draft.target) {
+          state.target = draft.target;
+        }
+        const savedItems = Array.isArray(draft.items) ? draft.items : [];
+        state.selectedItems = state.selectedItems.map((item) => {
+          const saved = savedItems.find((row) => row && (
+            (row.id && row.id === item.id) ||
+            (String(row.seq || "") && String(row.seq || "") === String(item.seq || ""))
+          ));
+          if (!saved) {
+            return item;
+          }
+          return {
+            ...item,
+            result: saved.result || "",
+            inputValue: saved.inputValue || "",
+            abnormalDesc: saved.abnormalDesc || "",
+            handling: saved.handling || "",
+            handlingStatus: saved.handlingStatus || "待处理",
+            photos: normalizePhotoList(saved.photos),
+          };
+        });
+        state.submitPhotos = normalizePhotoList(draft.submitPhotos);
+        state.signatures = (Array.isArray(draft.signatures) ? draft.signatures : [])
+          .map(normalizeDraftSignature)
+          .filter((item) => item && (item.dataUrl || item.previewUrl || item.signTime));
+        if (!state.signatures.length) {
+          state.signatures = [createSignatureRow()];
+        }
+        state.principalSignature = normalizeDraftSignature(draft.principalSignature) || createSignatureRow();
+      }
+
+      function serializeDraftPhotos(value) {
+        return normalizePhotoList(value).map((photo) => ({
+          id: photo.id || "",
+          name: photo.name || "",
+          url: photo.url || "",
+          dataUrl: photo.dataUrl || (/^data:image\//i.test(photo.url || "") ? photo.url : ""),
+        }));
+      }
+
+      function serializeDraftSignature(signature) {
+        if (!signature || typeof signature !== "object") {
+          return createSignatureRow();
+        }
+        return {
+          id: signature.id || "",
+          name: signature.name || "",
+          dataUrl: signature.dataUrl || "",
+          previewUrl: signature.previewUrl || signature.dataUrl || "",
+          signTime: signature.signTime || "",
+        };
+      }
+
+      function normalizeDraftSignature(signature) {
+        if (!signature || typeof signature !== "object") {
+          return null;
+        }
+        return {
+          id: signature.id || `signature_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          name: signature.name || "",
+          dataUrl: signature.dataUrl || (/^data:image\//i.test(signature.previewUrl || "") ? signature.previewUrl : ""),
+          previewUrl: signature.previewUrl || signature.dataUrl || "",
+          signTime: signature.signTime || "",
+        };
+      }
+
+      function readInspectionDraft() {
+        try {
+          const raw = localStorage.getItem(getInspectionDraftKey());
+          return raw ? JSON.parse(raw) : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function removeInspectionDraft() {
+        try {
+          localStorage.removeItem(getInspectionDraftKey());
+        } catch {
+          // ignore localStorage cleanup failures
+        }
+      }
+
+      function getInspectionDraftKey() {
+        const taskId = state.selectedTask?.id || "";
+        const templateId = state.selectedTemplate?.id || "";
+        const target = state.target || "";
+        return `${DRAFT_STORAGE_PREFIX}${taskId || `${templateId}:${target}`}`;
       }
 
       async function submitInspection() {
@@ -2566,6 +2836,13 @@
               dataUrl: signature.dataUrl,
               signTime: signature.signTime,
             })),
+          principalSignature: state.principalSignature && state.principalSignature.dataUrl
+            ? {
+                name: state.principalSignature.name,
+                dataUrl: state.principalSignature.dataUrl,
+                signTime: state.principalSignature.signTime,
+              }
+            : null,
           items: state.selectedItems.map((item) => ({
             itemId: item.id,
             seq: item.seq,
@@ -2595,6 +2872,7 @@
         try {
           const resp = await requestApi("/safety-check/submit", "POST", payload);
           state.summary = resp.data || {};
+          removeInspectionDraft();
           renderSummary();
           switchView("summary");
           await loadData();

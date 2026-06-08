@@ -1494,18 +1494,6 @@
                 <input id="stdVersionInput" type="hidden" />
 
                 <div class="field">
-                  <label for="stdWorkshopInput">所属车间</label>
-                  <select id="stdWorkshopInput" class="select">
-                    <option value="">请选择所属车间</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="stdAreaInput">所属区域</label>
-                  <select id="stdAreaInput" class="select">
-                    <option value="">请选择所属区域</option>
-                  </select>
-                </div>
-                <div class="field">
                   <label for="stdPostInput">责任岗位</label>
                   <input id="stdPostInput" class="input" type="text" />
                 </div>
@@ -1884,7 +1872,6 @@
       const OPTIONS = {
         category: ["日检", "周检", "月检", "定期点检"],
         applicableDeviceType: ["设备", "危化品"],
-        workshop: ["冲压车间", "热处理车间", "打磨车间", "仓储物流区", "燃气站", "成品库", "公共动力区"],
       };
 
       const state = {
@@ -1993,8 +1980,6 @@
         stdCategoryInput: document.getElementById("stdCategoryInput"),
         stdApplicableDeviceTypeInput: document.getElementById("stdApplicableDeviceTypeInput"),
         stdVersionInput: document.getElementById("stdVersionInput"),
-        stdWorkshopInput: document.getElementById("stdWorkshopInput"),
-        stdAreaInput: document.getElementById("stdAreaInput"),
         stdPostInput: document.getElementById("stdPostInput"),
         stdStatusInput: document.getElementById("stdStatusInput"),
         stdDeptCombo: document.getElementById("stdDeptCombo"),
@@ -2114,8 +2099,6 @@
         refs.stdApplicableDeviceTypeInput.innerHTML = OPTIONS.applicableDeviceType
           .map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`)
           .join("");
-        renderWorkshopSelectOptions();
-        renderAreaSelectOptions();
         renderDepartmentSelectOptions();
         renderOwnerSelectOptions();
         syncModalSelectPlaceholderState();
@@ -2155,79 +2138,9 @@
         updateSelectPlaceholderState(refs.stdCategoryInput);
       }
 
-      function getSiteByWorkshop(value) {
-        const text = String(value || "").trim();
-        if (!text) {
-          return null;
-        }
-        return state.sitePool.find((site) => site.name === text || site.code === text) || null;
-      }
-
-      function getSiteAreas() {
-        return unique(state.sitePool.map((site) => site.area).filter(Boolean)).sort((a, b) => String(a).localeCompare(String(b), "zh-Hans-CN"));
-      }
-
-      function renderWorkshopSelectOptions(selectedValue = String(refs.stdWorkshopInput?.value || "").trim()) {
-        const selected = String(selectedValue || "").trim();
-        const grouped = new Map();
-        state.sitePool.forEach((site) => {
-          const area = site.area || "未配置区域";
-          if (!grouped.has(area)) {
-            grouped.set(area, []);
-          }
-          grouped.get(area).push(site);
-        });
-
-        const options = ['<option value="">请选择所属车间</option>'];
-        Array.from(grouped.keys())
-          .sort((a, b) => String(a).localeCompare(String(b), "zh-Hans-CN"))
-          .forEach((area) => {
-            options.push(`<optgroup label="${escapeHtml(area)}">`);
-            grouped
-              .get(area)
-              .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "zh-Hans-CN"))
-              .forEach((site) => {
-                const label = site.code ? `${site.name}（${site.code}）` : site.name;
-                options.push(`<option value="${escapeHtml(site.name)}">${escapeHtml(label)}</option>`);
-              });
-            options.push("</optgroup>");
-          });
-
-        if (selected && !state.sitePool.some((site) => site.name === selected)) {
-          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
-        }
-
-        refs.stdWorkshopInput.innerHTML = options.join("");
-        refs.stdWorkshopInput.value = selected;
-        updateSelectPlaceholderState(refs.stdWorkshopInput);
-      }
-
-      function renderAreaSelectOptions(selectedValue = String(refs.stdAreaInput?.value || "").trim()) {
-        const selected = String(selectedValue || "").trim();
-        const areas = getSiteAreas();
-        const options = ['<option value="">请选择所属区域</option>'];
-        areas.forEach((area) => {
-          options.push(`<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`);
-        });
-        if (selected && !areas.includes(selected)) {
-          options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
-        }
-
-        refs.stdAreaInput.innerHTML = options.join("");
-        refs.stdAreaInput.value = selected;
-        updateSelectPlaceholderState(refs.stdAreaInput);
-      }
-
-      function fillStandardAreaByWorkshop() {
-        const site = getSiteByWorkshop(refs.stdWorkshopInput.value);
-        renderAreaSelectOptions(site?.area || "");
-      }
-
       function syncModalSelectPlaceholderState() {
         updateSelectPlaceholderState(refs.stdCategoryInput);
         updateSelectPlaceholderState(refs.stdApplicableDeviceTypeInput);
-        updateSelectPlaceholderState(refs.stdWorkshopInput);
-        updateSelectPlaceholderState(refs.stdAreaInput);
         updateSelectPlaceholderState(refs.stdDeptInput);
         updateSelectPlaceholderState(refs.stdOwnerInput);
       }
@@ -3118,12 +3031,6 @@
         refs.stdCategoryInput.addEventListener("change", () => {
           updateSelectPlaceholderState(refs.stdCategoryInput);
         });
-        refs.stdWorkshopInput.addEventListener("change", () => {
-          fillStandardAreaByWorkshop();
-        });
-        refs.stdAreaInput.addEventListener("change", () => {
-          updateSelectPlaceholderState(refs.stdAreaInput);
-        });
         refs.stdApplicableDeviceTypeInput.addEventListener("change", () => {
           const draft = state.modal.standard.draft;
           const nextType = normalizeApplicableDeviceType(refs.stdApplicableDeviceTypeInput.value);
@@ -3539,8 +3446,6 @@
             ...site,
             chemicalCount: state.chemicalPool.filter((chemical) => isChemicalInStore(chemical, site)).length,
           }));
-        renderWorkshopSelectOptions();
-        renderAreaSelectOptions();
       }
 
       async function syncRuleOptions() {
@@ -3779,11 +3684,13 @@
         const code = toDisplayText(getAliasRawValue(record, SITE_FIELD.code));
         const name = toDisplayText(getAliasRawValue(record, SITE_FIELD.name));
         const area = toDisplayText(getAliasRawValue(record, SITE_FIELD.area)) || "未配置区域";
+        const displayName = getSiteDisplayName({ area, name });
         return {
           id: cloudId || code || name,
           cloudId,
           code,
           name,
+          displayName,
           category: "危化品库",
           deviceType: "危化品库",
           workshop: area,
@@ -3791,7 +3698,7 @@
           department: "",
           owner: toDisplayText(getAliasRawValue(record, SITE_FIELD.owner)),
           riskLevel: "",
-          location: name,
+          location: displayName || name,
           status: "启用",
           objectType: "危化品库",
           chemicalCount: 0,
@@ -4087,9 +3994,6 @@
         refs.stdCategoryInput.value = draft.category || "";
         refs.stdApplicableDeviceTypeInput.value = normalizeApplicableDeviceType(draft.applicableDeviceType);
         refs.stdVersionInput.value = draft.version || "";
-        renderWorkshopSelectOptions(draft.workshop || "");
-        const matchedSite = getSiteByWorkshop(draft.workshop || "");
-        renderAreaSelectOptions(draft.area || matchedSite?.area || "");
         refs.stdPostInput.value = draft.responsibilityPost || "";
         refs.stdStatusInput.value = draft.status || "启用";
         renderDepartmentSelectOptions({
@@ -4238,8 +4142,6 @@
         draft.category = refs.stdCategoryInput.value.trim();
         draft.applicableDeviceType = normalizeApplicableDeviceType(refs.stdApplicableDeviceTypeInput.value);
         draft.version = refs.stdVersionInput.value.trim();
-        draft.workshop = refs.stdWorkshopInput.value.trim();
-        draft.area = refs.stdAreaInput.value.trim();
         draft.responsibilityPost = refs.stdPostInput.value.trim();
         draft.status = normalizeStatus(refs.stdStatusInput.value);
         const selectedDept = getSelectedDepartmentMeta();
@@ -4498,8 +4400,6 @@
           [MASTER_FIELD.name]: draft.name || "",
           [MASTER_FIELD.category]: draft.category || "",
           [MASTER_FIELD.applicableDeviceType]: normalizeApplicableDeviceType(draft.applicableDeviceType),
-          [MASTER_FIELD.workshop]: draft.workshop || "",
-          [MASTER_FIELD.area]: draft.area || "",
           [MASTER_FIELD.responsibilityPost]: draft.responsibilityPost || "",
           [MASTER_FIELD.responsibilityDept]: deptValue,
           [MASTER_FIELD.defaultOwner]: ownerValue,
@@ -5476,7 +5376,7 @@
           if (!keyword) {
             return true;
           }
-          const text = [item.code, item.name, item.deviceType, item.category, item.area, item.department, item.owner, item.riskLevel, item.location]
+          const text = [item.code, item.name, item.displayName, item.deviceType, item.category, item.area, item.department, item.owner, item.riskLevel, item.location]
             .join(" ")
             .toLowerCase();
           return text.includes(keyword);
@@ -5905,12 +5805,19 @@
 
       function getObjectSearchPlaceholder(objectType) {
         return normalizeApplicableDeviceType(objectType) === "危化品"
-          ? "场地编码/场地名称/所属区域"
+          ? "场地名称/所属区域"
           : "设备编号/设备名称/设备类型/区域";
       }
 
       function getObjectPool(objectType) {
         return normalizeApplicableDeviceType(objectType) === "危化品" ? state.sitePool : state.devicePool;
+      }
+
+      function getSiteDisplayName(site) {
+        const area = String(site?.area || site?.workshop || "").trim();
+        const name = String(site?.name || "").trim();
+        if (!name) return area || "";
+        return area && area !== "未配置区域" && area !== name ? `${area}-${name}` : name;
       }
 
       function isObjectLinkable(item, objectType) {
@@ -5947,7 +5854,7 @@
 
       function getSiteForChemical(chemical) {
         const storage = String(chemical?.location || chemical?.area || "").trim();
-        const site = state.sitePool.find((item) => isSameStoreName(item.name, storage) || isSameStoreName(item.code, storage));
+        const site = state.sitePool.find((item) => isSameStoreName(item.name, storage) || isSameStoreName(item.code, storage) || isSameStoreName(getSiteDisplayName(item), storage));
         if (site) {
           return site;
         }
@@ -5974,11 +5881,13 @@
         if (!chemical || !site) {
           return false;
         }
-        return isSameStoreName(chemical.location, site.name) || isSameStoreName(chemical.area, site.name) || isSameStoreName(chemical.location, site.code);
+        const chemicalCandidates = [chemical.location, chemical.storageLocation, chemical.area, chemical.workshop];
+        const siteCandidates = [site.name, site.code, site.displayName, getSiteDisplayName(site)];
+        return chemicalCandidates.some((left) => siteCandidates.some((right) => isSameStoreName(left, right)));
       }
 
       function getStoreKey(site) {
-        return normalizeCompareText(site?.code || site?.name || site?.location || site?.id);
+        return normalizeCompareText(site?.code || site?.displayName || site?.name || site?.location || site?.id);
       }
 
       function isSameStoreName(left, right) {
@@ -6001,22 +5910,35 @@
         const isChemical = normalizeApplicableDeviceType(objectType) === "危化品";
         const checkboxId = thead.id === "pickerTableHead" ? "pickerCheckAll" : "modalDeviceCheckAll";
         const first = selectable ? `<th style="width: 42px"><input id="${checkboxId}" type="checkbox" /></th>` : "";
-        const labels = isChemical
-          ? ["场地编码", "场地名称", "对象类型", "所属区域", "负责人", "状态", "危化品数"]
-          : ["设备编号", "设备名称", "设备类型", "所属区域", "责任部门", "设备状态", "风险等级"];
-        thead.innerHTML = `
-          <tr>
-            ${first}
-            <th style="width: 62px">序</th>
-            <th style="width: 130px">${labels[0]}</th>
-            <th>${labels[1]}</th>
-            <th style="width: 120px">${labels[2]}</th>
-            <th style="width: 120px">${labels[3]}</th>
-            <th style="width: 120px">${labels[4]}</th>
-            <th style="width: 90px">${labels[5]}</th>
-            <th style="width: 120px">${labels[6]}</th>
-          </tr>
-        `;
+        if (isChemical) {
+          thead.innerHTML = `
+            <tr>
+              ${first}
+              <th style="width: 62px">序</th>
+              <th>场地名称</th>
+              <th style="width: 120px">对象类型</th>
+              <th style="width: 120px">所属区域</th>
+              <th style="width: 120px">负责人</th>
+              <th style="width: 90px">状态</th>
+              <th style="width: 120px">危化品数</th>
+            </tr>
+          `;
+        } else {
+          const labels = ["设备编号", "设备名称", "设备类型", "所属区域", "责任部门", "设备状态", "风险等级"];
+          thead.innerHTML = `
+            <tr>
+              ${first}
+              <th style="width: 62px">序</th>
+              <th style="width: 130px">${labels[0]}</th>
+              <th>${labels[1]}</th>
+              <th style="width: 120px">${labels[2]}</th>
+              <th style="width: 120px">${labels[3]}</th>
+              <th style="width: 120px">${labels[4]}</th>
+              <th style="width: 90px">${labels[5]}</th>
+              <th style="width: 120px">${labels[6]}</th>
+            </tr>
+          `;
+        }
         if (thead.id === "pickerTableHead") {
           refs.pickerCheckAll = document.getElementById("pickerCheckAll");
           if (refs.pickerCheckAll) {
@@ -6053,9 +5975,21 @@
           ? `<td><input type="checkbox" data-id="${escapeHtml(row.id)}" ${selectedIds && selectedIds.has(row.id) ? "checked" : ""} /></td>`
           : "";
         const typeText = row.deviceType || row.category || "-";
-        const locationText = isChemical ? row.location || row.area || row.workshop || "-" : row.area || row.workshop || row.location || "-";
+        const locationText = isChemical ? row.area || row.workshop || "-" : row.area || row.workshop || row.location || "-";
         const ownerText = isChemical ? row.owner || row.department || "-" : row.department || row.owner || "-";
         const lastText = isChemical ? `${Number(row.chemicalCount || 0)} 种` : row.riskLevel || "-";
+        if (isChemical) {
+          return `
+            ${checkbox}
+            <td>${index + 1}</td>
+            <td>${escapeHtml(row.displayName || row.location || row.name || "-")}</td>
+            <td>${escapeHtml(typeText)}</td>
+            <td>${escapeHtml(locationText)}</td>
+            <td>${escapeHtml(ownerText)}</td>
+            <td>${renderStatusTag(row.status)}</td>
+            <td>${escapeHtml(lastText)}</td>
+          `;
+        }
         return `
           ${checkbox}
           <td>${index + 1}</td>
@@ -6838,7 +6772,7 @@
       }
 
       function normalizeCompareText(value) {
-        return toDisplayText(value).replace(/\s+/g, "").toLowerCase();
+        return toDisplayText(value).replace(/\s+/g, "").replace(/[－—–]/g, "-").toLowerCase();
       }
 
       function safeJsonParse(text) {

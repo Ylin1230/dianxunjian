@@ -392,7 +392,7 @@
               <th>检查类型</th>
               <th style="width:170px">区域/对象</th>
               <th style="width:120px">检查人</th>
-              <th style="width:150px">结束时间</th>
+              <th style="width:150px">检查时间</th>
               <th style="width:90px">结果</th>
               <th style="width:90px">异常数</th>
               <th style="width:100px">状态</th>
@@ -1150,13 +1150,16 @@
     }
   }
 
-  function openRecordModal(record) {
+  function openRecordModal(record, options = {}) {
     if (!record) {
       showToast("请先选择检查记录");
       return;
     }
+    const editingTime = Boolean(options.editingTime);
     const rows = state.submissionDetails.filter((item) => item.submissionId === record.id);
     const signatureMarks = renderRecordSignatureMarks(record);
+    const principalSignatureMarks = renderPrincipalSignatureMarks(record);
+    const inspectionTimeValue = record.endTime || record.startTime || "";
     refs.modalRoot.innerHTML = `
       <div class="modal-mask">
         <div class="modal">
@@ -1183,8 +1186,20 @@
                 <strong>${signatureMarks}</strong>
               </div>
               <div class="record-summary-item">
-                <span>结束时间</span>
-                <strong>${escapeHtml(shortDateTime(record.endTime || record.startTime))}</strong>
+                <span>主要负责人签字</span>
+                <strong>${principalSignatureMarks}</strong>
+              </div>
+              <div class="record-summary-item">
+                <span>检查时间</span>
+                <strong class="${editingTime ? "is-hidden" : ""}" data-record-time-text>${escapeHtml(shortDateTime(inspectionTimeValue))}</strong>
+                <input
+                  id="recordInspectionTimeInlineInput"
+                  class="input record-time-input ${editingTime ? "" : "is-hidden"}"
+                  type="datetime-local"
+                  value="${escapeHtml(toDateTimeInput(inspectionTimeValue))}"
+                  ${editingTime ? "" : "disabled"}
+                  required
+                />
               </div>
               <div class="record-summary-item">
                 <span>结果</span>
@@ -1233,16 +1248,64 @@
             </div>
           </div>
           <div class="modal-foot">
-            <button class="btn" type="button" data-record-modal-print>打印</button>
-            <button class="btn" type="button" data-record-modal-export>导出</button>
-            <button class="btn primary" type="button" data-close>确定</button>
+            ${editingTime ? `
+              <button class="btn" type="button" data-record-modal-cancel-edit>取消</button>
+              <button class="btn primary" type="button" data-record-modal-save-time>保存</button>
+            ` : `
+              <button class="btn" type="button" data-record-modal-edit>编辑</button>
+              <button class="btn" type="button" data-record-modal-print>打印</button>
+              <button class="btn" type="button" data-record-modal-export>导出</button>
+              <button class="btn primary" type="button" data-close>确定</button>
+            `}
           </div>
         </div>
       </div>
     `;
     bindCloseButtons();
-    refs.modalRoot.querySelector("[data-record-modal-print]")?.addEventListener("click", () => printSafetyRecord(record));
-    refs.modalRoot.querySelector("[data-record-modal-export]")?.addEventListener("click", () => exportSafetyRecord(record));
+    if (editingTime) {
+      const input = id("recordInspectionTimeInlineInput");
+      input?.focus();
+      refs.modalRoot.querySelector("[data-record-modal-cancel-edit]")?.addEventListener("click", () => openRecordModal(record));
+      refs.modalRoot.querySelector("[data-record-modal-save-time]")?.addEventListener("click", () => {
+        void saveRecordInspectionTimeInline(record);
+      });
+    } else {
+      refs.modalRoot.querySelector("[data-record-modal-edit]")?.addEventListener("click", () => {
+        state.selectedRecordId = record.id;
+        openRecordModal(record, { editingTime: true });
+      });
+      refs.modalRoot.querySelector("[data-record-modal-print]")?.addEventListener("click", () => printSafetyRecord(record));
+      refs.modalRoot.querySelector("[data-record-modal-export]")?.addEventListener("click", () => exportSafetyRecord(record));
+    }
+  }
+
+  async function saveRecordInspectionTimeInline(record) {
+    const inspectionTime = valueOf("recordInspectionTimeInlineInput");
+    if (!inspectionTime) {
+      showToast("请填写检查时间");
+      return;
+    }
+    const saveBtn = refs.modalRoot.querySelector("[data-record-modal-save-time]");
+    try {
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "保存中...";
+      }
+      await requestApi("/safety-check/submission/update-time", "POST", {
+        id: record.id,
+        inspectionTime,
+      });
+      state.selectedRecordId = record.id;
+      await loadAll();
+      openRecordModal(getSelectedRecord() || { ...record, endTime: inspectionTime });
+      showToast("检查时间已保存");
+    } catch (error) {
+      showToast(`保存失败：${error.message}`);
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "保存";
+      }
+    }
   }
 
   function printSafetyRecord(record) {
@@ -1616,6 +1679,10 @@
       .flatMap((row) => normalizeDisplayFiles(row?.files, "__safety-check-submission-signatures"));
   }
 
+  function getPrincipalSignatureFiles(record) {
+    return normalizeDisplayFiles(record?.principalSignatureFiles, "__safety-check-submission-signatures");
+  }
+
   function preferNonEmptyFiles(primary, fallback) {
     if (Array.isArray(primary)) {
       return primary.length ? primary : fallback;
@@ -1668,6 +1735,19 @@
         return `${separator}<img class="record-signature-img" src="${escapeHtml(file.url)}" alt="签名" />`;
       }
       return `${separator}<span>${escapeHtml(file.name || "签名")}</span>`;
+    }).join("")}</span>`;
+  }
+
+  function renderPrincipalSignatureMarks(record) {
+    const files = getPrincipalSignatureFiles(record);
+    if (!files.length) {
+      return "-";
+    }
+    return `<span class="record-signature-list">${files.map((file) => {
+      if (file.url) {
+        return `<img class="record-signature-img" src="${escapeHtml(file.url)}" alt="主要负责人签字" />`;
+      }
+      return `<span>${escapeHtml(file.name || "主要负责人签字")}</span>`;
     }).join("")}</span>`;
   }
 

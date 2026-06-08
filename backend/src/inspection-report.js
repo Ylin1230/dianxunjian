@@ -678,9 +678,12 @@ function registerInspectionReportRoutes(app, config) {
 
     const normalizedItems = items.map((item, index) => normalizeSubmitItem(item, index + 1));
     const abnormalItems = normalizedItems.filter((item) => item.isAbnormal);
+    const pendingAbnormalItems = abnormalItems.filter((item) => !isSubmitItemHandled(item));
+    const handledAbnormalItems = abnormalItems.filter((item) => isSubmitItemHandled(item));
     const abnormalCount = abnormalItems.length;
+    const pendingAbnormalCount = pendingAbnormalItems.length;
     const reportResult = abnormalCount > 0 ? "异常" : "正常";
-    const needReview = abnormalCount > 0 ? "是" : "否";
+    const needReview = pendingAbnormalCount > 0 ? "是" : "否";
     const currentStatus = "已完成";
     const nowText = formatDateTime(new Date());
     const reportDateText = normalizeDateTime(payload.reportDate) || nowText;
@@ -740,9 +743,15 @@ function registerInspectionReportRoutes(app, config) {
     }
 
     const hazardIds = [];
+    const flowIds = [];
+    const closedHazardIds = [];
     let hazardStartCount = 0;
-    let hazardWarning = "";
-    if (abnormalItems.length) {
+    const hazardWarnings = [];
+
+    const createInspectionHazard = async (groupItems, handled) => {
+      if (!groupItems.length) {
+        return;
+      }
       const hazardPayload = buildHazardFromInspectionReport({
         task,
         device,
@@ -750,20 +759,36 @@ function registerInspectionReportRoutes(app, config) {
         reporter,
         reportDateText,
         remark,
-        abnormalItems,
+        abnormalItems: groupItems,
+        handled,
       });
-      const hazardResult = await createHazardRecord(config, hazardPayload, payload);
+      const hazardResult = handled
+        ? await createClosedHazardRecord(config, hazardPayload, payload)
+        : await createHazardRecord(config, hazardPayload, payload);
       const hazardId = extractRecordId(hazardResult.response && hazardResult.response.data ? hazardResult.response.data : hazardResult.response);
-      hazardStartCount += 1;
+      if (hazardResult.flowUsed || !handled) {
+        hazardStartCount += 1;
+      }
       if (hazardId) {
         hazardIds.push(hazardId);
+        if (handled && !hazardResult.flowUsed) {
+          closedHazardIds.push(hazardId);
+        } else {
+          flowIds.push(hazardId);
+        }
       } else {
-        hazardWarning = "点检异常工单已发起，但百数云未返回工单ID";
+        hazardWarnings.push("点检异常工单已发起，但百数云未返回工单ID");
       }
-    }
+      if (hazardResult.warning) {
+        hazardWarnings.push(hazardResult.warning);
+      }
+    };
+
+    await createInspectionHazard(pendingAbnormalItems, false);
+    await createInspectionHazard(handledAbnormalItems, true);
 
     const taskUpdatePayload = {
-      [TASK_FIELD.taskStatus]: abnormalCount > 0 ? "异常" : "已完成",
+      [TASK_FIELD.taskStatus]: pendingAbnormalCount > 0 ? "异常" : "已完成",
       [TASK_FIELD.reportStatus]: "已报工",
       [TASK_FIELD.reportedCount]: task.shouldReportCount > 0 ? task.shouldReportCount : normalizedItems.length,
     };
@@ -775,12 +800,15 @@ function registerInspectionReportRoutes(app, config) {
         reportId,
         reportResult,
         abnormalCount,
+        pendingAbnormalCount,
         hazardIds,
-        flowIds: hazardIds,
+        flowIds,
+        closedHazardIds,
         flowStartCount: hazardStartCount,
-        hazardWarning,
+        hazardWarning: hazardWarnings[0] || "",
+        hazardWarnings,
         detailCount: normalizedItems.length,
-        taskStatus: abnormalCount > 0 ? "异常" : "已完成",
+        taskStatus: pendingAbnormalCount > 0 ? "异常" : "已完成",
       },
     });
   }));
@@ -822,15 +850,31 @@ async function createHazardRecord(config, values, options = {}) {
   throw new Error(`点检异常工单发起失败：${errors.filter(Boolean).join("；") || "未知错误"}`);
 }
 
+async function createClosedHazardRecord(config, values, options = {}) {
+  try {
+    const response = await requestEntry(config, HAZARD_ENTRY_ID, "data_create", { data: values });
+    return { response, flowUsed: false };
+  } catch (error) {
+    const fallback = await createHazardRecord(config, values, options);
+    return {
+      ...fallback,
+      flowUsed: true,
+      warning: `已处理点检异常直接归档失败，已按流程发起：${error.message}`,
+    };
+  }
+}
+
 function buildHazardFromInspectionReport(context) {
   const task = context.task || {};
   const device = context.device || {};
   const abnormalItems = Array.isArray(context.abnormalItems) ? context.abnormalItems : [];
+  const handled = Boolean(context.handled);
   const deviceName = task.deviceName || device.name || "点检对象";
   const deviceCode = task.deviceCode || device.code || "";
   const standardName = task.standardName || "点检标准";
   const title = `${deviceName} - ${standardName}异常`;
   const target = deviceCode ? `${deviceName}（${deviceCode}）` : deviceName;
+  const closedAt = handled ? formatDateTime(new Date()) : "";
   const beforePhotos = abnormalItems
     .map((item) => item.abnormalPhotos)
     .filter(Boolean)
@@ -854,14 +898,14 @@ function buildHazardFromInspectionReport(context) {
     [HAZARD_FIELD.ownerDept]: "",
     [HAZARD_FIELD.ownerUser]: "",
     [HAZARD_FIELD.deadline]: formatDateTime(addDays(new Date(), 7)),
-    [HAZARD_FIELD.requirement]: "请根据点检异常项完成整改，并在工单中上传整改记录。",
-    [HAZARD_FIELD.status]: "待整改",
-    [HAZARD_FIELD.actionDesc]: "",
+    [HAZARD_FIELD.requirement]: handled ? "现场已处理，留存点检异常闭环记录。" : "请根据点检异常项完成整改，并在工单中上传整改记录。",
+    [HAZARD_FIELD.status]: handled ? "已关闭" : "待整改",
+    [HAZARD_FIELD.actionDesc]: handled ? "现场已处理，提交点检报工时自动关闭。" : "",
     [HAZARD_FIELD.beforePhotos]: beforePhotos,
     [HAZARD_FIELD.afterPhotos]: "",
     [HAZARD_FIELD.verifier]: "",
-    [HAZARD_FIELD.verifyComment]: "",
-    [HAZARD_FIELD.closedAt]: "",
+    [HAZARD_FIELD.verifyComment]: handled ? "现场已处理，无需后续整改。" : "",
+    [HAZARD_FIELD.closedAt]: closedAt,
     [HAZARD_FIELD.overdue]: "否",
     [HAZARD_FIELD.source]: "点巡检",
   };
@@ -882,7 +926,8 @@ function buildInspectionHazardDescription(input) {
 function formatInspectionAbnormalLine(item, index) {
   const desc = item.abnormalDesc || "-";
   const handling = item.handling || "-";
-  return `${index}. 异常描述：${desc}；处理措施：${handling}`;
+  const handlingStatus = normalizeHandlingStatus(item.handlingStatus);
+  return `${index}. 异常描述：${desc}；处理措施：${handling}；处理情况：${handlingStatus}`;
 }
 
 async function fetchReportTaskRecords(config, filters = {}) {
@@ -945,7 +990,7 @@ function findMatchedSite(sites, scanValue) {
     return null;
   }
   const exact = sites.find((item) => {
-    const candidates = [item.id, item.code, item.name];
+    const candidates = [item.id, item.code, item.name, item.displayName, getSiteDisplayName(item)];
     return candidates.some((value) => String(value || "") === text);
   });
   if (exact) {
@@ -953,7 +998,7 @@ function findMatchedSite(sites, scanValue) {
   }
   const normalized = normalizeCompareText(text);
   return sites.find((item) => {
-    const candidates = [item.code, item.name];
+    const candidates = [item.code, item.name, item.displayName, getSiteDisplayName(item)];
     return candidates.some((value) => {
       const v = normalizeCompareText(value);
       return v && (v.includes(normalized) || normalized.includes(v));
@@ -965,13 +1010,14 @@ function isChemicalInSite(chemical, site) {
   if (!chemical || !site) {
     return false;
   }
-  const siteName = normalizeCompareText(site.name);
-  const siteCode = normalizeCompareText(site.code);
-  const storage = normalizeCompareText(chemical.storageLocation || chemical.location);
-  const usage = normalizeCompareText(chemical.usageLocation || chemical.workshop);
-  return Boolean(
-    (siteName && (storage === siteName || chemical.location && normalizeCompareText(chemical.location) === siteName)) ||
-      (siteCode && (storage === siteCode || usage === siteCode))
+  const chemicalCandidates = [chemical.storageLocation, chemical.location, chemical.usageLocation, chemical.workshop];
+  const siteCandidates = [site.name, site.code, site.displayName, getSiteDisplayName(site)];
+  return chemicalCandidates.some((left) =>
+    siteCandidates.some((right) => {
+      const a = normalizeCompareText(left);
+      const b = normalizeCompareText(right);
+      return Boolean(a && b && a === b);
+    })
   );
 }
 
@@ -1259,6 +1305,7 @@ function parseOptionList(value) {
 
 function normalizeSubmitItem(source, fallbackSeq) {
   const item = source && typeof source === "object" ? source : {};
+  const isAbnormal = toYesNo(item.isAbnormal) === "是";
   return {
     standardDetailId: toDisplayText(item.standardDetailId || item.id),
     seq: toIntOrDefault(item.seq, fallbackSeq),
@@ -1269,10 +1316,11 @@ function normalizeSubmitItem(source, fallbackSeq) {
     mobileInputValue: toDisplayText(item.mobileInputValue || item.inputValue),
     actualOptionValue: toDisplayText(item.actualOptionValue || item.optionValue),
     actualNumericValue: toNumberOrEmpty(item.actualNumericValue ?? item.numericValue),
-    isAbnormal: toYesNo(item.isAbnormal) === "是",
+    isAbnormal,
     abnormalDesc: toDisplayText(item.abnormalDesc),
     abnormalPhotos: normalizePhotos(item.photos || item.abnormalPhotos),
     handling: toDisplayText(item.handling),
+    handlingStatus: isAbnormal ? normalizeHandlingStatus(item.handlingStatus || item.processStatus || item.disposalStatus) : "",
   };
 }
 
@@ -1298,6 +1346,18 @@ function toYesNo(value) {
     return "是";
   }
   return "否";
+}
+
+function normalizeHandlingStatus(value) {
+  const text = toDisplayText(value);
+  if (text.includes("已")) {
+    return "已处理";
+  }
+  return "待处理";
+}
+
+function isSubmitItemHandled(item) {
+  return normalizeHandlingStatus(item && item.handlingStatus) === "已处理";
 }
 
 function mapDeviceRecord(record) {
@@ -1347,13 +1407,25 @@ function mapChemicalRecord(record) {
 function mapSiteRecord(record) {
   const code = toDisplayText(getAliasRawValue(record, SITE_FIELD.code));
   const name = toDisplayText(getAliasRawValue(record, SITE_FIELD.name));
+  const area = toDisplayText(getAliasRawValue(record, SITE_FIELD.area)) || "未配置区域";
+  const displayName = getSiteDisplayName({ area, name });
   return {
     id: extractRecordId(record) || code || name,
     code,
     name,
-    area: toDisplayText(getAliasRawValue(record, SITE_FIELD.area)),
+    displayName,
+    area,
     owner: toDisplayText(getAliasRawValue(record, SITE_FIELD.owner)),
   };
+}
+
+function getSiteDisplayName(site) {
+  const area = toDisplayText(site?.area);
+  const name = toDisplayText(site?.name);
+  if (!name) {
+    return area || "";
+  }
+  return area && area !== "未配置区域" && area !== name ? `${area}-${name}` : name;
 }
 
 function mapTaskRecord(record) {
@@ -2109,6 +2181,7 @@ function extractPrimaryObjectId(value) {
 function normalizeCompareText(value) {
   return toDisplayText(value)
     .replace(/\s+/g, "")
+    .replace(/[－—–]/g, "-")
     .replace(/[()（）【】\[\]{}<>《》]/g, "")
     .toLowerCase();
 }

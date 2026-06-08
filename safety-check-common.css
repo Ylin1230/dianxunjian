@@ -711,18 +711,56 @@ table {
   grid-column: 1 / -1;
 }
 
+.record-detail-modal {
+  width: min(1240px, calc(100vw - 28px));
+}
+
+.record-detail-modal .modal-body {
+  padding: 0;
+  gap: 0;
+  background: #f7f9fc;
+}
+
+.record-detail-section {
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.record-detail-section:last-child {
+  border-bottom: 0;
+}
+
+.record-detail-title {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .record-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #fbfcfe;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
 }
 
 .record-summary-item {
   min-width: 0;
+  min-height: 58px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.record-summary-item:nth-child(4n) {
+  border-right: 0;
+}
+
+.record-summary-item:nth-last-child(-n + 4) {
+  border-bottom: 0;
 }
 
 .record-summary-item span,
@@ -757,6 +795,34 @@ table {
   grid-column: span 2;
 }
 
+.record-signature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.record-signature-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+}
+
+.record-signature-card > span {
+  display: block;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.record-signature-box {
+  min-height: 82px;
+  max-height: 168px;
+  overflow: auto;
+  padding: 10px;
+}
+
 .record-file-list {
   display: inline-flex;
   align-items: center;
@@ -789,10 +855,13 @@ table {
 }
 
 .record-signature-list {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.5;
 }
 
 .record-signature-img {
@@ -804,6 +873,20 @@ table {
 
 .record-signature-separator {
   color: var(--muted);
+}
+
+.record-signature-box .record-signature-img {
+  max-width: 128px;
+  max-height: 48px;
+}
+
+.record-detail-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.record-detail-table {
+  min-width: 980px;
 }
 
 .template-item-wrap {
@@ -1094,6 +1177,23 @@ tbody tr.selected {
   .form-grid.cols-3,
   .template-summary-grid,
   .record-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .record-summary-item,
+  .record-summary-item:nth-child(4n) {
+    border-right: 0;
+  }
+
+  .record-summary-item:nth-last-child(-n + 4) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .record-summary-item:last-child {
+    border-bottom: 0;
+  }
+
+  .record-signature-grid {
     grid-template-columns: 1fr;
   }
 

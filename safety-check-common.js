@@ -1162,60 +1162,74 @@
     const inspectionTimeValue = record.endTime || record.startTime || "";
     refs.modalRoot.innerHTML = `
       <div class="modal-mask">
-        <div class="modal">
+        <div class="modal record-detail-modal">
           <div class="modal-head">
-            <h2>${escapeHtml(record.code || "检查记录")} · ${escapeHtml(record.templateName || "")}</h2>
+            <h2>${escapeHtml(record.templateName || "检查记录")}</h2>
             <button class="btn" type="button" data-close>关闭</button>
           </div>
           <div class="modal-body">
-            <div class="record-summary-grid">
-              <div class="record-summary-item">
-                <span>提交编号</span>
-                <strong>${escapeHtml(record.code || "-")}</strong>
+            <section class="record-detail-section">
+              <h3 class="record-detail-title">基础信息</h3>
+              <div class="record-summary-grid">
+                <div class="record-summary-item">
+                  <span>提交编号</span>
+                  <strong>${escapeHtml(record.code || "-")}</strong>
+                </div>
+                <div class="record-summary-item">
+                  <span>检查类型</span>
+                  <strong>${escapeHtml(record.templateName || "-")}</strong>
+                </div>
+                <div class="record-summary-item">
+                  <span>区域/对象</span>
+                  <strong>${escapeHtml(record.target || "-")}</strong>
+                </div>
+                <div class="record-summary-item">
+                  <span>检查人</span>
+                  <strong>${escapeHtml(record.inspector || "-")}</strong>
+                </div>
+                <div class="record-summary-item">
+                  <span>检查时间</span>
+                  <strong class="${editingTime ? "is-hidden" : ""}" data-record-time-text>${escapeHtml(shortDateTime(inspectionTimeValue))}</strong>
+                  <input
+                    id="recordInspectionTimeInlineInput"
+                    class="input record-time-input ${editingTime ? "" : "is-hidden"}"
+                    type="datetime-local"
+                    value="${escapeHtml(toDateTimeInput(inspectionTimeValue))}"
+                    ${editingTime ? "" : "disabled"}
+                    required
+                  />
+                </div>
+                <div class="record-summary-item">
+                  <span>结果</span>
+                  <strong>${renderResultTag(record.result)}</strong>
+                </div>
+                <div class="record-summary-item">
+                  <span>异常数</span>
+                  <strong>${escapeHtml(record.abnormalCount || 0)}</strong>
+                </div>
+                <div class="record-summary-item">
+                  <span>状态</span>
+                  <strong>${escapeHtml(record.status || "-")}</strong>
+                </div>
               </div>
-              <div class="record-summary-item">
-                <span>检查类型</span>
-                <strong>${escapeHtml(record.templateName || "-")}</strong>
+            </section>
+            <section class="record-detail-section">
+              <h3 class="record-detail-title">签字信息</h3>
+              <div class="record-signature-grid">
+                <div class="record-signature-card">
+                  <span>检查人员签字</span>
+                  <div class="record-signature-box">${signatureMarks}</div>
+                </div>
+                <div class="record-signature-card">
+                  <span>主要负责人签字</span>
+                  <div class="record-signature-box">${principalSignatureMarks}</div>
+                </div>
               </div>
-              <div class="record-summary-item">
-                <span>区域/对象</span>
-                <strong>${escapeHtml(record.target || "-")}</strong>
-              </div>
-              <div class="record-summary-item">
-                <span>检查人员</span>
-                <strong>${signatureMarks}</strong>
-              </div>
-              <div class="record-summary-item">
-                <span>主要负责人签字</span>
-                <strong>${principalSignatureMarks}</strong>
-              </div>
-              <div class="record-summary-item">
-                <span>检查时间</span>
-                <strong class="${editingTime ? "is-hidden" : ""}" data-record-time-text>${escapeHtml(shortDateTime(inspectionTimeValue))}</strong>
-                <input
-                  id="recordInspectionTimeInlineInput"
-                  class="input record-time-input ${editingTime ? "" : "is-hidden"}"
-                  type="datetime-local"
-                  value="${escapeHtml(toDateTimeInput(inspectionTimeValue))}"
-                  ${editingTime ? "" : "disabled"}
-                  required
-                />
-              </div>
-              <div class="record-summary-item">
-                <span>结果</span>
-                <strong>${renderResultTag(record.result)}</strong>
-              </div>
-              <div class="record-summary-item">
-                <span>异常数</span>
-                <strong>${escapeHtml(record.abnormalCount || 0)}</strong>
-              </div>
-              <div class="record-summary-item">
-                <span>状态</span>
-                <strong>${escapeHtml(record.status || "-")}</strong>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table>
+            </section>
+            <section class="record-detail-section">
+              <h3 class="record-detail-title">检查明细</h3>
+              <div class="table-wrap record-detail-table-wrap">
+                <table class="record-detail-table">
                 <thead>
                   <tr>
                     <th style="width:60px">序号</th>
@@ -1226,7 +1240,6 @@
                     <th>处理措施</th>
                     <th style="width:90px">处理情况</th>
                     <th style="width:130px">异常照片</th>
-                    <th style="width:140px">整改流程</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1240,12 +1253,12 @@
                       <td>${escapeHtml(item.handling || "-")}</td>
                       <td>${escapeHtml(item.handlingStatus || "-")}</td>
                       <td>${renderRecordFilePreviews(getDetailPhotoFiles(item))}</td>
-                      <td>${escapeHtml(item.hazardId || "-")}</td>
                     </tr>
-                  `).join("") : `<tr><td colspan="9"><div class="empty">暂无明细</div></td></tr>`}
+                  `).join("") : `<tr><td colspan="8"><div class="empty">暂无明细</div></td></tr>`}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </section>
           </div>
           <div class="modal-foot">
             ${editingTime ? `

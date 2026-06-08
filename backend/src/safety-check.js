@@ -1356,11 +1356,22 @@ async function fetchRecordById(config, entryId, dataId) {
 }
 
 async function fetchEntryRecords(config, entryId, options = {}) {
+  if (!options.actions && !options.payloads) {
+    const skipRecords = await fetchEntryRecordsBySkip(config, entryId).catch((error) => {
+      console.warn("fetch entry records by skip failed:", error);
+      return null;
+    });
+    if (skipRecords) {
+      return skipRecords;
+    }
+  }
+
   const actions = options.actions || ["data", "data_search", "data_list"];
   const payloads = options.payloads || [
-    { page: 1, limit: 1000 },
-    { page_no: 1, page_size: 1000 },
-    { limit: 1000 },
+    { limit: 300, skip: 0 },
+    { page: 1, limit: 300 },
+    { page_no: 1, page_size: 300 },
+    { pageNum: 1, pageSize: 300 },
     {},
   ];
   const errors = [];
@@ -1380,6 +1391,55 @@ async function fetchEntryRecords(config, entryId, options = {}) {
   }
 
   throw new Error(errors[errors.length - 1] || "未能获取列表数据");
+}
+
+async function fetchEntryRecordsBySkip(config, entryId) {
+  const pageSize = 300;
+  const maxPages = 200;
+  const totalResult = await requestEntry(config, entryId, "data_count", {});
+  const total = extractPossibleTotal(totalResult);
+  if (!Number.isFinite(total) || total < 0) {
+    return null;
+  }
+  if (total === 0) {
+    return [];
+  }
+
+  const output = [];
+  const seenIds = new Set();
+  const seenFingerprints = new Set();
+  for (let skip = 0, page = 1; skip < total && page <= maxPages; skip += pageSize, page += 1) {
+    const resp = await requestEntry(config, entryId, "data", { limit: pageSize, skip });
+    const records = extractRecordArray(resp);
+    if (!Array.isArray(records)) {
+      throw new Error(`data 返回结构无法识别：${previewPayload(resp)}`);
+    }
+    if (!records.length) {
+      break;
+    }
+
+    const fingerprint = records.map((item) => extractRecordId(item)).filter(Boolean).join("|");
+    if (fingerprint && seenFingerprints.has(fingerprint)) {
+      break;
+    }
+    if (fingerprint) {
+      seenFingerprints.add(fingerprint);
+    }
+
+    records.forEach((record) => {
+      const id = extractRecordId(record) || JSON.stringify(record);
+      if (seenIds.has(id)) {
+        return;
+      }
+      seenIds.add(id);
+      output.push(record);
+    });
+
+    if (records.length < pageSize) {
+      break;
+    }
+  }
+  return output;
 }
 
 async function requestEntry(config, entryId, action, body = {}, method = "POST") {
@@ -1453,6 +1513,46 @@ function extractRecordArray(source) {
     });
   }
   return [];
+}
+
+function extractPossibleTotal(result) {
+  const keys = ["total", "total_count", "totalCount", "count", "data_count", "rows_count", "records_total", "size", "data"];
+  const queue = [result];
+  const visited = new Set();
+  while (queue.length) {
+    const current = queue.shift();
+    if (!current || typeof current !== "object" || Array.isArray(current) || visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    for (const key of keys) {
+      if (!Object.prototype.hasOwnProperty.call(current, key)) {
+        continue;
+      }
+      const raw = Number(current[key]);
+      if (Number.isFinite(raw)) {
+        return raw;
+      }
+    }
+
+    Object.values(current).forEach((value) => {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        queue.push(value);
+      }
+    });
+  }
+  return null;
+}
+
+function previewPayload(value, maxLength = 260) {
+  try {
+    const text = JSON.stringify(value);
+    return text.length <= maxLength ? text : `${text.slice(0, maxLength)}...`;
+  } catch {
+    const text = String(value ?? "");
+    return text.length <= maxLength ? text : `${text.slice(0, maxLength)}...`;
+  }
 }
 
 function getAliasRawValue(record, alias) {
